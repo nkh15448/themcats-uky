@@ -1,0 +1,87 @@
+{{ define "main" }}
+
+{{ $join       := .Site.GetPage "/join" }}
+{{ $resources  := .Site.GetPage "/resources" }}
+{{ $meetings   := .Site.GetPage "/meetings" }}
+{{ $leadership := .Site.GetPage "/leadership" }}
+
+<section class="hero">
+  <div class="grain"></div>
+  <div class="hero-inner">
+    <p class="hero-eyebrow">University of Kentucky</p>
+    <h1 class="hero-title">The<br><em>M-CATS</em></h1>
+    <p class="hero-tagline">{{ .Site.Params.tagline }}</p>
+    <div class="hero-cta">
+      <a href="{{ $join.Permalink }}" class="btn btn-primary">Join the Community</a>
+      <a href="{{ $resources.Permalink }}" class="btn btn-ghost">Explore Resources</a>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">scroll</div>
+</section>
+
+<section class="section about">
+  <div class="container">
+    <div class="section-label">About</div>
+    <div class="about-grid">
+      <div class="about-text">
+        <h2>Peer-driven<br>MCAT preparation.</h2>
+        <p>The M-CATS is a student organization at the University of Kentucky dedicated to helping pre-medical students navigate one of medicine's most challenging milestones. We believe preparation is stronger when done together.</p>
+      </div>
+      <div class="about-pillars">
+        <div class="pillar">
+          <span class="pillar-num">01</span>
+          <h3>Study Resources</h3>
+          <p>Curated guides, notes, and practice materials organized by subject and difficulty.</p>
+        </div>
+        <div class="pillar">
+          <span class="pillar-num">02</span>
+          <h3>Peer Tutoring</h3>
+          <p>Connect with experienced students who've excelled on the MCAT for personalized guidance.</p>
+        </div>
+        <div class="pillar">
+          <span class="pillar-num">03</span>
+          <h3>Community</h3>
+          <p>A collaborative environment where pre-med students support each other through the journey.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section offerings">
+  <div class="container">
+    <div class="section-label">What We Offer</div>
+    <h2 class="section-title">Everything you need<br>to <em>succeed</em>.</h2>
+    <div class="offerings-grid">
+      <a href="{{ $meetings.Permalink }}" class="offering-card">
+        <div class="offering-icon">◎</div>
+        <h3>Weekly Meetings</h3>
+        <p>Regular sessions covering MCAT content, strategy, and Q&A with our teaching assistants.</p>
+        <span class="card-link">View Schedule →</span>
+      </a>
+      <a href="{{ $resources.Permalink }}" class="offering-card">
+        <div class="offering-icon">◈</div>
+        <h3>Resource Library</h3>
+        <p>Shared study guides, notes, and links to the best MCAT preparation materials available.</p>
+        <span class="card-link">Browse Resources →</span>
+      </a>
+      <a href="{{ $leadership.Permalink }}" class="offering-card">
+        <div class="offering-icon">◇</div>
+        <h3>Mentorship</h3>
+        <p>Our leadership team offers one-on-one mentorship and guidance for your pre-med journey.</p>
+        <span class="card-link">Meet the Team →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="section cta-band">
+  <div class="container">
+    <div class="cta-inner">
+      <h2>Ready to start<br>preparing?</h2>
+      <a href="{{ $join.Permalink }}" class="btn btn-primary">Join M-CATS Today</a>
+    </div>
+  </div>
+</section>
+
+{{ end }}

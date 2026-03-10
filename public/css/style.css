@@ -1,0 +1,43 @@
+body {
+  margin:0;
+  font-family: "Playfair Display", serif;
+  color:white;
+
+  background:
+    radial-gradient(circle at top left, #ff9ec7, transparent),
+    radial-gradient(circle at bottom right, #6fb7ff, transparent),
+    linear-gradient(135deg,#ff8ecf,#6a9bff);
+
+  min-height:100vh;
+}
+
+.hero {
+  text-align:center;
+  padding:120px 20px;
+}
+
+.hero h1 {
+  font-size:4rem;
+  font-weight:600;
+  letter-spacing:1px;
+}
+
+.hero p {
+  font-size:1.4rem;
+  max-width:700px;
+  margin:auto;
+}
+
+.section {
+  padding:80px 20px;
+  text-align:center;
+}
+
+.card {
+  backdrop-filter: blur(8px);
+  background:rgba(255,255,255,0.08);
+  border-radius:16px;
+  padding:30px;
+  margin:20px;
+  display:inline-block;
+}

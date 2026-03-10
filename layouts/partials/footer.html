@@ -1,0 +1,14 @@
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="footer-logo">M-CATS</span>
+      <p>University of Kentucky</p>
+    </div>
+    <div class="footer-links">
+      {{ range .Site.Menus.main }}
+      <a href="{{ .URL | absURL }}">{{ .Name }}</a>
+      {{ end }}
+    </div>
+    <p class="footer-copy">© {{ now.Year }} The M-CATS at the University of Kentucky</p>
+  </div>
+</footer>

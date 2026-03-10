@@ -1,0 +1,32 @@
+baseURL = "https://themcats-uky.github.io/themcats-uky/"
+languageCode = "en-us"
+title = "The M-CATS | At the University of Kentucky"
+theme = ""
+
+[params]
+  description = "An academic community supporting students preparing for the MCAT."
+  tagline = "An academic community supporting students preparing for the MCAT."
+  groupme = "https://groupme.com"
+  discord = "https://discord.com"
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 1
+  [[menu.main]]
+    name = "Resources"
+    url = "/resources/"
+    weight = 2
+  [[menu.main]]
+    name = "Meetings"
+    url = "/meetings/"
+    weight = 3
+  [[menu.main]]
+    name = "Leadership"
+    url = "/leadership/"
+    weight = 4
+  [[menu.main]]
+    name = "Join"
+    url = "/join/"
+    weight = 5
