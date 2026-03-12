@@ -571,3 +571,94 @@ a  { color: inherit; text-decoration: none; }
   .cta-inner { flex-direction: column; text-align: center; }
   .leader-grid, .resource-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================
+   SHORTCODE CARDS
+   ============================ */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0 2.5rem;
+}
+
+.sc-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  text-decoration: none;
+  color: var(--ink);
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  position: relative;
+}
+
+.sc-card:hover {
+  box-shadow: 0 6px 24px rgba(107, 91, 138, 0.12);
+  transform: translateY(-2px);
+  border-color: rgba(107, 91, 138, 0.3);
+}
+
+.sc-card--download .sc-card-arrow {
+  color: #6b5b8a;
+  font-size: 1.1rem;
+}
+
+.sc-card-icon {
+  font-size: 1.3rem;
+  color: var(--violet);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.sc-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sc-card-tag {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6b5b8a;
+  background: rgba(107, 91, 138, 0.08);
+  padding: 0.2rem 0.55rem;
+  border-radius: 2px;
+  margin-bottom: 0.5rem;
+}
+
+.sc-card-body h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.sc-card-body p {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+.sc-card-arrow {
+  font-size: 0.9rem;
+  color: var(--indigo);
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  transition: transform 0.2s;
+}
+
+.sc-card:hover .sc-card-arrow {
+  transform: translateX(3px);
+}
+
+.sc-card--download:hover .sc-card-arrow {
+  transform: translateY(3px);
+}

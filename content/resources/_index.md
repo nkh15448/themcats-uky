@@ -1,52 +1,72 @@
 ---
 title: "Resources"
 subtitle: "Curated materials to guide your MCAT preparation."
+
+anki_decks:
+  - title: "AnKing Overhaul v12"
+    desc: "The gold-standard all-in-one MCAT deck. Covers every high-yield topic across all four sections."
+    tag: "All Sections"
+    href: "/decks/anking-v12.apkg"
+    download: "AnKing-v12.apkg"
+  - title: "Amino Acids & Biochem"
+    desc: "Structures, properties, and mnemonics for all 20 amino acids plus enzyme kinetics."
+    tag: "Biochemistry"
+    href: "/decks/biochem-amino-acids.apkg"
+    download: "Biochem-AminoAcids.apkg"
+  - title: "Psych/Soc Master Deck"
+    desc: "All Psychological, Social, and Biological Foundations terms, theories, and researchers."
+    tag: "Psych / Soc"
+    href: "/decks/psych-sociology.apkg"
+    download: "PsychSoc-Master.apkg"
+  - title: "Physics Equation Sheet"
+    desc: "Every equation you need for C/P with worked examples and unit analysis built in."
+    tag: "Chem & Physics"
+    href: "/decks/physics-equations.apkg"
+    download: "Physics-Equations.apkg"
+  - title: "Organic Chemistry Reactions"
+    desc: "Reaction mechanisms, reagents, and products for all high-yield orgo topics."
+    tag: "Organic Chemistry"
+    href: "/decks/orgo-reactions.apkg"
+    download: "Orgo-Reactions.apkg"
+  - title: "Biology Systems"
+    desc: "Organ systems, physiology, genetics, and microbiology high-yield facts."
+    tag: "Biology"
+    href: "/decks/biology-systems.apkg"
+    download: "Biology-Systems.apkg"
+
+study_guides:
+  - title: "Biology & Biochemistry Notes"
+    desc: "Comprehensive notes on amino acids, enzymes, cellular processes, and genetics."
+    tag: "Biology"
+    href: "https://drive.google.com"
+  - title: "Chemistry & Physics Notes"
+    desc: "Worked examples and formula sheets for gen chem, orgo, and physics."
+    tag: "Chem & Physics"
+    href: "https://drive.google.com"
+  - title: "Psych/Soc Guide"
+    desc: "Condensed guides for the Psych/Soc section with key terms and concepts."
+    tag: "Psych / Soc"
+    href: "https://drive.google.com"
+  - title: "CARS Strategy Guide"
+    desc: "Approach frameworks, timing strategies, and annotated practice passages."
+    tag: "CARS"
+    href: "https://drive.google.com"
+
+external:
+  - title: "AAMC Official Materials"
+    desc: "The official source. Full-length practice tests, question packs, and the Official Guide."
+    tag: "Official"
+    href: "https://students-residents.aamc.org/prepare-mcat-exam/prepare-mcat-exam"
+  - title: "Khan Academy MCAT"
+    desc: "Free, comprehensive video series covering every MCAT subject from scratch."
+    tag: "Free"
+    href: "https://www.khanacademy.org/test-prep/mcat"
+  - title: "Jack Westin CARS"
+    desc: "Free daily CARS passages with expert explanations. The best free CARS practice available."
+    tag: "CARS"
+    href: "https://jackwestin.com"
+  - title: "r/MCAT"
+    desc: "The largest MCAT community online. Score reports, study schedules, and advice."
+    tag: "Community"
+    href: "https://www.reddit.com/r/Mcat"
 ---
-
-## Study Materials
-
-Our members have compiled the following resources to help you prepare. All materials are shared via Google Drive and are free to access.
-
-<div class="resource-grid">
-  <div class="resource-card">
-    <h3>Biology & Biochemistry</h3>
-    <p>Comprehensive notes covering amino acids, enzymes, cellular processes, and genetics.</p>
-    <a href="#">View Notes →</a>
-  </div>
-  <div class="resource-card">
-    <h3>Chemistry & Physics</h3>
-    <p>Worked examples and formula sheets for general chemistry, organic chemistry, and physics.</p>
-    <a href="#">View Notes →</a>
-  </div>
-  <div class="resource-card">
-    <h3>Psychology & Sociology</h3>
-    <p>Condensed guides for the MCAT Psych/Soc section with key terms and concepts.</p>
-    <a href="#">View Notes →</a>
-  </div>
-  <div class="resource-card">
-    <h3>CARS Practice</h3>
-    <p>Recommended passages, timing strategies, and approach frameworks for CARS.</p>
-    <a href="#">View Notes →</a>
-  </div>
-  <div class="resource-card">
-    <h3>Full-Length Practice Tests</h3>
-    <p>Links to AAMC official materials and third-party practice exams with score analysis tips.</p>
-    <a href="#">View Resources →</a>
-  </div>
-  <div class="resource-card">
-    <h3>Shared Google Drive</h3>
-    <p>Access the full M-CATS shared drive with all member-contributed notes and guides.</p>
-    <a href="#">Open Drive →</a>
-  </div>
-</div>
-
-## Recommended External Resources
-
-- **AAMC Official Materials** — The gold standard for MCAT prep
-- **Khan Academy MCAT** — Free, comprehensive video series
-- **Anki Decks** — Community-verified flashcard decks for high-yield content
-- **Jack Westin** — Free CARS practice passages
-
-## Request a Resource
-
-Have a resource to share or a topic you'd like covered? Reach out to our leadership team or post in the Discord.
