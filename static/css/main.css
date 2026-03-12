@@ -21,13 +21,13 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
   font-family: var(--sans);
   color: var(--ink);
   background: #fff;
-  overflow-x: hidden;
+
   -webkit-font-smoothing: antialiased;
 }
 
@@ -661,4 +661,453 @@ a  { color: inherit; text-decoration: none; }
 
 .sc-card--download:hover .sc-card-arrow {
   transform: translateY(3px);
+}
+
+/* ============================
+   RESOURCE MODAL
+   ============================ */
+
+/* Make cards buttons that look like cards */
+button.sc-card {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+/* Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 15, 30, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Modal container */
+.modal {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  width: 100%;
+  max-width: 780px;
+  max-height: 90vh;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.3s ease;
+  position: relative;
+}
+
+.modal-backdrop.open .modal {
+  transform: translateY(0) scale(1);
+}
+
+/* Close button */
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  background: rgba(255,255,255,0.25);
+  border: none;
+  color: #fff;
+  font-size: 0.85rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.modal-close:hover { background: rgba(255,255,255,0.4); }
+
+/* Left gradient panel */
+.modal-left {
+  position: relative;
+  background: #e8e0f5;
+  display: flex;
+  align-items: flex-end;
+  padding: 2rem;
+  overflow: hidden;
+  transition: background 0.4s ease;
+}
+
+.modal-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  background-size: 200px;
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.modal-left-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.modal-tag {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  padding: 0.3rem 0.7rem;
+  border-radius: 2px;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.modal-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  color: rgba(255,255,255,0.6);
+  margin: 0;
+  font-family: var(--serif);
+}
+
+/* Right content panel */
+.modal-right {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.modal-right-inner {
+  flex: 1;
+  padding: 2.5rem 2.5rem 1.5rem;
+}
+
+.modal-title {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1.15;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+
+.modal-stats {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  margin-bottom: 1.5rem;
+}
+
+.modal-details {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 0;
+}
+
+.modal-actions {
+  padding: 1.5rem 2.5rem 2rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .modal {
+    grid-template-columns: 1fr;
+    grid-template-rows: 160px 1fr;
+    max-height: 95vh;
+  }
+  .modal-left { align-items: flex-start; padding: 1.5rem; }
+  .modal-right-inner { padding: 1.5rem 1.5rem 1rem; }
+  .modal-actions { padding: 1rem 1.5rem 1.5rem; }
+  .modal-close { background: rgba(255,255,255,0.3); color: #fff; }
+}
+
+/* ============================
+   MODAL ANIMATION
+   ============================ */
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-animating {
+  animation: modalBackdropIn 0.25s ease both;
+}
+
+.modal-animating > div {
+  animation: modalSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ============================
+   MEETINGS PAGE
+   ============================ */
+
+/* Color tokens per session type */
+.meet-color-pink   { --mc: rgba(240,160,190,0.9); --mc-soft: rgba(240,160,190,0.12); --mc-mid: rgba(240,160,190,0.4); --mc-text: #a04060; }
+.meet-color-blue   { --mc: rgba(120,170,230,0.9); --mc-soft: rgba(120,170,230,0.12); --mc-mid: rgba(120,170,230,0.4); --mc-text: #2a5a9a; }
+.meet-color-violet { --mc: rgba(175,140,220,0.9); --mc-soft: rgba(175,140,220,0.12); --mc-mid: rgba(175,140,220,0.4); --mc-text: #6040a0; }
+.meet-color-indigo { --mc: rgba(110,130,210,0.9); --mc-soft: rgba(110,130,210,0.12); --mc-mid: rgba(110,130,210,0.4); --mc-text: #303898; }
+
+/* ── Weekly rhythm cards ── */
+.meet-rhythm {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0 0;
+}
+
+.meet-rhythm-card {
+  position: relative;
+  border-radius: 6px;
+  padding: 2rem;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 140% 100% at 10% 10%, var(--mc) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 120% at 90% 90%, var(--mc-mid) 0%, transparent 55%),
+    #f5f0fa;
+}
+
+.meet-rhythm-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 200px;
+  pointer-events: none;
+}
+
+.meet-rhythm-day {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.meet-rhythm-time {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+
+.meet-rhythm-type {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mc-text);
+}
+
+.meet-rhythm-badge {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.6);
+  color: var(--muted);
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+}
+
+/* ── Upcoming session list ── */
+.meet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 1.5rem 0 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.meet-item {
+  display: grid;
+  grid-template-columns: 100px 4px 1fr;
+  align-items: stretch;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s;
+}
+
+.meet-item:last-child { border-bottom: none; }
+
+.meet-item:hover { background: #fdfaff; }
+
+.meet-item-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  background: var(--mc-soft);
+}
+
+.meet-item-day {
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.meet-item-weekday {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.meet-item-bar {
+  width: 4px;
+  background: var(--mc);
+  flex-shrink: 0;
+}
+
+.meet-item-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.meet-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.meet-item-type {
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mc-text);
+  background: var(--mc-soft);
+  padding: 0.2rem 0.55rem;
+  border-radius: 2px;
+}
+
+.meet-item-time {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.meet-item-title {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+  line-height: 1.3;
+}
+
+.meet-item-desc {
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Session type legend ── */
+.meet-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+}
+
+.meet-type-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border-radius: 4px;
+  background: var(--mc-soft);
+  border: 1px solid var(--mc-mid);
+}
+
+.meet-type-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mc);
+  flex-shrink: 0;
+  margin-top: 0.35rem;
+}
+
+.meet-type-card strong {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+}
+
+.meet-type-card p {
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ── Footer note ── */
+.meet-footer-note {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.meet-footer-note p {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.meet-footer-note a {
+  color: #6b5b8a;
+  border-bottom: 1px solid rgba(107,91,138,0.3);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .meet-item {
+    grid-template-columns: 75px 3px 1fr;
+  }
+  .meet-item-date { padding: 1rem 0.5rem; }
+  .meet-item-body { padding: 1rem; }
 }

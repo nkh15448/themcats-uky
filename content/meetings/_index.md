@@ -1,41 +1,105 @@
 ---
 title: "Meetings"
-subtitle: "Join us for weekly study sessions, topic reviews, and strategy discussions."
+subtitle: "Join us for weekly sessions, topic reviews, and strategy discussions."
+
+schedule:
+  - day: "Tuesday"
+    time: "6:00 PM"
+    location: "TBD"
+    type: "Topic Review"
+    color: "pink"
+    recurring: true
+  - day: "Thursday"
+    time: "7:00 PM"
+    location: "TBD"
+    type: "Peer Tutoring"
+    color: "blue"
+    recurring: true
+
+upcoming:
+  - date: "March 18"
+    weekday: "Tuesday"
+    time: "6:00 PM"
+    title: "Cardiovascular Physiology"
+    desc: "High-yield cardiac cycle, Frank-Starling, and pressure-volume loops."
+    type: "Topic Review"
+    color: "pink"
+    location: "Wethington 110"
+
+  - date: "March 20"
+    weekday: "Thursday"
+    time: "7:00 PM"
+    title: "Open Q&A — Biochemistry"
+    desc: "Bring your hardest biochem questions. TAs cover enzyme kinetics and metabolism."
+    type: "Peer Tutoring"
+    color: "blue"
+    location: "Wethington 110"
+
+  - date: "March 25"
+    weekday: "Tuesday"
+    time: "6:00 PM"
+    title: "Renal Physiology"
+    desc: "Nephron anatomy, filtration, reabsorption, and acid-base regulation."
+    type: "Topic Review"
+    color: "pink"
+    location: "Wethington 110"
+
+  - date: "March 27"
+    weekday: "Thursday"
+    time: "7:00 PM"
+    title: "CARS Strategy Workshop"
+    desc: "Active reading techniques, question elimination, and timed passage practice."
+    type: "Strategy"
+    color: "violet"
+    location: "Wethington 110"
+
+  - date: "April 1"
+    weekday: "Tuesday"
+    time: "6:00 PM"
+    title: "Immunology & Microbiology"
+    desc: "Innate vs adaptive immunity, antibody structure, and high-yield pathogens."
+    type: "Topic Review"
+    color: "pink"
+    location: "Wethington 110"
+
+  - date: "April 3"
+    weekday: "Thursday"
+    time: "7:00 PM"
+    title: "Full-Length Debrief Session"
+    desc: "Bring your latest practice test. We'll walk through question analysis together."
+    type: "Debrief"
+    color: "indigo"
+    location: "Wethington 110"
+
+  - date: "April 8"
+    weekday: "Tuesday"
+    time: "6:00 PM"
+    title: "Psych/Soc — Social Theories"
+    desc: "Sociological theories, identity, prejudice, and health disparities."
+    type: "Topic Review"
+    color: "pink"
+    location: "Wethington 110"
+
+  - date: "April 10"
+    weekday: "Thursday"
+    time: "7:00 PM"
+    title: "Open Tutoring"
+    desc: "Drop-in session. TAs available for any subject — no agenda, just questions."
+    type: "Peer Tutoring"
+    color: "blue"
+    location: "Wethington 110"
+
+session_types:
+  - name: "Topic Review"
+    desc: "Led by a TA, covering high-yield MCAT content with practice questions."
+    color: "pink"
+  - name: "Peer Tutoring"
+    desc: "Open Q&A with TAs. Bring your questions from any subject."
+    color: "blue"
+  - name: "Strategy"
+    desc: "Test-taking strategy, timing, and section-specific techniques."
+    color: "violet"
+  - name: "Debrief"
+    desc: "Full-length practice test analysis and score improvement planning."
+    color: "indigo"
 ---
-
-## Weekly Schedule
-
-Our meetings are held weekly throughout the semester and are open to all members. No prior registration is needed — just show up.
-
-| Day | Time | Format | Location |
-|-----|------|--------|----------|
-| Tuesday | 6:00 PM | Topic Review | TBD |
-| Thursday | 7:00 PM | Q&A / Peer Tutoring | TBD |
-
-*Locations are announced each week via GroupMe and Discord.*
-
-## What to Expect
-
-### Topic Review Sessions
-Each Tuesday we cover a specific MCAT subject area, led by one of our Teaching Assistants. Topics rotate on a semester schedule and include high-yield content summaries, practice questions, and open discussion.
-
-### Peer Tutoring Sessions
-Thursday sessions are more flexible. Bring your questions, practice problems, or full-length test debrief. Our TAs and officers are available for one-on-one guidance.
-
-### Strategy Seminars
-Periodically throughout the semester we host longer sessions focused on:
-- Test-day strategies and timing
-- Score analysis and improvement planning
-- Application advice and medical school Q&A
-
-## Calendar
-
-*Embed your Google Calendar below by replacing the src with your calendar's embed URL.*
-
-<div style="margin: 2rem 0; border: 1px solid var(--border); border-radius: 4px; overflow: hidden;">
-  <iframe src="https://calendar.google.com/calendar/embed?src=YOUR_CALENDAR_ID&ctz=America%2FNew_York" style="border:0; width:100%; height:500px;" frameborder="0" scrolling="no"></iframe>
-</div>
-
-## Stay Updated
-
-Meeting topics and any location changes are always announced in advance via GroupMe and Discord. [Join the community →](/join/)

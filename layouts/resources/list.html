@@ -12,10 +12,12 @@
   <div class="container">
 
     <h2>Anki Decks</h2>
-    <p>Community-vetted Anki decks our members rely on most. Click any card to download.</p>
+    <p>Community-vetted Anki decks our members rely on most. Click any card for details.</p>
     <div class="card-grid">
       {{ range .Params.anki_decks }}
-      <a href="{{ .href }}" class="sc-card sc-card--download" download="{{ .download }}">
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="{{ .title }}" data-tag="{{ .tag }}" data-details="{{ .details }}"
+              data-stats="{{ .stats }}" data-href="{{ .href }}" data-download="{{ .download }}" data-type="download">
         <div class="sc-card-icon">◈</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">{{ .tag }}</span>
@@ -23,7 +25,7 @@
           <p>{{ .desc }}</p>
         </div>
         <div class="sc-card-arrow">↓</div>
-      </a>
+      </button>
       {{ end }}
     </div>
 
@@ -31,7 +33,9 @@
     <p>Member-contributed notes organized by subject. All hosted on Google Drive.</p>
     <div class="card-grid">
       {{ range .Params.study_guides }}
-      <a href="{{ .href }}" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="{{ .title }}" data-tag="{{ .tag }}" data-details="{{ .details }}"
+              data-stats="{{ .stats }}" data-href="{{ .href }}" data-type="link">
         <div class="sc-card-icon">◇</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">{{ .tag }}</span>
@@ -39,14 +43,16 @@
           <p>{{ .desc }}</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       {{ end }}
     </div>
 
     <h2>External Resources</h2>
     <div class="card-grid">
       {{ range .Params.external }}
-      <a href="{{ .href }}" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="{{ .title }}" data-tag="{{ .tag }}" data-details="{{ .details }}"
+              data-stats="{{ .stats }}" data-href="{{ .href }}" data-type="link">
         <div class="sc-card-icon">◎</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">{{ .tag }}</span>
@@ -54,7 +60,7 @@
           <p>{{ .desc }}</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       {{ end }}
     </div>
 
@@ -63,4 +69,6 @@
 
   </div>
 </section>
+
+{{ partial "resource-modal.html" . }}
 {{ end }}
