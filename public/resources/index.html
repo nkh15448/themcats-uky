@@ -48,20 +48,24 @@
   <div class="container">
 
     <h2>Anki Decks</h2>
-    <p>Community-vetted Anki decks our members rely on most. Click any card to download.</p>
+    <p>Community-vetted Anki decks our members rely on most. Click any card for details.</p>
     <div class="card-grid">
       
-      <a href="//localhost:1313/decks/anking-v12.apkg" class="sc-card sc-card--download" download="AnKing-v12.apkg">
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="AnKing Overhaul v12" data-tag="All Sections" data-details="The AnKing Overhaul deck is widely considered the best all-in-one Anki resource for the MCAT. Built on top of the Zanki and Lightyear decks, it has been carefully curated and updated by medical students to cover every high-yield topic across all four MCAT sections. Cards are tagged by subject and AAMC learning objective, making it easy to study by topic or by exam section. Recommended for students at any stage of prep."
+              data-stats="~20,000 cards · All sections · Updated 2024" data-href="//localhost:1313/decks/anking-v12.apkg" data-download="AnKing-v12.apkg" data-type="download">
         <div class="sc-card-icon">◈</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">All Sections</span>
           <h3>AnKing Overhaul v12</h3>
-          <p>The gold-standard all-in-one MCAT deck. Covers every high-yield topic across all four sections.</p>
+          <p>The gold-standard all-in-one MCAT deck.</p>
         </div>
         <div class="sc-card-arrow">↓</div>
-      </a>
+      </button>
       
-      <a href="//localhost:1313/decks/biochem-amino-acids.apkg" class="sc-card sc-card--download" download="Biochem-AminoAcids.apkg">
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="Amino Acids &amp; Biochem" data-tag="Biochemistry" data-details="A focused deck covering all 20 amino acids including their structures, one- and three-letter codes, pKa values, classifications, and high-yield mnemonics. Also includes enzyme kinetics (Michaelis-Menten, inhibition types), cofactors, and metabolic pathways commonly tested on the MCAT. Great as a standalone biochemistry supplement."
+              data-stats="~800 cards · Biochemistry · B/B Section" data-href="//localhost:1313/decks/biochem-amino-acids.apkg" data-download="Biochem-AminoAcids.apkg" data-type="download">
         <div class="sc-card-icon">◈</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Biochemistry</span>
@@ -69,9 +73,11 @@
           <p>Structures, properties, and mnemonics for all 20 amino acids plus enzyme kinetics.</p>
         </div>
         <div class="sc-card-arrow">↓</div>
-      </a>
+      </button>
       
-      <a href="//localhost:1313/decks/psych-sociology.apkg" class="sc-card sc-card--download" download="PsychSoc-Master.apkg">
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="Psych/Soc Master Deck" data-tag="Psych / Soc" data-details="A comprehensive deck covering the entire MCAT Psych/Soc content outline. Includes key theorists and their contributions, psychological disorders, social psychology concepts, sociological theories, and research methods. Cards are organized by AAMC content category and include example applications to help you recognize concepts in passage context."
+              data-stats="~1,200 cards · Psych/Soc · P/S Section" data-href="//localhost:1313/decks/psych-sociology.apkg" data-download="PsychSoc-Master.apkg" data-type="download">
         <div class="sc-card-icon">◈</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Psych / Soc</span>
@@ -79,19 +85,23 @@
           <p>All Psychological, Social, and Biological Foundations terms, theories, and researchers.</p>
         </div>
         <div class="sc-card-arrow">↓</div>
-      </a>
+      </button>
       
-      <a href="//localhost:1313/decks/physics-equations.apkg" class="sc-card sc-card--download" download="Physics-Equations.apkg">
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="Physics Equation Sheet" data-tag="Chem &amp; Physics" data-details="A deck built around every physics equation tested on the MCAT. Each card presents an equation on the front with unit analysis, variable definitions, and a worked example on the back. Covers mechanics, electricity, circuits, waves, optics, and thermodynamics. Designed to complement content review — not replace it."
+              data-stats="~300 cards · Physics · C/P Section" data-href="//localhost:1313/decks/physics-equations.apkg" data-download="Physics-Equations.apkg" data-type="download">
         <div class="sc-card-icon">◈</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Chem &amp; Physics</span>
           <h3>Physics Equation Sheet</h3>
-          <p>Every equation you need for C/P with worked examples and unit analysis built in.</p>
+          <p>Every equation you need for C/P with worked examples and unit analysis.</p>
         </div>
         <div class="sc-card-arrow">↓</div>
-      </a>
+      </button>
       
-      <a href="//localhost:1313/decks/orgo-reactions.apkg" class="sc-card sc-card--download" download="Orgo-Reactions.apkg">
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="Organic Chemistry Reactions" data-tag="Organic Chemistry" data-details="Covers all organic chemistry reactions that appear on the MCAT, including substitution, elimination, addition, and oxidation-reduction reactions. Each card shows the starting material and reagents on the front, with the product, mechanism type, and key notes on the back. Focuses on MCAT-relevant reactions only — no unnecessary synthesis chains."
+              data-stats="~500 cards · Orgo · C/P Section" data-href="//localhost:1313/decks/orgo-reactions.apkg" data-download="Orgo-Reactions.apkg" data-type="download">
         <div class="sc-card-icon">◈</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Organic Chemistry</span>
@@ -99,9 +109,11 @@
           <p>Reaction mechanisms, reagents, and products for all high-yield orgo topics.</p>
         </div>
         <div class="sc-card-arrow">↓</div>
-      </a>
+      </button>
       
-      <a href="//localhost:1313/decks/biology-systems.apkg" class="sc-card sc-card--download" download="Biology-Systems.apkg">
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="Biology Systems" data-tag="Biology" data-details="A high-yield biology deck covering organ system physiology (cardiovascular, respiratory, renal, endocrine, immune, and more), genetics and molecular biology, and microbiology. Cards emphasize mechanisms and clinical correlations — the kind of integrated thinking the MCAT rewards. Pairs well with the AnKing deck as a focused supplement."
+              data-stats="~1,500 cards · Biology · B/B Section" data-href="//localhost:1313/decks/biology-systems.apkg" data-download="Biology-Systems.apkg" data-type="download">
         <div class="sc-card-icon">◈</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Biology</span>
@@ -109,7 +121,7 @@
           <p>Organ systems, physiology, genetics, and microbiology high-yield facts.</p>
         </div>
         <div class="sc-card-arrow">↓</div>
-      </a>
+      </button>
       
     </div>
 
@@ -117,7 +129,9 @@
     <p>Member-contributed notes organized by subject. All hosted on Google Drive.</p>
     <div class="card-grid">
       
-      <a href="https://drive.google.com" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="Biology &amp; Biochemistry Notes" data-tag="Biology" data-details="Member-written notes covering the full B/B section content outline. Includes detailed diagrams of metabolic pathways, enzyme regulation, cellular signaling, DNA replication and repair, and genetics. Written to complement standard content review books with additional clarity and mnemonics from students who have sat the MCAT."
+              data-stats="Google Drive · PDF · Updated Fall 2024" data-href="https://drive.google.com" data-type="link">
         <div class="sc-card-icon">◇</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Biology</span>
@@ -125,9 +139,11 @@
           <p>Comprehensive notes on amino acids, enzymes, cellular processes, and genetics.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
-      <a href="https://drive.google.com" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="Chemistry &amp; Physics Notes" data-tag="Chem &amp; Physics" data-details="Condensed notes for the C/P section covering general chemistry (equilibrium, thermodynamics, electrochemistry), organic chemistry (functional groups, reactions, spectroscopy), and physics (mechanics, electricity, waves). Each topic includes a summary of key concepts, relevant equations, and worked MCAT-style practice problems."
+              data-stats="Google Drive · PDF · Updated Fall 2024" data-href="https://drive.google.com" data-type="link">
         <div class="sc-card-icon">◇</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Chem &amp; Physics</span>
@@ -135,9 +151,11 @@
           <p>Worked examples and formula sheets for gen chem, orgo, and physics.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
-      <a href="https://drive.google.com" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="Psych/Soc Guide" data-tag="Psych / Soc" data-details="A streamlined reference guide for the P/S section. Organized by AAMC content category, this guide lists key terms, theorists, and concepts with brief definitions and context. Designed to be used as a quick review tool in the final weeks of prep rather than a primary content source."
+              data-stats="Google Drive · PDF · Updated Fall 2024" data-href="https://drive.google.com" data-type="link">
         <div class="sc-card-icon">◇</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Psych / Soc</span>
@@ -145,9 +163,11 @@
           <p>Condensed guides for the Psych/Soc section with key terms and concepts.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
-      <a href="https://drive.google.com" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="CARS Strategy Guide" data-tag="CARS" data-details="A guide to approaching the CARS section systematically. Covers active reading strategies, question type identification, elimination techniques, and timing management. Includes annotated practice passages showing how to identify the main argument, tone, and structure of different passage types. Written by M-CATS members who scored 127&#43; on CARS."
+              data-stats="Google Drive · PDF · Updated Fall 2024" data-href="https://drive.google.com" data-type="link">
         <div class="sc-card-icon">◇</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">CARS</span>
@@ -155,52 +175,60 @@
           <p>Approach frameworks, timing strategies, and annotated practice passages.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
     </div>
 
     <h2>External Resources</h2>
     <div class="card-grid">
       
-      <a href="https://students-residents.aamc.org/prepare-mcat-exam/prepare-mcat-exam" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="AAMC Official Materials" data-tag="Official" data-details="The AAMC produces the MCAT, and their official practice materials are the closest thing to the real exam. The bundle includes full-length practice tests, question packs organized by section, the Official Guide to the MCAT, and the Section Bank. These should be saved for the final weeks of prep when your content review is complete."
+              data-stats="Paid · aamc.org · Most representative of real exam" data-href="https://students-residents.aamc.org/prepare-mcat-exam/prepare-mcat-exam" data-type="link">
         <div class="sc-card-icon">◎</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Official</span>
           <h3>AAMC Official Materials</h3>
-          <p>The official source. Full-length practice tests, question packs, and the Official Guide.</p>
+          <p>The official source for MCAT practice.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
-      <a href="https://www.khanacademy.org/test-prep/mcat" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="Khan Academy MCAT" data-tag="Free" data-details="Khan Academy&#39;s MCAT prep series was developed in partnership with the AAMC and covers the entire content outline for free. Videos are organized by subject and include practice questions. Particularly useful for building foundational understanding in subjects where you have content gaps. Best used early in prep alongside a content review book."
+              data-stats="Free · khanacademy.org · Developed with AAMC" data-href="https://www.khanacademy.org/test-prep/mcat" data-type="link">
         <div class="sc-card-icon">◎</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Free</span>
           <h3>Khan Academy MCAT</h3>
-          <p>Free, comprehensive video series covering every MCAT subject from scratch.</p>
+          <p>Free, comprehensive video series covering every MCAT subject.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
-      <a href="https://jackwestin.com" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="Jack Westin CARS" data-tag="CARS" data-details="Jack Westin offers a free daily CARS passage delivered to your inbox, along with a large library of practice passages on his website. Each passage comes with detailed explanations for every answer choice. Consistent daily CARS practice is one of the most effective ways to improve your score on this section, and Jack Westin makes that easy and free."
+              data-stats="Free · jackwestin.com · Daily practice passages" data-href="https://jackwestin.com" data-type="link">
         <div class="sc-card-icon">◎</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">CARS</span>
           <h3>Jack Westin CARS</h3>
-          <p>Free daily CARS passages with expert explanations. The best free CARS practice available.</p>
+          <p>Free daily CARS passages with expert explanations.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
-      <a href="https://www.reddit.com/r/Mcat" class="sc-card" target="_blank" rel="noopener">
+      <button class="sc-card" onclick="openResourceModal(this)"
+              data-title="r/MCAT" data-tag="Community" data-details="The r/MCAT subreddit is one of the most active communities for MCAT preppers. You&#39;ll find score reports, study schedules, resource recommendations, and support from others going through the same process. The wiki is particularly valuable and contains a curated list of top resources organized by section. Use it for community support — not as a substitute for structured study."
+              data-stats="Free · reddit.com/r/mcat · 200k&#43; members" data-href="https://www.reddit.com/r/Mcat" data-type="link">
         <div class="sc-card-icon">◎</div>
         <div class="sc-card-body">
           <span class="sc-card-tag">Community</span>
           <h3>r/MCAT</h3>
-          <p>The largest MCAT community online. Score reports, study schedules, and advice.</p>
+          <p>The largest MCAT community online.</p>
         </div>
         <div class="sc-card-arrow">→</div>
-      </a>
+      </button>
       
     </div>
 
@@ -209,6 +237,113 @@
 
   </div>
 </section>
+
+<div id="resourceModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; align-items:center; justify-content:center; padding:1.5rem; background:rgba(20,15,30,0.6); backdrop-filter:blur(6px);">
+  <div id="modalInner" style="display:grid; grid-template-columns:260px 1fr; width:100%; max-width:760px; max-height:88vh; border-radius:8px; overflow:hidden; background:#fff; box-shadow:0 24px 80px rgba(0,0,0,0.3); position:relative;">
+    <button onclick="closeResourceModal()" style="position:absolute; top:0.85rem; right:0.85rem; z-index:10; background:rgba(255,255,255,0.25); border:none; color:#fff; font-size:0.9rem; width:2rem; height:2rem; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+    <div id="modalLeft" style="position:relative; display:flex; align-items:flex-end; padding:2rem; overflow:hidden; transition:background 0.4s;">
+      <div style="position:absolute; inset:0; background-image:url('data:image/svg+xml,%3Csvg viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.07\'/%3E%3C/svg%3E'); background-size:200px; opacity:0.55; mix-blend-mode:multiply; pointer-events:none;"></div>
+      <div style="position:relative; z-index:1;">
+        <span id="modalTag" style="display:block; font-size:0.62rem; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.2); padding:0.3rem 0.7rem; border-radius:2px; margin-bottom:1rem;"></span>
+        <p id="modalIcon" style="font-size:3rem; margin:0; color:rgba(255,255,255,0.55);"></p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; overflow-y:auto;">
+      <div style="flex:1; padding:2.5rem 2.5rem 1.5rem;">
+        <h2 id="modalTitle" style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.8rem; font-weight:500; line-height:1.15; color:#1a1520; margin-bottom:0.75rem;"></h2>
+        <p id="modalStats" style="font-size:0.7rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#8ea8d8; margin-bottom:1.5rem;"></p>
+        <p id="modalDetails" style="font-size:0.95rem; line-height:1.8; color:#5a5060; margin:0;"></p>
+      </div>
+      <div style="padding:1.5rem 2.5rem 2rem; border-top:1px solid rgba(90,80,96,0.15); display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+        <a id="modalBtn" href="#" class="btn btn-primary">Open Resource</a>
+        <button onclick="closeResourceModal()" class="btn btn-ghost">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _palettes = [
+  'radial-gradient(ellipse 120% 80% at 20% 30%, rgba(240,160,190,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 80% 80%, rgba(150,180,240,0.85) 0%, transparent 60%), #e0d8f0',
+  'radial-gradient(ellipse 120% 80% at 80% 20%, rgba(150,200,245,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 20% 80%, rgba(185,155,225,0.85) 0%, transparent 60%), #d8e4f0',
+  'radial-gradient(ellipse 120% 80% at 50% 10%, rgba(196,174,224,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 50% 90%, rgba(240,184,200,0.85) 0%, transparent 60%), #ead8f0',
+  'radial-gradient(ellipse 120% 80% at 10% 70%, rgba(142,168,216,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 90% 30%, rgba(240,160,190,0.85) 0%, transparent 60%), #d8e0f0',
+];
+var _pi = 0;
+
+function openResourceModal(card) {
+  var modal = document.getElementById('resourceModal');
+  var inner = document.getElementById('modalInner');
+  var type  = card.dataset.type;
+
+  document.getElementById('modalTitle').textContent   = card.dataset.title;
+  document.getElementById('modalTag').textContent     = card.dataset.tag;
+  document.getElementById('modalIcon').textContent    = type === 'download' ? '◈' : (type === 'link' ? '◎' : '◇');
+  document.getElementById('modalDetails').textContent = card.dataset.details;
+  document.getElementById('modalStats').textContent   = card.dataset.stats;
+  document.getElementById('modalLeft').style.background = _palettes[_pi % _palettes.length];
+  _pi++;
+
+  var btn = document.getElementById('modalBtn');
+  btn.href = card.dataset.href;
+  if (type === 'download') {
+    btn.textContent = '↓ Download Deck';
+    btn.setAttribute('download', card.dataset.download);
+    btn.removeAttribute('target');
+  } else {
+    btn.textContent = 'Open Resource →';
+    btn.setAttribute('target', '_blank');
+    btn.removeAttribute('download');
+  }
+
+  
+  modal.style.display = 'flex';
+  modal.style.opacity = '0';
+  inner.style.opacity = '0';
+  inner.style.transform = 'translateY(28px) scale(0.97)';
+
+  
+  modal.offsetHeight;
+
+  modal.style.transition = 'opacity 0.25s ease';
+  inner.style.transition = 'opacity 0.3s cubic-bezier(0.22,1,0.36,1), transform 0.3s cubic-bezier(0.22,1,0.36,1)';
+  modal.style.opacity = '1';
+  inner.style.opacity = '1';
+  inner.style.transform = 'translateY(0) scale(1)';
+
+  document.body.style.overflow = 'hidden';
+}
+
+function closeResourceModal() {
+  var modal = document.getElementById('resourceModal');
+  var inner = document.getElementById('modalInner');
+
+  modal.style.transition = 'opacity 0.2s ease';
+  inner.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+  modal.style.opacity = '0';
+  inner.style.opacity = '0';
+  inner.style.transform = 'translateY(12px) scale(0.98)';
+
+  setTimeout(function() {
+    modal.style.display = 'none';
+    modal.style.opacity = '';
+    inner.style.opacity = '';
+    inner.style.transform = '';
+    inner.style.transition = '';
+    modal.style.transition = '';
+    document.body.style.overflow = '';
+  }, 200);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeResourceModal();
+});
+
+document.getElementById('resourceModal').addEventListener('click', function(e) {
+  if (e.target === this) closeResourceModal();
+});
+</script>
+
 
   </main>
   <footer class="site-footer">

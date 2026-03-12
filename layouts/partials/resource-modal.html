@@ -1,0 +1,105 @@
+<div id="resourceModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; align-items:center; justify-content:center; padding:1.5rem; background:rgba(20,15,30,0.6); backdrop-filter:blur(6px);">
+  <div id="modalInner" style="display:grid; grid-template-columns:260px 1fr; width:100%; max-width:760px; max-height:88vh; border-radius:8px; overflow:hidden; background:#fff; box-shadow:0 24px 80px rgba(0,0,0,0.3); position:relative;">
+    <button onclick="closeResourceModal()" style="position:absolute; top:0.85rem; right:0.85rem; z-index:10; background:rgba(255,255,255,0.25); border:none; color:#fff; font-size:0.9rem; width:2rem; height:2rem; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+    <div id="modalLeft" style="position:relative; display:flex; align-items:flex-end; padding:2rem; overflow:hidden; transition:background 0.4s;">
+      <div style="position:absolute; inset:0; background-image:url('data:image/svg+xml,%3Csvg viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\' opacity=\'0.07\'/%3E%3C/svg%3E'); background-size:200px; opacity:0.55; mix-blend-mode:multiply; pointer-events:none;"></div>
+      <div style="position:relative; z-index:1;">
+        <span id="modalTag" style="display:block; font-size:0.62rem; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.9); background:rgba(255,255,255,0.2); padding:0.3rem 0.7rem; border-radius:2px; margin-bottom:1rem;"></span>
+        <p id="modalIcon" style="font-size:3rem; margin:0; color:rgba(255,255,255,0.55);"></p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; overflow-y:auto;">
+      <div style="flex:1; padding:2.5rem 2.5rem 1.5rem;">
+        <h2 id="modalTitle" style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.8rem; font-weight:500; line-height:1.15; color:#1a1520; margin-bottom:0.75rem;"></h2>
+        <p id="modalStats" style="font-size:0.7rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:#8ea8d8; margin-bottom:1.5rem;"></p>
+        <p id="modalDetails" style="font-size:0.95rem; line-height:1.8; color:#5a5060; margin:0;"></p>
+      </div>
+      <div style="padding:1.5rem 2.5rem 2rem; border-top:1px solid rgba(90,80,96,0.15); display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+        <a id="modalBtn" href="#" class="btn btn-primary">Open Resource</a>
+        <button onclick="closeResourceModal()" class="btn btn-ghost">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var _palettes = [
+  'radial-gradient(ellipse 120% 80% at 20% 30%, rgba(240,160,190,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 80% 80%, rgba(150,180,240,0.85) 0%, transparent 60%), #e0d8f0',
+  'radial-gradient(ellipse 120% 80% at 80% 20%, rgba(150,200,245,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 20% 80%, rgba(185,155,225,0.85) 0%, transparent 60%), #d8e4f0',
+  'radial-gradient(ellipse 120% 80% at 50% 10%, rgba(196,174,224,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 50% 90%, rgba(240,184,200,0.85) 0%, transparent 60%), #ead8f0',
+  'radial-gradient(ellipse 120% 80% at 10% 70%, rgba(142,168,216,0.95) 0%, transparent 60%), radial-gradient(ellipse 100% 100% at 90% 30%, rgba(240,160,190,0.85) 0%, transparent 60%), #d8e0f0',
+];
+var _pi = 0;
+
+function openResourceModal(card) {
+  var modal = document.getElementById('resourceModal');
+  var inner = document.getElementById('modalInner');
+  var type  = card.dataset.type;
+
+  document.getElementById('modalTitle').textContent   = card.dataset.title;
+  document.getElementById('modalTag').textContent     = card.dataset.tag;
+  document.getElementById('modalIcon').textContent    = type === 'download' ? '◈' : (type === 'link' ? '◎' : '◇');
+  document.getElementById('modalDetails').textContent = card.dataset.details;
+  document.getElementById('modalStats').textContent   = card.dataset.stats;
+  document.getElementById('modalLeft').style.background = _palettes[_pi % _palettes.length];
+  _pi++;
+
+  var btn = document.getElementById('modalBtn');
+  btn.href = card.dataset.href;
+  if (type === 'download') {
+    btn.textContent = '↓ Download Deck';
+    btn.setAttribute('download', card.dataset.download);
+    btn.removeAttribute('target');
+  } else {
+    btn.textContent = 'Open Resource →';
+    btn.setAttribute('target', '_blank');
+    btn.removeAttribute('download');
+  }
+
+  // Show and animate
+  modal.style.display = 'flex';
+  modal.style.opacity = '0';
+  inner.style.opacity = '0';
+  inner.style.transform = 'translateY(28px) scale(0.97)';
+
+  // Force reflow so transition applies
+  modal.offsetHeight;
+
+  modal.style.transition = 'opacity 0.25s ease';
+  inner.style.transition = 'opacity 0.3s cubic-bezier(0.22,1,0.36,1), transform 0.3s cubic-bezier(0.22,1,0.36,1)';
+  modal.style.opacity = '1';
+  inner.style.opacity = '1';
+  inner.style.transform = 'translateY(0) scale(1)';
+
+  document.body.style.overflow = 'hidden';
+}
+
+function closeResourceModal() {
+  var modal = document.getElementById('resourceModal');
+  var inner = document.getElementById('modalInner');
+
+  modal.style.transition = 'opacity 0.2s ease';
+  inner.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+  modal.style.opacity = '0';
+  inner.style.opacity = '0';
+  inner.style.transform = 'translateY(12px) scale(0.98)';
+
+  setTimeout(function() {
+    modal.style.display = 'none';
+    modal.style.opacity = '';
+    inner.style.opacity = '';
+    inner.style.transform = '';
+    inner.style.transition = '';
+    modal.style.transition = '';
+    document.body.style.overflow = '';
+  }, 200);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeResourceModal();
+});
+
+document.getElementById('resourceModal').addEventListener('click', function(e) {
+  if (e.target === this) closeResourceModal();
+});
+</script>

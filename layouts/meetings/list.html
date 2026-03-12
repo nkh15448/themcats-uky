@@ -1,0 +1,110 @@
+{{ define "main" }}
+
+{{ $colors := dict
+  "pink"   (dict
+    "grad"    "radial-gradient(ellipse 140% 100% at 10% 10%, rgba(240,160,190,0.9) 0%, transparent 60%), radial-gradient(ellipse 100% 120% at 90% 90%, rgba(240,160,190,0.45) 0%, transparent 55%), #f7f0f5"
+    "fadebg"  "linear-gradient(to left, rgba(240,160,190,0.22) 0%, transparent 100%)"
+    "fade"    "rgba(240,160,190,0.13)"
+    "bar"     "rgba(230,120,160,1)"
+    "tag"     "#a04060"
+    "dot"     "rgba(230,120,160,1)"
+    "border"  "rgba(230,120,160,0.35)")
+  "blue"   (dict
+    "grad"    "radial-gradient(ellipse 140% 100% at 10% 10%, rgba(120,170,230,0.9) 0%, transparent 60%), radial-gradient(ellipse 100% 120% at 90% 90%, rgba(120,170,230,0.45) 0%, transparent 55%), #f0f3fa"
+    "fadebg"  "linear-gradient(to left, rgba(120,170,230,0.22) 0%, transparent 100%)"
+    "fade"    "rgba(120,170,230,0.13)"
+    "bar"     "rgba(90,145,220,1)"
+    "tag"     "#2a5a9a"
+    "dot"     "rgba(90,145,220,1)"
+    "border"  "rgba(90,145,220,0.35)")
+  "violet" (dict
+    "grad"    "radial-gradient(ellipse 140% 100% at 10% 10%, rgba(175,140,220,0.9) 0%, transparent 60%), radial-gradient(ellipse 100% 120% at 90% 90%, rgba(175,140,220,0.45) 0%, transparent 55%), #f3f0fa"
+    "fadebg"  "linear-gradient(to left, rgba(175,140,220,0.22) 0%, transparent 100%)"
+    "fade"    "rgba(175,140,220,0.13)"
+    "bar"     "rgba(150,110,205,1)"
+    "tag"     "#6040a0"
+    "dot"     "rgba(150,110,205,1)"
+    "border"  "rgba(150,110,205,0.35)")
+  "indigo" (dict
+    "grad"    "radial-gradient(ellipse 140% 100% at 10% 10%, rgba(110,130,210,0.9) 0%, transparent 60%), radial-gradient(ellipse 100% 120% at 90% 90%, rgba(110,130,210,0.45) 0%, transparent 55%), #f0f1fa"
+    "fadebg"  "linear-gradient(to left, rgba(110,130,210,0.22) 0%, transparent 100%)"
+    "fade"    "rgba(110,130,210,0.13)"
+    "bar"     "rgba(80,105,200,1)"
+    "tag"     "#303898"
+    "dot"     "rgba(80,105,200,1)"
+    "border"  "rgba(80,105,200,0.35)")
+}}
+
+<div class="page-hero">
+  <div class="grain"></div>
+  <div class="container">
+    <div class="section-label">Meetings</div>
+    <h1 class="page-title">Meetings</h1>
+    <p class="page-subtitle">{{ .Params.subtitle }}</p>
+  </div>
+</div>
+
+<section class="page-content">
+  <div class="container">
+
+    <!-- Weekly Rhythm -->
+    <div class="section-label">Weekly Schedule</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.25rem; margin:1.5rem 0 0;">
+      {{ range .Params.schedule }}{{ $c := index $colors .color }}
+      <div style="border-radius:8px; padding:2rem 2rem 1.75rem; background:{{ index $c "grad" | safeCSS }}; border:1px solid {{ index $c "border" | safeCSS }}; position:relative; overflow:hidden;">
+        <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:2.4rem; font-weight:500; color:#1a1520; line-height:1; margin-bottom:0.5rem;">{{ .day }}</div>
+        <div style="font-size:0.8rem; letter-spacing:0.06em; color:#5a5060; margin-bottom:0.7rem;">{{ .time }}</div>
+        <div style="font-size:0.68rem; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:{{ index $c "tag" | safeCSS }};">{{ .type }}</div>
+        {{ if .recurring }}<div style="display:inline-block; margin-top:1.1rem; font-size:0.6rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; background:rgba(255,255,255,0.6); color:#5a5060; padding:0.25rem 0.75rem; border-radius:99px;">Weekly</div>{{ end }}
+      </div>
+      {{ end }}
+    </div>
+
+    <!-- Upcoming Sessions -->
+    <div class="section-label" style="margin-top:3.5rem;">Upcoming Sessions</div>
+    <div style="display:flex; flex-direction:column; border:1px solid rgba(90,80,96,0.15); border-radius:8px; overflow:hidden; margin:1.5rem 0 0;">
+      {{ range .Params.upcoming }}{{ $c := index $colors .color }}
+      <div style="display:grid; grid-template-columns:88px 4px 1fr; border-bottom:1px solid rgba(90,80,96,0.12); position:relative; background:#fff; overflow:hidden;">
+        <!-- Right fade overlay -->
+        <div style="position:absolute; top:0; right:0; bottom:0; width:260px; background:{{ index $c "fadebg" | safeCSS }}; pointer-events:none; z-index:1;"></div>
+        <!-- Date -->
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1.5rem 0.5rem; text-align:center; background:{{ index $c "fade" | safeCSS }}; position:relative; z-index:2;">
+          <span style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1rem; font-weight:500; color:#1a1520; line-height:1.3;">{{ .date }}</span>
+          <span style="font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:#5a5060; margin-top:0.3rem;">{{ .weekday }}</span>
+        </div>
+        <!-- Color bar -->
+        <div style="background:{{ index $c "bar" | safeCSS }}; position:relative; z-index:2;"></div>
+        <!-- Content -->
+        <div style="padding:1.25rem 1.5rem; position:relative; z-index:2;">
+          <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:0.45rem; flex-wrap:wrap;">
+            <span style="font-size:0.6rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; color:{{ index $c "tag" | safeCSS }}; background:{{ index $c "fade" | safeCSS }}; padding:0.2rem 0.55rem; border-radius:2px; border:1px solid {{ index $c "border" | safeCSS }};">{{ .type }}</span>
+            <span style="font-size:0.72rem; color:#5a5060;">{{ .time }} · {{ .location }}</span>
+          </div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.15rem; font-weight:500; color:#1a1520; margin-bottom:0.3rem; line-height:1.3;">{{ .title }}</div>
+          <p style="font-size:0.84rem; color:#5a5060; line-height:1.65; margin:0;">{{ .desc }}</p>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+
+    <!-- Session Type Legend -->
+    <div class="section-label" style="margin-top:3.5rem;">Session Types</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:1rem; margin:1.5rem 0 0;">
+      {{ range .Params.session_types }}{{ $c := index $colors .color }}
+      <div style="display:flex; align-items:flex-start; gap:0.85rem; padding:1.25rem; border-radius:6px; background:{{ index $c "fade" | safeCSS }}; border:1px solid {{ index $c "border" | safeCSS }};">
+        <div style="width:9px; height:9px; border-radius:50%; background:{{ index $c "dot" | safeCSS }}; flex-shrink:0; margin-top:0.35rem;"></div>
+        <div>
+          <div style="font-size:0.82rem; font-weight:500; color:#1a1520; margin-bottom:0.3rem;">{{ .name }}</div>
+          <p style="font-size:0.78rem; line-height:1.55; color:#5a5060; margin:0;">{{ .desc }}</p>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+
+    <div style="margin-top:3rem; padding-top:1.5rem; border-top:1px solid rgba(90,80,96,0.15);">
+      <p style="font-size:0.85rem; color:#5a5060;">Locations confirmed each week via GroupMe and Discord. <a href="/join/" style="color:#6b5b8a; border-bottom:1px solid rgba(107,91,138,0.3);">Join the community →</a></p>
+    </div>
+
+  </div>
+</section>
+{{ end }}
