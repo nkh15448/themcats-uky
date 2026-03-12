@@ -30,6 +30,11 @@ canonifyURLs = true
     name = "Join"
     url = "/join/"
     weight = 5
+  [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 6
+
 
 [markup]
   [markup.goldmark]
