@@ -1,0 +1,66 @@
+{{ define "main" }}
+<div class="page-hero">
+  <div class="grain"></div>
+  <div class="container">
+    <div class="section-label">Resources</div>
+    <h1 class="page-title">Resources</h1>
+    <p class="page-subtitle">Curated materials to guide your MCAT preparation.</p>
+  </div>
+</div>
+
+<section class="page-content">
+  <div class="container">
+
+    <h2>Anki Decks</h2>
+    <p>Community-vetted Anki decks our members rely on most. Click any card to download.</p>
+    <div class="card-grid">
+      {{ range .Params.anki_decks }}
+      <a href="{{ .href }}" class="sc-card sc-card--download" download="{{ .download }}">
+        <div class="sc-card-icon">◈</div>
+        <div class="sc-card-body">
+          <span class="sc-card-tag">{{ .tag }}</span>
+          <h3>{{ .title }}</h3>
+          <p>{{ .desc }}</p>
+        </div>
+        <div class="sc-card-arrow">↓</div>
+      </a>
+      {{ end }}
+    </div>
+
+    <h2>Study Guides &amp; Notes</h2>
+    <p>Member-contributed notes organized by subject. All hosted on Google Drive.</p>
+    <div class="card-grid">
+      {{ range .Params.study_guides }}
+      <a href="{{ .href }}" class="sc-card" target="_blank" rel="noopener">
+        <div class="sc-card-icon">◇</div>
+        <div class="sc-card-body">
+          <span class="sc-card-tag">{{ .tag }}</span>
+          <h3>{{ .title }}</h3>
+          <p>{{ .desc }}</p>
+        </div>
+        <div class="sc-card-arrow">→</div>
+      </a>
+      {{ end }}
+    </div>
+
+    <h2>External Resources</h2>
+    <div class="card-grid">
+      {{ range .Params.external }}
+      <a href="{{ .href }}" class="sc-card" target="_blank" rel="noopener">
+        <div class="sc-card-icon">◎</div>
+        <div class="sc-card-body">
+          <span class="sc-card-tag">{{ .tag }}</span>
+          <h3>{{ .title }}</h3>
+          <p>{{ .desc }}</p>
+        </div>
+        <div class="sc-card-arrow">→</div>
+      </a>
+      {{ end }}
+    </div>
+
+    <hr>
+    <p><em>Have a resource to contribute? Share it in the Discord and we'll add it here.</em></p>
+
+  </div>
+</section>
+{{ end }}

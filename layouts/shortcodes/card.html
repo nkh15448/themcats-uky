@@ -1,0 +1,19 @@
+{{ $href     := .Get "href" }}
+{{ $title    := .Get "title" }}
+{{ $desc     := .Get "desc" }}
+{{ $icon     := .Get "icon"    | default "◈" }}
+{{ $tag      := .Get "tag" }}
+{{ $download := .Get "download" | default "" }}
+{{ $last     := .Get "last"    | default "" }}
+
+<a href="{{ $href }}"
+   class="sc-card{{ if $download }} sc-card--download{{ end }}"
+   {{ if $download }}download="{{ $download }}"{{ end }}>
+  <div class="sc-card-icon">{{ $icon }}</div>
+  <div class="sc-card-body">
+    {{ with $tag }}<span class="sc-card-tag">{{ . }}</span>{{ end }}
+    <h3>{{ $title }}</h3>
+    <p>{{ $desc }}</p>
+  </div>
+  <div class="sc-card-arrow">{{ if $download }}↓{{ else }}→{{ end }}</div>
+</a>

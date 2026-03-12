@@ -1,6 +1,7 @@
-baseURL = "https://themcats-uky.github.io/themcats-uky/"
+baseURL = "/"
 languageCode = "en-us"
-title = "The M-CATS | At the University of Kentucky"
+title = "The M-CATS | University of Kentucky"
+canonifyURLs = true
 
 [params]
   description = "An academic community supporting students preparing for the MCAT."
@@ -29,3 +30,8 @@ title = "The M-CATS | At the University of Kentucky"
     name = "Join"
     url = "/join/"
     weight = 5
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true

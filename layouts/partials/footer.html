@@ -6,7 +6,7 @@
     </div>
     <div class="footer-links">
       {{ range .Site.Menus.main }}
-      <a href="{{ .URL | absURL }}">{{ .Name }}</a>
+        <a href="{{ .URL }}">{{ .Name }}</a>
       {{ end }}
     </div>
     <p class="footer-copy">© {{ now.Year }} The M-CATS at the University of Kentucky</p>

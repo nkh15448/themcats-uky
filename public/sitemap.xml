@@ -2,18 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/themcats-uky/categories/</loc>
+    <loc>//localhost:1313/categories/</loc>
   </url><url>
-    <loc>http://localhost:1313/themcats-uky/</loc>
+    <loc>//localhost:1313/</loc>
   </url><url>
-    <loc>http://localhost:1313/themcats-uky/join/</loc>
+    <loc>//localhost:1313/join/</loc>
   </url><url>
-    <loc>http://localhost:1313/themcats-uky/leadership/</loc>
+    <loc>//localhost:1313/leadership/</loc>
   </url><url>
-    <loc>http://localhost:1313/themcats-uky/meetings/</loc>
+    <loc>//localhost:1313/meetings/</loc>
   </url><url>
-    <loc>http://localhost:1313/themcats-uky/resources/</loc>
+    <loc>//localhost:1313/resources/</loc>
   </url><url>
-    <loc>http://localhost:1313/themcats-uky/tags/</loc>
+    <loc>//localhost:1313/tags/</loc>
   </url>
 </urlset>
