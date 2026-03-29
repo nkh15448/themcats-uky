@@ -8,20 +8,14 @@ Membership is free and open to all University of Kentucky students interested in
 ## How to Join
 
 1. **Join the GroupMe** — Our primary channel for meeting announcements, reminders, and quick updates.
-2. **Join the Discord** — Our community server for discussions, resource sharing, and connecting with other members.
-3. **Sign the interest form** — Add yourself to our mailing list to receive semester updates and event invites.
+2. **Join the BBNvolved** — This is still a WIP, we expect to have a running page by the beginning of the second week of April 2026. 
 4. **Show up** — Attend any meeting to get started. No registration required.
 
 <div class="join-links">
-  <a href="https://groupme.com" class="btn btn-primary" target="_blank">Join GroupMe</a>
-  <a href="https://discord.com" class="btn btn-ghost" target="_blank">Join Discord</a>
+  <a href="https://groupme.com/join_group/113607612/J0DBPuPV" class="btn btn-primary" target="_blank">Join GroupMe</a>
+  <a href="" class="btn btn-ghost" target="_blank">Join BBNvolved</a>
 </div>
 
-## Interest Form
-
-*Replace the link below with your Google Form URL.*
-
-<a href="https://forms.google.com" class="btn btn-ghost" target="_blank">Sign the Interest Form →</a>
 
 ## What to Expect as a Member
 
@@ -29,7 +23,8 @@ Membership is free and open to all University of Kentucky students interested in
 - Access to the shared resource drive
 - Direct access to TAs and leadership for questions
 - A community of peers all working toward the same goal
+- As a member you can get exclusive access to discount codes to one of the best resources for the MCAT: UWorld
 
 ## Questions?
 
-Reach out via the Discord or contact leadership directly. We're happy to help.
+Reach out via the Groupme or contact leadership directly (emails are in the Leadership section!). We're happy to help!

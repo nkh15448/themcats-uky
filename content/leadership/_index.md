@@ -7,13 +7,13 @@ Our leadership team is made up of dedicated pre-medical students who have naviga
 
 <div class="leader-grid">
   <div class="leader-card">
-    <div class="leader-role">President</div>
-    <h3>Name Here</h3>
-    <p>Major, Year. MCAT strengths and mentorship focus.</p>
+    <div class="leader-role">President & Founder</div>
+    <h3>Nikhil Kumar</h3>
+    <p>Hello! I am a sophomore, Biochemistry and Pure Matehmatics dual major with a minor in Italian! I am strong in B/B, C/P, P/S, and am fine at CARS :D</p>
   </div>
   <div class="leader-card">
     <div class="leader-role">Vice President</div>
-    <h3>Name Here</h3>
+    <h3>Anmol Nayak</h3>
     <p>Major, Year. MCAT strengths and mentorship focus.</p>
   </div>
   <div class="leader-card">

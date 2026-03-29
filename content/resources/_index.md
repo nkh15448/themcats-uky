@@ -1,8 +1,21 @@
 ---
 title: "Resources"
 subtitle: "Curated materials to guide your MCAT preparation."
-
 anki_decks:
+  - title: "The Jacksparrow deck"
+    desc: "A high-quality comphrehensive deck for all subjects"
+    tag: "All Sections"
+    href: "https://drive.google.com/file/d/1NFWIVwMGuj1TF0kC0kZc6Ve2JCexw0pX/view?usp=sharing"
+    details: "A reddit user u/jacksparrow2048 created this deck when they were going through all of the kaplan books for the MCAT. It is much more comprehensive than the Milesdown or AnKing decks. However the formatting of some of the cards can be frustrating and may need to be tailored as you go through the deck. Although this isn't a huge hurdle, it is something to note. Many of Jack's cards are formatted with little context on the front and a lot of answer on the back, in scenarios like this you can either simplify the back or split the card into multiple cards. For advice, ask someone on the leadership board!"
+    stats: "6,398 cards · All sections"
+
+
+  - title: "The Milesdown Deck"
+    desc: "A well formatted digestible high-yield all-in-one MCAT deck."
+    tag: "All Sections"
+    href: ""
+    details: "This deck was made by a reddit user and has been updated frequently and formatted significantly. It is very digestible to go through and is organized by the Kaplan chapters. Furthermore it makes generous use of cloze deletions and covers all of the high-yield content of the MCAT. It doesn't have too much low yield content. If you are considering using this one in your studies, please talk to someone on the leadership board before you start!"
+
   - title: "AnKing Overhaul v12"
     desc: "The gold-standard all-in-one MCAT deck."
     tag: "All Sections"
@@ -109,3 +122,17 @@ external:
     details: "The r/MCAT subreddit is one of the most active communities for MCAT preppers. You'll find score reports, study schedules, resource recommendations, and support from others going through the same process. The wiki is particularly valuable and contains a curated list of top resources organized by section. Use it for community support — not as a substitute for structured study."
     stats: "Free · reddit.com/r/mcat · 200k+ members"
 ---
+
+
+
+<!-- Ok so decks to include?
+
+We can't include the anking deck since it is copyrighted, we may be able ot include the milesdown instead. Should include:
+
+- Jacksparrow
+- Pankow
+= Aiden
+- Biochemistry deck
+- formual
+
+-->

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Resources — The M-CATS | University of Kentucky</title>
-  <meta name="description" content="An academic community supporting students preparing for the MCAT." />
+  <meta name="description" content="An academic community supporting students preparing for the MCAT completely for free." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
@@ -29,6 +29,8 @@
       
         <li><a href="//localhost:1313/join/" class="">Join</a></li>
       
+        <li><a href="//localhost:1313/about/" class="">About</a></li>
+      
     </ul>
   </nav>
 </header>
@@ -50,6 +52,30 @@
     <h2>Anki Decks</h2>
     <p>Community-vetted Anki decks our members rely on most. Click any card for details.</p>
     <div class="card-grid">
+      
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="The Jacksparrow deck" data-tag="All Sections" data-details="A reddit user u/jacksparrow2048 created this deck when they were going through all of the kaplan books for the MCAT. It is much more comprehensive than the Milesdown or AnKing decks. However the formatting of some of the cards can be frustrating and may need to be tailored as you go through the deck. Although this isn&#39;t a huge hurdle, it is something to note. Many of Jack&#39;s cards are formatted with little context on the front and a lot of answer on the back, in scenarios like this you can either simplify the back or split the card into multiple cards. For advice, ask someone on the leadership board!"
+              data-stats="6,398 cards · All sections" data-href="https://drive.google.com/file/d/1NFWIVwMGuj1TF0kC0kZc6Ve2JCexw0pX/view?usp=sharing" data-download="" data-type="download">
+        <div class="sc-card-icon">◈</div>
+        <div class="sc-card-body">
+          <span class="sc-card-tag">All Sections</span>
+          <h3>The Jacksparrow deck</h3>
+          <p>A high-quality comphrehensive deck for all subjects</p>
+        </div>
+        <div class="sc-card-arrow">↓</div>
+      </button>
+      
+      <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
+              data-title="The Milesdown Deck" data-tag="All Sections" data-details="This deck was made by a reddit user and has been updated frequently and formatted significantly. It is very digestible to go through and is organized by the Kaplan chapters. Furthermore it makes generous use of cloze deletions and covers all of the high-yield content of the MCAT. It doesn&#39;t have too much low yield content. If you are considering using this one in your studies, please talk to someone on the leadership board before you start!"
+              data-stats="" data-href="" data-download="" data-type="download">
+        <div class="sc-card-icon">◈</div>
+        <div class="sc-card-body">
+          <span class="sc-card-tag">All Sections</span>
+          <h3>The Milesdown Deck</h3>
+          <p>A well formatted digestible high-yield all-in-one MCAT deck.</p>
+        </div>
+        <div class="sc-card-arrow">↓</div>
+      </button>
       
       <button class="sc-card sc-card--download" onclick="openResourceModal(this)"
               data-title="AnKing Overhaul v12" data-tag="All Sections" data-details="The AnKing Overhaul deck is widely considered the best all-in-one Anki resource for the MCAT. Built on top of the Zanki and Lightyear decks, it has been carefully curated and updated by medical students to cover every high-yield topic across all four MCAT sections. Cards are tagged by subject and AAMC learning objective, making it easy to study by topic or by exam section. Recommended for students at any stage of prep."
@@ -363,6 +389,8 @@ document.getElementById('resourceModal').addEventListener('click', function(e) {
         <a href="//localhost:1313/leadership/">Leadership</a>
       
         <a href="//localhost:1313/join/">Join</a>
+      
+        <a href="//localhost:1313/about/">About</a>
       
     </div>
     <p class="footer-copy">© 2026 The M-CATS at the University of Kentucky</p>

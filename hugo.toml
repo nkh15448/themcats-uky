@@ -4,8 +4,8 @@ title = "The M-CATS | University of Kentucky"
 canonifyURLs = true
 
 [params]
-  description = "An academic community supporting students preparing for the MCAT."
-  tagline = "An academic community supporting students preparing for the MCAT."
+  description = "An academic community supporting students preparing for the MCAT completely for free."
+  tagline = "An academic community supporting students preparing for the MCAT completely for free."
   groupme = "https://groupme.com"
   discord = "https://discord.com"
 
@@ -30,6 +30,11 @@ canonifyURLs = true
     name = "Join"
     url = "/join/"
     weight = 5
+  [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 6
+
 
 [markup]
   [markup.goldmark]
