@@ -13,7 +13,7 @@ Membership is free and open to all University of Kentucky students interested in
 
 <div class="join-links">
   <a href="https://groupme.com/join_group/113607612/J0DBPuPV" class="btn btn-primary" target="_blank">Join GroupMe</a>
-  <a href="" class="btn btn-ghost" target="_blank">Join BBNvolved</a>
+  <a href="https://uky.campuslabs.com/engage/organization/themcats" class="btn btn-primary" target="_blank">Join BBNvolved</a>
 </div>
 
 
