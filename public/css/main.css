@@ -1111,3 +1111,62 @@ button.sc-card {
   .meet-item-date { padding: 1rem 0.5rem; }
   .meet-item-body { padding: 1rem; }
 }
+
+
+/* ============================
+   PAST MEETINGS — RESOURCE BUTTONS
+   ============================ */
+
+.meet-resource-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.9rem;
+  font-family: var(--sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.meet-resource-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(107, 91, 138, 0.15);
+}
+
+/* Recording — warm rose-tinted pill */
+.meet-resource-btn--recording {
+  background: rgba(230, 120, 160, 0.1);
+  color: #a04060;
+  border-color: rgba(230, 120, 160, 0.35);
+}
+
+.meet-resource-btn--recording:hover {
+  background: rgba(230, 120, 160, 0.18);
+  border-color: rgba(230, 120, 160, 0.55);
+}
+
+/* Slides — cool indigo-tinted pill */
+.meet-resource-btn--slides {
+  background: rgba(110, 130, 210, 0.1);
+  color: #303898;
+  border-color: rgba(110, 130, 210, 0.3);
+}
+
+.meet-resource-btn--slides:hover {
+  background: rgba(110, 130, 210, 0.18);
+  border-color: rgba(110, 130, 210, 0.5);
+}
+
+.meet-resource-btn-icon {
+  font-size: 0.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+

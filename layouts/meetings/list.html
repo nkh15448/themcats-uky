@@ -45,52 +45,38 @@
 </div>
 
 <section class="page-content">
-<section class="page-content">
-  <div class="container">
-   
-    <p style="font-size:0.78rem; line-height:1.55; color:#5a5060; margin:0;">
-        We often go back and forth on the exact programming of the meetings. For right now we are performing online peer tutoring until the 2026 academic year where we plan on doing in person office hours along with a kaplan lecture/group practice series. More information will come about that soon for now please see the bookings page to schedule a meeting with one of us to discuss about your MCAT, questions about content, practice--really anything MCAT related! 
-
-        <br>
-      <a href="https://bookings.cloud.microsoft/book/TheMCATSPeerTutoring-Bookings@l.uky.edu/?ismsaljsauthenabled" class="btn btn-primary">Bookings Page        </a>
-
-  </div>
-</section>
-
-
-
-
-
   <div class="container">
 
-    <!-- Weekly Rhythm -->
+    <p style="font-size:0.78rem; line-height:1.55; color:#5a5060; margin:0 0 1.5rem;">
+      We often go back and forth on the exact programming of the meetings. For right now we are performing online peer tutoring until the 2026 academic year where we plan on doing in person office hours along with a kaplan lecture/group practice series. More information will come about that soon — for now please see the bookings page to schedule a meeting with one of us.
+    </p>
+    <a href="https://bookings.cloud.microsoft/book/TheMCATSPeerTutoring-Bookings@l.uky.edu/?ismsaljsauthenabled" class="btn btn-primary" style="margin-bottom:3rem; display:inline-block;">Bookings Page</a>
+
+    <!-- ── Weekly Schedule ── -->
     <div class="section-label">Weekly Schedule</div>
     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1.25rem; margin:1.5rem 0 0;">
       {{ range .Params.schedule }}{{ $c := index $colors .color }}
       <div style="border-radius:8px; padding:2rem 2rem 1.75rem; background:{{ index $c "grad" | safeCSS }}; border:1px solid {{ index $c "border" | safeCSS }}; position:relative; overflow:hidden;">
         <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:2.4rem; font-weight:500; color:#1a1520; line-height:1; margin-bottom:0.5rem;">{{ .day }}</div>
-        <div style="font-size:0.8rem; letter-spacing:0.06em; color:#5a5060; margin-bottom:0.7rem;">{{ .time }}  |  {{ .location}}</div>
+        <div style="font-size:0.8rem; letter-spacing:0.06em; color:#5a5060; margin-bottom:0.7rem;">{{ .time }}  |  {{ .location }}</div>
         <div style="font-size:0.68rem; font-weight:500; letter-spacing:0.16em; text-transform:uppercase; color:{{ index $c "tag" | safeCSS }};">{{ .type }}</div>
         {{ if .recurring }}<div style="display:inline-block; margin-top:1.1rem; font-size:0.6rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; background:rgba(255,255,255,0.6); color:#5a5060; padding:0.25rem 0.75rem; border-radius:99px;">Weekly</div>{{ end }}
       </div>
       {{ end }}
     </div>
 
-    <!-- Upcoming Sessions -->
+    <!-- ── Upcoming Sessions ── -->
+    {{ if .Params.upcoming }}
     <div class="section-label" style="margin-top:3.5rem;">Upcoming Sessions</div>
     <div style="display:flex; flex-direction:column; border:1px solid rgba(90,80,96,0.15); border-radius:8px; overflow:hidden; margin:1.5rem 0 0;">
       {{ range .Params.upcoming }}{{ $c := index $colors .color }}
       <div style="display:grid; grid-template-columns:88px 4px 1fr; border-bottom:1px solid rgba(90,80,96,0.12); position:relative; background:#fff; overflow:hidden;">
-        <!-- Right fade overlay -->
         <div style="position:absolute; top:0; right:0; bottom:0; width:260px; background:{{ index $c "fadebg" | safeCSS }}; pointer-events:none; z-index:1;"></div>
-        <!-- Date -->
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1.5rem 0.5rem; text-align:center; background:{{ index $c "fade" | safeCSS }}; position:relative; z-index:2;">
           <span style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1rem; font-weight:500; color:#1a1520; line-height:1.3;">{{ .date }}</span>
           <span style="font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:#5a5060; margin-top:0.3rem;">{{ .weekday }}</span>
         </div>
-        <!-- Color bar -->
         <div style="background:{{ index $c "bar" | safeCSS }}; position:relative; z-index:2;"></div>
-        <!-- Content -->
         <div style="padding:1.25rem 1.5rem; position:relative; z-index:2;">
           <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:0.45rem; flex-wrap:wrap;">
             <span style="font-size:0.6rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; color:{{ index $c "tag" | safeCSS }}; background:{{ index $c "fade" | safeCSS }}; padding:0.2rem 0.55rem; border-radius:2px; border:1px solid {{ index $c "border" | safeCSS }};">{{ .type }}</span>
@@ -102,8 +88,56 @@
       </div>
       {{ end }}
     </div>
+    {{ end }}
 
-    <!-- Session Type Legend -->
+    <!-- ── Past Sessions ── -->
+    {{ if .Params.past }}
+    <div class="section-label" style="margin-top:3.5rem;">Past Sessions</div>
+    <p style="font-size:0.85rem; color:#5a5060; margin-bottom:1.5rem; max-width:560px;">Missed a session? Watch the recording or download the slides below.</p>
+    <div style="display:flex; flex-direction:column; border:1px solid rgba(90,80,96,0.15); border-radius:8px; overflow:hidden; margin-top:0;">
+      {{ range .Params.past }}{{ $c := index $colors .color }}
+      <div class="past-meet-row" style="display:grid; grid-template-columns:88px 4px 1fr; border-bottom:1px solid rgba(90,80,96,0.10); position:relative; background:#fdfcff; overflow:hidden;">
+        <!-- Subtle right fade -->
+        <div style="position:absolute; top:0; right:0; bottom:0; width:200px; background:{{ index $c "fadebg" | safeCSS }}; pointer-events:none; z-index:1; opacity:0.5;"></div>
+        <!-- Date — slightly muted to signal "past" -->
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1.5rem 0.5rem; text-align:center; background:{{ index $c "fade" | safeCSS }}; opacity:0.75; position:relative; z-index:2;">
+          <span style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1rem; font-weight:500; color:#1a1520; line-height:1.3;">{{ .date }}</span>
+          <span style="font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:#5a5060; margin-top:0.3rem;">{{ .weekday }}</span>
+        </div>
+        <!-- Color bar — desaturated for past -->
+        <div style="background:{{ index $c "bar" | safeCSS }}; opacity:0.45; position:relative; z-index:2;"></div>
+        <!-- Content -->
+        <div style="padding:1.1rem 1.5rem; position:relative; z-index:2;">
+          <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:0.4rem; flex-wrap:wrap;">
+            <span style="font-size:0.6rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; color:{{ index $c "tag" | safeCSS }}; background:{{ index $c "fade" | safeCSS }}; padding:0.2rem 0.55rem; border-radius:2px; border:1px solid {{ index $c "border" | safeCSS }};">{{ .type }}</span>
+            <span style="font-size:0.72rem; color:#5a5060;">{{ .time }} · {{ .location }}</span>
+          </div>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; font-weight:500; color:#1a1520; margin-bottom:0.3rem; line-height:1.3;">{{ .title }}</div>
+          <p style="font-size:0.82rem; color:#5a5060; line-height:1.6; margin:0 0 0.85rem;">{{ .desc }}</p>
+          <!-- Recording + Slides buttons -->
+          {{ if or .recording .slides }}
+          <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+            {{ if .recording }}
+            <a href="{{ .recording }}" target="_blank" rel="noopener" class="meet-resource-btn meet-resource-btn--recording">
+              <span class="meet-resource-btn-icon">▶</span> Recording
+            </a>
+            {{ end }}
+            {{ if .slides }}
+            <a href="{{ .slides }}" target="_blank" rel="noopener" class="meet-resource-btn meet-resource-btn--slides">
+              <span class="meet-resource-btn-icon">◧</span> Slides
+            </a>
+            {{ end }}
+          </div>
+          {{ else }}
+          <p style="font-size:0.72rem; color:#9a90a0; font-style:italic; margin:0;">No recording available</p>
+          {{ end }}
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ end }}
+
+    <!-- ── Session Type Legend ── -->
     <div class="section-label" style="margin-top:3.5rem;">Session Types</div>
     <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:1rem; margin:1.5rem 0 0;">
       {{ range .Params.session_types }}{{ $c := index $colors .color }}

@@ -18,14 +18,23 @@ schedule:
     recurring: false 
 
 upcoming:
+
+# ── Past meetings ──────────────────────────────────────────────
+# To move an upcoming meeting here, cut it from `upcoming:` and
+# paste it under `past:`. Then optionally add `recording` and/or
+# `slides` URLs. Both fields are optional — just omit or leave blank.
+past:
+
   - date: "April 15"
     weekday: "Wednesday"
-    time: "4:00 PM "
+    time: "4:00 PM"
     title: "General Interest Meeting"
     desc: "In this meeting we will be introducing the club to its members, talking about the logistics, and discussing the plans for the club for now and for the future."
     type: "General Meeting"
     color: "pink"
     location: "JSB 321"
+    recording: "https://youtu.be/wN1Q1jDAa1Y"
+    slides: "https://docs.google.com/presentation/d/1w5Tgl59JrcW-eGBIrLrfdl1O2c64esCzGt1XALfjLhk/edit?usp=sharing"
 
   - date: "April 16"
     weekday: "Thursday"
@@ -35,6 +44,8 @@ upcoming:
     type: "Peer Tutoring"
     color: "pink"
     location: "JSB 121"
+    recording: "https://youtu.be/wN1Q1jDAa1Y"
+    slides: "https://docs.google.com/presentation/d/1w5Tgl59JrcW-eGBIrLrfdl1O2c64esCzGt1XALfjLhk/edit?usp=sharing"
 
 
 session_types:
