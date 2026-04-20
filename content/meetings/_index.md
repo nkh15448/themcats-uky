@@ -40,7 +40,7 @@ past:
     weekday: "Thursday"
     time: "7:00 PM"
     title: "General Interest Meeting"
-    desc: "Bring your hardest biochem questions. TAs cover enzyme kinetics and metabolism."
+    desc: "In this meeting we will be introducing the club to its members, talking about the logistics, and discussing the plans for the club for now and for the future."
     type: "Peer Tutoring"
     color: "pink"
     location: "JSB 121"
