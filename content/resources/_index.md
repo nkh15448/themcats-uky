@@ -2,12 +2,13 @@
 title: "Resources"
 subtitle: "Curated materials to guide your MCAT preparation."
 anki_decks:
-  - title: "The Jacksparrow deck"
-    desc: "A high-quality comphrehensive deck for all subjects"
+
+  - title: "The Captain Hook deck V2"
+    desc: "A high-quality comphrehensive deck for all subjects. Based off the Jacksparrow deck but with better formatting!"
     tag: "All Sections"
-    href: "https://drive.google.com/file/d/1NFWIVwMGuj1TF0kC0kZc6Ve2JCexw0pX/view?usp=sharing"
-    details: "A reddit user u/jacksparrow2048 created this deck when they were going through all of the kaplan books for the MCAT. It is much more comprehensive than the Milesdown or AnKing decks. However the formatting of some of the cards can be frustrating and may need to be tailored as you go through the deck. Although this isn't a huge hurdle, it is something to note. Many of Jack's cards are formatted with little context on the front and a lot of answer on the back, in scenarios like this you can either simplify the back or split the card into multiple cards. For advice, ask someone on the leadership board!"
-    stats: "6,398 cards · All sections"
+    href: "https://drive.google.com/file/d/14ZUvw22dNdhYZKVEvDNygCnwcjOV1rn3/view?usp=sharing"
+    details: "This is deck is a reformatted verions of the deck created by u/jacksparrow2048. Within it is all the same content as jacksparrow but the many formatting errors of jacksparrow. Thus it is a good happy medium between the more comprehensive jacksparrow deck and the great formatting of the anking deck. Furthermore, there is now extra notes, formulae, and links to khan academy videos covering the content of the card. In the original deck it included the Pankow deck for P/S, however we here at the M-CATS decided to exclude it as it is not as well formatted as the version linked in our resources page."
+    stats: "4,747 cards · All sections"
 
 
   - title: "The Milesdown Deck"
@@ -26,6 +27,12 @@ anki_decks:
     details: "This deck was made by a reddit user named Pankow. He made this deck specifically to cover the P/S section basing it off the formatting of the Khan Academy P/S portion. It is a very well made deck with well written cards and ... funny memes :D. Match this deck with the Khan Academy course and the Khan Academy 300 or 86 page document." 
     stats: "~ 2,681 cards · P/S"
 
+  - title: "The Jacksparrow deck"
+    desc: "A high-quality comphrehensive deck for all subjects"
+    tag: "All Sections"
+    href: "https://drive.google.com/file/d/1NFWIVwMGuj1TF0kC0kZc6Ve2JCexw0pX/view?usp=sharing"
+    details: "A reddit user u/jacksparrow2048 created this deck when they were going through all of the kaplan books for the MCAT. It is much more comprehensive than the Milesdown or AnKing decks. However the formatting of some of the cards can be frustrating and may need to be tailored as you go through the deck. Although this isn't a huge hurdle, it is something to note. Many of Jack's cards are formatted with little context on the front and a lot of answer on the back, in scenarios like this you can either simplify the back or split the card into multiple cards. For advice, ask someone on the leadership board!"
+    stats: "6,398 cards · All sections"
 
   - title: "The Aidan Deck"
     desc: "The MOST comprehensive deck, it is very good but has to be approached correctly!"
@@ -53,6 +60,15 @@ anki_decks:
 
 
 study_guides:
+
+  - title: "Planning Excel Sheet"
+    desc: "A planner to layout your MCAT studying plan. If you want help planning out your study plan, schedule a tutoring session with us!"
+    tag: "Planner"
+    href: "/handouts/Plan.xlsx"
+    download: "MCAT_Planner_The_MCATS_UK_051826.xlsx"
+    details: "Going into this exam prep with a plan will set you up for success. I found it easiest to use a planner like this one to easily make my plan and change it as things go according to and against the plan. Feel free to use this planner as a template and change it according to your timeline. If you are having trouble doing this, or your situation is different, or just want someone else's input in general, feel free to set up a meeting with one of us and we can help create a custom plan just for you!! :D"
+    stats: "Excel · Planner"
+
   - title: "Biochemisty Metabolism Map"
     desc: "A comprehensive metabolism map that can be used for review!"
     tag: "Biochemistry"
@@ -122,13 +138,6 @@ study_guides:
 
 
 external:
-
-
-
-
-
-
-
   - title: "AAMC Official Materials"
     desc: "The official source for MCAT practice."
     tag: "Official"
