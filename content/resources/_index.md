@@ -136,6 +136,12 @@ study_guides:
     details: "This was made by the reddit user u/augiram and it was based off a condensed version of the 300 Pg Doc and then further condensed and organized to a staggering 86 pages. This was mentioned in the description of the 300 Pg Doc but whether you use this one or the other doesn't truly matter. As long as you couple these handouts with the actual videos and the anki cards (we recommend the Pankow deck) then using this one versus the 300 pg one won't change too much."
     stats: "PDF · P/S · Psych / Soc"
 
+  - title: "AAMC Unscored FL Score Community Converter"
+    desc: "AAMC doesn't provide a score conversion for the unscored full length. Reddit does. :) "
+    tag: "Misc"
+    href: "https://docs.google.com/spreadsheets/d/1R6xwXsnPagtjfAyf9qW61J7tMOuxLNMkHLrM0YwP1vI/edit?usp=sharing"
+    details: "The AAMC offers two free full length exams. One of them will convert your score to the final standard 528 scale. The other will tell you what you got right and wrong but does not convert it to the 528 scale. Since the conversion is based off user data a bunch of people from reddit created their own converter that is SCARILY accurate. Thus feel free to compare how much you got correct to convert to the 528 scale!"
+    stats: "EXCEL · Misc"
 
 external:
   - title: "AAMC Official Materials"
