@@ -43,12 +43,12 @@ Our leadership team is made up of dedicated pre-medical students who have naviga
     <div class="leader-role">Officer</div>
     <h3>Nihal Jacobs</h3>
     <p>
-            <strong>Year: </strong>Junior<br>
-            <strong>Major(s): </strong>Biochemistry & Spanish <br>
-            <strong>Minor(s): </strong> - <br>
-            <strong>Fav (MCAT) Subjects: </strong> Chemistry, P/S, and CARS<br>
-            <strong>Hobbies: </strong> Roller Skating & Hiking <br>
-            <strong>Fav Food(s): </strong> Pineapple Curry <br> </p>
+            <strong>Year: </strong>Freshman<br>
+            <strong>Major(s): </strong>Neuroscience & Mathematics <br>
+            <strong>Minor(s): </strong> Physics, Pharmacology, & Microbiology <br>
+            <strong>Fav (MCAT) Subjects: </strong> Chemistry<br>
+            <strong>Hobbies: </strong> Rock Climbing <br>
+            <strong>Fav Food(s): </strong> Marie Calendar's Chicken Pot Pies <br> </p>
   </div>
 
   <div class="leader-card">
