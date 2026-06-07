@@ -52,10 +52,10 @@ jobs:
         env:
           HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
           HUGO_ENVIRONMENT: production
-        run: |
-          hugo \
-            --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+run: |
+  hugo \
+    --minify \
+    --baseURL "https://themcats.org/"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
