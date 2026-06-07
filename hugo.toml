@@ -1,4 +1,4 @@
-baseURL = "/"
+baseURL = "https://themcats.org/"
 languageCode = "en-us"
 title = "The M-CATS | University of Kentucky"
 canonifyURLs = true
