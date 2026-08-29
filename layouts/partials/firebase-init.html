@@ -1,0 +1,45 @@
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, collection, getDocs, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyAHh1mnoKaSnISMv7pTfZ4BNGvzXdi6UaI",
+
+  authDomain: "the-m-cats.firebaseapp.com",
+
+  projectId: "the-m-cats",
+
+  storageBucket: "the-m-cats.firebasestorage.app",
+
+  messagingSenderId: "273956409630",
+
+  appId: "1:273956409630:web:5ad453893f0c996098b90f",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function loadMeetings() {
+    const el = document.getElementById("meetings");
+    if (!el) return;
+
+    const q = query(collection(db, "meetings"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    el.innerHTML = "";
+    snapshot.forEach((doc) => {
+      const m = doc.data();
+      el.insertAdjacentHTML("beforeend", `
+        <div class="meeting-card">
+          <h3>${m.title}</h3>
+          <p>${m.date} · ${m.time}</p>
+          <p>${m.location}</p>
+          <p>${m.description}</p>
+        </div>
+      `);
+    });
+  }
+
+  loadMeetings();
+</script>

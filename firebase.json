@@ -1,0 +1,16 @@
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "The M-CATs at The University of Kentucky",
+        "supportEmail": "themcatsatuk@gmail.com"
+      }
+    }
+  }
+}
