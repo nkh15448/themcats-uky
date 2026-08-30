@@ -4,9 +4,9 @@
   --navy:   #000435;
   --cream:  #f0e3d0;
 
-  --bodoni-moda: 'Bodoni Moda', bodoni-moda;
+  --bodoni-moda: 'Bodoni Moda', serif;
   --noto-serif: 'Noto Serif', serif;
-  --montserrat: 'Montserrat', montserrat-serif;
+  --montserrat: 'Montserrat', sans-serif;
 
   --max-w: 1100px;
   --gap:   clamp(2rem, 5vw, 5rem);
@@ -27,8 +27,8 @@
   --muted:   #5a5060;
   --border:  rgba(90, 80, 96, 0.15);
 
-  --bodoni-moda: 'Cormorant Garamond', Georgia, bodoni-moda;
-  --montserrat:  'Jost', system-ui, montserrat-bodoni-moda;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --sans:  'Jost', system-ui, sans-serif;
 
   --max-w: 1100px;
   --gap:   clamp(2rem, 5vw, 5rem);
