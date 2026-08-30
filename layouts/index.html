@@ -19,8 +19,33 @@
 {{ $leadership := .Site.GetPage "/leadership" }}
 {{ $about      := .Site.GetPage "/about" }}
 
+
+
+
+
+
+<!-- THIS IS NEW HUMAN CODE :D -->
+
 <section class="hero">
-  <div class="grain"></div>
+  <div class="hero-inner">
+    <h1 class="hero-title"><em>the</em><br>M-CATs</h1>
+    <p class="hero-tagline">{{ .Site.Params.tagline }}</p>
+    <p class="hero-eyebrow">At the University of Kentucky</p>
+    <div class="hero-cta">
+      <a href="{{ $join.Permalink }}" class="btn btn-primary">Join the Community</a>
+      <a href="{{ $resources.Permalink }}" class="btn btn-ghost">Explore Resources</a>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">scroll</div>
+</section>
+
+
+
+
+<!-- BELOW IS OLD AI CODE  -->
+
+
+<section class="hero">
   <div class="hero-inner">
     <p class="hero-eyebrow">At the University of Kentucky</p>
     <h1 class="hero-title">The<br><em>M-CATS</em></h1>
