@@ -1,8 +1,23 @@
+/* Redesign code */
+
+:root {
+  --navy:   #000435;
+  --cream:  #f0e3d0;
+
+  --bodoni-moda: 'Bodoni Moda', bodoni-moda;
+  --noto-serif: 'Noto Serif', serif;
+  --montserrat: 'Montserrat', montserrat-serif;
+
+  --max-w: 1100px;
+  --gap:   clamp(2rem, 5vw, 5rem);
+}
+
+
 /* ===========================
    M-CATS — Design System
    =========================== */
 
-:root {
+/* :root {
   --pink:    #f0b8c8;
   --blue:    #b8d4f0;
   --indigo:  #8ea8d8;
@@ -12,19 +27,19 @@
   --muted:   #5a5060;
   --border:  rgba(90, 80, 96, 0.15);
 
-  --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans:  'Jost', system-ui, sans-serif;
+  --bodoni-moda: 'Cormorant Garamond', Georgia, bodoni-moda;
+  --montserrat:  'Jost', system-ui, montserrat-bodoni-moda;
 
   --max-w: 1100px;
   --gap:   clamp(2rem, 5vw, 5rem);
-}
+} */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
-  font-family: var(--sans);
+  font-family: var(--montserrat);
   color: var(--ink);
   background: #fff;
 
@@ -44,7 +59,7 @@ body {
 }
 
 /* ── Typography ── */
-h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.1; }
+h1, h2, h3 { font-family: var(--bodoni-moda); font-weight: 500; line-height: 1.1; }
 h1 { font-size: clamp(3.5rem, 10vw, 8rem); }
 h2 { font-size: clamp(2.2rem, 5vw, 3.8rem); }
 h3 { font-size: clamp(1.2rem, 2.5vw, 1.6rem); font-weight: 400; }
@@ -60,7 +75,7 @@ a  { color: inherit; text-decoration: none; }
 }
 
 .section-label {
-  font-family: var(--sans);
+  font-family: var(--montserrat);
   font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.18em;
@@ -75,7 +90,7 @@ a  { color: inherit; text-decoration: none; }
 .btn {
   display: inline-block;
   padding: 0.85rem 2.2rem;
-  font-family: var(--sans);
+  font-family: var(--montserrat);
   font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -127,7 +142,7 @@ a  { color: inherit; text-decoration: none; }
 }
 
 .nav-logo {
-  font-family: var(--serif);
+  font-family: var(--bodoni-moda);
   font-size: 1.4rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -200,12 +215,12 @@ a  { color: inherit; text-decoration: none; }
 }
 
 .hero-eyebrow {
-  font-family: var(--sans);
+  font-family: var(--montserrat);
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--indigo);
+  color: var(--navy);
   margin-bottom: 1.5rem;
   animation: fadeUp 0.9s ease both;
 }
@@ -228,7 +243,7 @@ a  { color: inherit; text-decoration: none; }
   font-size: clamp(1rem, 2vw, 1.2rem);
   max-width: 480px;
   margin-bottom: 2.5rem;
-  color: var(--muted);
+  color: var(--cream);
   font-weight: 300;
   animation: fadeUp 0.9s ease 0.2s both;
 }
@@ -248,7 +263,7 @@ a  { color: inherit; text-decoration: none; }
   font-size: 0.65rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--indigo);
+  color: var(--navy);
   animation: bounce 2.5s infinite 1.5s;
   z-index: 2;
 }
@@ -258,7 +273,7 @@ a  { color: inherit; text-decoration: none; }
   display: block;
   width: 1px;
   height: 40px;
-  background: var(--indigo);
+  background: var(--navy);
   margin: 0.5rem auto 0;
   opacity: 0.5;
 }
@@ -293,7 +308,7 @@ a  { color: inherit; text-decoration: none; }
 .pillar { padding-top: 1.5rem; border-top: 1px solid var(--border); }
 
 .pillar-num {
-  font-family: var(--serif);
+  font-family: var(--bodoni-moda);
   font-size: 0.85rem;
   color: var(--indigo);
   display: block;
@@ -504,7 +519,7 @@ a  { color: inherit; text-decoration: none; }
 }
 
 .footer-logo {
-  font-family: var(--serif);
+  font-family: var(--bodoni-moda);
   font-size: 1.3rem;
   color: #fff;
   display: block;
@@ -787,7 +802,7 @@ button.sc-card {
   line-height: 1;
   color: rgba(255,255,255,0.6);
   margin: 0;
-  font-family: var(--serif);
+  font-family: var(--bodoni-moda);
 }
 
 /* Right content panel */
@@ -907,7 +922,7 @@ button.sc-card {
 }
 
 .meet-rhythm-day {
-  font-family: var(--serif);
+  font-family: var(--bodoni-moda);
   font-size: 2rem;
   font-weight: 500;
   color: var(--ink);
@@ -979,7 +994,7 @@ button.sc-card {
 }
 
 .meet-item-day {
-  font-family: var(--serif);
+  font-family: var(--bodoni-moda);
   font-size: 1rem;
   font-weight: 500;
   color: var(--ink);
@@ -1122,7 +1137,7 @@ button.sc-card {
   align-items: center;
   gap: 0.4rem;
   padding: 0.38rem 0.9rem;
-  font-family: var(--sans);
+  font-family: var(--montserrat);
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.1em;
