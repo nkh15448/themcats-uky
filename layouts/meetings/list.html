@@ -82,8 +82,27 @@
             <span style="font-size:0.6rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; color:{{ index $c "tag" | safeCSS }}; background:{{ index $c "fade" | safeCSS }}; padding:0.2rem 0.55rem; border-radius:2px; border:1px solid {{ index $c "border" | safeCSS }};">{{ .type }}</span>
             <span style="font-size:0.72rem; color:#5a5060;">{{ .time }} · {{ .location }}</span>
           </div>
-          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.15rem; font-weight:500; color:#1a1520; margin-bottom:0.3rem; line-height:1.3;">{{ .title }}</div>
-          <p style="font-size:0.84rem; color:#5a5060; line-height:1.65; margin:0;">{{ .desc }}</p>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.15rem; font-weight:500; color:#1a1520; margin-bottom:0.4rem; line-height:1.3;">{{ .title }}</div>
+          <p style="font-size:0.84rem; color:#5a5060; line-height:1.65; margin:0 0 0.6rem;">{{ .desc }}</p>
+          {{ if .bullets }}
+          <ul style="margin:0 0 0.75rem 1rem; padding:0;">
+            {{ range .bullets }}
+            <li style="font-size:0.82rem; color:#5a5060; line-height:1.65; margin-bottom:0.2rem;">{{ . }}</li>
+            {{ end }}
+          </ul>
+          {{ end }}
+          {{ if .links }}
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+            {{ range .links }}
+            <a href="{{ .url }}" target="_blank" rel="noopener"
+               style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.7rem; font-weight:500; letter-spacing:0.06em; color:#6b5b8a; background:rgba(107,91,138,0.08); border:1px solid rgba(107,91,138,0.2); padding:0.3rem 0.75rem; border-radius:99px; text-decoration:none; transition:background 0.2s;"
+               onmouseover="this.style.background='rgba(107,91,138,0.16)'"
+               onmouseout="this.style.background='rgba(107,91,138,0.08)'">
+              {{ with .icon }}<span>{{ . }}</span>{{ end }}{{ .label }}
+            </a>
+            {{ end }}
+          </div>
+          {{ end }}
         </div>
       </div>
       {{ end }}
@@ -107,29 +126,31 @@
         <!-- Color bar — desaturated for past -->
         <div style="background:{{ index $c "bar" | safeCSS }}; opacity:0.45; position:relative; z-index:2;"></div>
         <!-- Content -->
-        <div style="padding:1.1rem 1.5rem; position:relative; z-index:2;">
-          <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:0.4rem; flex-wrap:wrap;">
+        <div style="padding:1.25rem 1.5rem; position:relative; z-index:2;">
+          <div style="display:flex; align-items:center; gap:0.65rem; margin-bottom:0.45rem; flex-wrap:wrap;">
             <span style="font-size:0.6rem; font-weight:500; letter-spacing:0.14em; text-transform:uppercase; color:{{ index $c "tag" | safeCSS }}; background:{{ index $c "fade" | safeCSS }}; padding:0.2rem 0.55rem; border-radius:2px; border:1px solid {{ index $c "border" | safeCSS }};">{{ .type }}</span>
             <span style="font-size:0.72rem; color:#5a5060;">{{ .time }} · {{ .location }}</span>
           </div>
-          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.1rem; font-weight:500; color:#1a1520; margin-bottom:0.3rem; line-height:1.3;">{{ .title }}</div>
-          <p style="font-size:0.82rem; color:#5a5060; line-height:1.6; margin:0 0 0.85rem;">{{ .desc }}</p>
-          <!-- Recording + Slides buttons -->
-          {{ if or .recording .slides }}
-          <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
-            {{ if .recording }}
-            <a href="{{ .recording }}" target="_blank" rel="noopener" class="meet-resource-btn meet-resource-btn--recording">
-              <span class="meet-resource-btn-icon">▶</span> Recording
-            </a>
+          <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:1.15rem; font-weight:500; color:#1a1520; margin-bottom:0.4rem; line-height:1.3;">{{ .title }}</div>
+          <p style="font-size:0.84rem; color:#5a5060; line-height:1.65; margin:0 0 0.6rem;">{{ .desc }}</p>
+          {{ if .bullets }}
+          <ul style="margin:0 0 0.75rem 1rem; padding:0;">
+            {{ range .bullets }}
+            <li style="font-size:0.82rem; color:#5a5060; line-height:1.65; margin-bottom:0.2rem;">{{ . }}</li>
             {{ end }}
-            {{ if .slides }}
-            <a href="{{ .slides }}" target="_blank" rel="noopener" class="meet-resource-btn meet-resource-btn--slides">
-              <span class="meet-resource-btn-icon">◧</span> Slides
+          </ul>
+          {{ end }}
+          {{ if .links }}
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+            {{ range .links }}
+            <a href="{{ .url }}" target="_blank" rel="noopener"
+               style="display:inline-flex; align-items:center; gap:0.35rem; font-size:0.7rem; font-weight:500; letter-spacing:0.06em; color:#6b5b8a; background:rgba(107,91,138,0.08); border:1px solid rgba(107,91,138,0.2); padding:0.3rem 0.75rem; border-radius:99px; text-decoration:none; transition:background 0.2s;"
+               onmouseover="this.style.background='rgba(107,91,138,0.16)'"
+               onmouseout="this.style.background='rgba(107,91,138,0.08)'">
+              {{ with .icon }}<span>{{ . }}</span>{{ end }}{{ .label }}
             </a>
             {{ end }}
           </div>
-          {{ else }}
-          <p style="font-size:0.72rem; color:#9a90a0; font-style:italic; margin:0;">No recording available</p>
           {{ end }}
         </div>
       </div>
