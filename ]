@@ -44,10 +44,10 @@ upcoming:
       - Watch assosciated Yusuf lectures
       - Come with questions to the seminar!
     links:
-      - label: "Yusuf — Biology Ch. 1 Pt. 1 - The Cell"
+      - label: "Yusuf  — Biology Ch. 1 Pt. 1 - The Cell"
         url: "https://www.youtube.com/watch?v=qlimG45Y5Ts&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=1"
         icon: "▶"
-      - label: "Yusuf — Biology Ch. 1 Pt. 2 - The Cell"
+      - label: "Yusuf  — Biology Ch. 1 Pt. 2 - The Cell"
         url: "https://www.youtube.com/watch?v=34YCo-RQdp0&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=2"
         icon: "▶"
       - label: "Yusuf — Biochemistry Ch. 1 - Amino Acids and Proteins"
@@ -59,62 +59,21 @@ upcoming:
 
   - date: "Sept. 14"
     weekday: "Monday"
-    time: "6:00 PM"
-    title: "Chemistry Seminar"
-    desc: "We will attempt to cover General Chemistry chapters 1 - 4 and Organic Chemistry chapter 3. Prior to the seminar be sure to:"
+    time: "5:00 PM"
+    title: "Biology Seminar"
+    desc: "We will be attempt to cover General Chemistry chapters 1 -4 and Organic Chemistry chapter 3. Prior to the seminar be sure to:"
     type: "Seminar"
     color: "pink"
-    location: "CP 297"
+    location: "CP 222"
+    recording: "https://youtu.be/wN1Q1jDAa1Y"
+    slides: "https://docs.google.com/presentation/d/1w5Tgl59JrcW-eGBIrLrfdl1O2c64esCzGt1XALfjLhk/edit?usp=sharing"
     bullets:
       - "Read the assosciated Kaplan chapters (Gen Chem 1-4, Orgo 3) before arriving"
       - Watch assosciated Yusuf lectures
       - Come with questions to the seminar!
     links:
-      - label: "Yusuf - Chemistry Ch. 1 - Atomic Structure "
-        url: "https://www.youtube.com/watch?v=xk5vS7KuH6Y&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=1"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 2 Pt. 1 - Periodic Table  "
-        url: "https://www.youtube.com/watch?v=xzHHROyzgCs&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=2"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 2 Pt. 2 - Periodic Table  "
-        url: "https://www.youtube.com/watch?v=CdEe1OVOcHI&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=3"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 3 - Bonding and Chemical Interactions"
-        url: "https://www.youtube.com/watch?v=56lX0qe8HOQ&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=4"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 4 - Compounds and Stoichiometry"
-        url: "https://www.youtube.com/watch?v=z3VSu2SjuMU&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=5"
-        icon: "▶"
-      - label: "Yusuf - Orgo Ch. 3 - Bonding"
-        url: "https://www.youtube.com/watch?v=uaNbT-x9yHA&list=PLJO__sTT243EcbUUmbR_gblwz5w62wDPg&index=4"
-        icon: "▶"
-
-
-
-
-  - date: "Sept. 16"
-    weekday: "Wednesday"
-    time: "5:00 PM"
-    title: "Biology Seminar"
-    desc: "We will attempt to cover Biology chapters 2 and 12. Prior to the seminar be sure to:"
-    type: "Seminar"
-    color: "blue"
-    location: "CP 222"
-    bullets:
-      - "Read the assosciated Kaplan chapters (Biology 2 & 12) before arriving"
-      - Watch assosciated Yusuf lectures
-      - Come with questions to the seminar!
-    links:
-      - label: "Yusuf - Biology Ch. 2 Pt. 1 - Reproduction "
-        url: "https://www.youtube.com/watch?v=nss44COMa6g&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=3"
-        icon: "▶"
-
-      - label: "Yusuf - Biology Ch. 2 Pt. 2 - Reproduction "
-        url: "https://www.youtube.com/watch?v=3dcXkwftzto&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=4"
-        icon: "▶"
-
-      - label: "Yusuf - Biology Ch. 12 - Genetics "
-        url: "https://www.youtube.com/watch?v=d_O30DwXKfY&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=20"
+      - label: "Yusuf - Chemistry Ch. 1 - "
+        url: ""
         icon: "▶"
 # ── Past meetings ──────────────────────────────────────────────
 # To move an upcoming meeting here, cut it from `upcoming:` and
