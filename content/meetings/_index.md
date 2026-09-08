@@ -18,16 +18,6 @@ schedule:
     recurring: true 
 
 upcoming:
-  - date: "Sept. 2"
-    weekday: "Wednesday"
-    time: "6:00 PM"
-    title: "Introductory Meeting"
-    desc: "We will introduce the club and the planning for the semester. We will be collecting UWorld discounts as well!"
-    type: "General Meeting"
-    color: "violet"
-    location: "CP 297"
-    recording: ""
-    slides: ""
 
   - date: "Sept. 9"
     weekday: "Wednesday"
@@ -153,6 +143,22 @@ past:
           icon: "▶"
         - label: "Meeting Slides"
           url:  "https://docs.google.com/presentation/d/1w5Tgl59JrcW-eGBIrLrfdl1O2c64esCzGt1XALfjLhk/edit?usp=sharing"
+          icon: "◧"
+
+  - date: "Sept. 2"
+    weekday: "Wednesday"
+    time: "6:00 PM"
+    title: "Introductory Meeting"
+    desc: "We will introduce the club and the planning for the semester. We will be collecting UWorld discounts as well!"
+    type: "General Meeting"
+    color: "violet"
+    location: "CP 297"
+    links:
+        - label: "Recording"
+          url:  "https://youtu.be/8ax1xM583oA"
+          icon: "▶"
+        - label: "Meeting Slides"
+          url:  "https://luky-my.sharepoint.com/:p:/g/personal/ndku225_uky_edu/IQBF60hV3PymT5Wp0L1nia2mAbGyIgwmU8Mqajm3hmw4gXc?e=esGdWc"
           icon: "◧"
 
 
