@@ -52,6 +52,17 @@ Our leadership team is made up of dedicated pre-medical students who have naviga
   </div>
 
   <div class="leader-card">
+    <div class="leader-role">Officer</div>
+    <h3>Zander Houchens</h3>
+    <p>
+            <strong>Year: </strong>Junior<br>
+            <strong>Major(s): </strong>Agricultural & Medical Biotechnology <br>
+            <strong>Fav (MCAT) Subjects: </strong> B/B & P/S<br>
+            <strong>Hobbies: </strong> Jiu Jitsu, lifting, making beats/ songwriting <br>
+            <strong>Fav Food(s): </strong> Lemon Pepper Wings!!! <br> </p>
+  </div>
+
+  <div class="leader-card">
     <div class="leader-role">Secretary & Website Manager</div>
     <h3>Andrew Peng</h3>
     <p>
