@@ -19,30 +19,6 @@ schedule:
 
 upcoming:
 
-  - date: "Sept. 9"
-    weekday: "Wednesday"
-    time: "5:00 PM"
-    title: "Biology Seminar"
-    desc: "We will be covering Biology & Biochemistry chapter 1. Prior to the seminar be sure to:"
-    type: "Seminar"
-    color: "blue"
-    location: "CP 222"
-    recording: "https://youtu.be/wN1Q1jDAa1Y"
-    slides: "https://docs.google.com/presentation/d/1w5Tgl59JrcW-eGBIrLrfdl1O2c64esCzGt1XALfjLhk/edit?usp=sharing"
-    bullets:
-      - "Read Kaplan Biology & Biochemistry Chapter 1 before arriving"
-      - Watch assosciated Yusuf lectures
-      - Come with questions to the seminar!
-    links:
-      - label: "Yusuf — Biology Ch. 1 Pt. 1 - The Cell"
-        url: "https://www.youtube.com/watch?v=qlimG45Y5Ts&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=1"
-        icon: "▶"
-      - label: "Yusuf — Biology Ch. 1 Pt. 2 - The Cell"
-        url: "https://www.youtube.com/watch?v=34YCo-RQdp0&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=2"
-        icon: "▶"
-      - label: "Yusuf — Biochemistry Ch. 1 - Amino Acids and Proteins"
-        url: "https://www.youtube.com/watch?v=4H9ptoUJgtM&list=PLJO__sTT243FkJ9Bnmv3SmXjv9O7DIKXZ&index=1"
-        icon: "▶"
 
 
 
@@ -160,6 +136,33 @@ past:
         - label: "Meeting Slides"
           url:  "https://luky-my.sharepoint.com/:p:/g/personal/ndku225_uky_edu/IQBF60hV3PymT5Wp0L1nia2mAbGyIgwmU8Mqajm3hmw4gXc?e=esGdWc"
           icon: "◧"
+  - date: "Sept. 9"
+    weekday: "Wednesday"
+    time: "5:00 PM"
+    title: "Biology Seminar"
+    desc: "We will be covering Biology & Biochemistry chapter 1. Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "blue"
+    location: "CP 222"
+    recording: "https://youtu.be/wN1Q1jDAa1Y"
+    slides: "https://docs.google.com/presentation/d/1w5Tgl59JrcW-eGBIrLrfdl1O2c64esCzGt1XALfjLhk/edit?usp=sharing"
+    bullets:
+      -  Thank you all for showing up! It means a lot, we know it was a bit wonky for the first meeting. We are working hard for the next one!
+      - Unfortunately we weren't able to finish biology--we stopped halfway through right before prokaryotes. 
+      - Please see the attached Question Slides from the meeting; if you can answer all of those questions then you understood most of the content from these chapters! 
+    links:
+      - label: "Question Slides from the meeting"
+        url:  "https://docs.google.com/presentation/d/1GugeBLQFNvnecxrUij_5vvfxVVFSJxt8h9-iJpx3e1I/edit?usp=sharing"
+        icon: "◧"
+      - label: "Yusuf — Biology Ch. 1 Pt. 1 - The Cell"
+        url: "https://www.youtube.com/watch?v=qlimG45Y5Ts&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=1"
+        icon: "▶"
+      - label: "Yusuf — Biology Ch. 1 Pt. 2 - The Cell"
+        url: "https://www.youtube.com/watch?v=34YCo-RQdp0&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=2"
+        icon: "▶"
+      - label: "Yusuf — Biochemistry Ch. 1 - Amino Acids and Proteins"
+        url: "https://www.youtube.com/watch?v=4H9ptoUJgtM&list=PLJO__sTT243FkJ9Bnmv3SmXjv9O7DIKXZ&index=1"
+        icon: "▶"
 
 
 session_types:
