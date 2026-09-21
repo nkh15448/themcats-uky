@@ -20,68 +20,24 @@ schedule:
 upcoming:
 
 
-
-
-
-  - date: "Sept. 14"
+  - date: "Sept. 21"
     weekday: "Monday"
     time: "6:00 PM"
     title: "Chemistry Seminar"
-    desc: "We will attempt to cover General Chemistry chapters 1 - 4 and Organic Chemistry chapter 3. Prior to the seminar be sure to:"
+    desc: "We will attempt to cover Organic Chemistry Chp. 2 and General Chemistry Chapter 5 & 6. Prior to the seminar be sure to:"
     type: "Seminar"
     color: "pink"
-    location: "CP 297"
+    location: "White Hall 231"
     bullets:
       - "Read the assosciated Kaplan chapters (Gen Chem 1-4, Orgo 3) before arriving"
-      - Watch assosciated Yusuf lectures
       - Come with questions to the seminar!
     links:
-      - label: "Yusuf - Chemistry Ch. 1 - Atomic Structure "
-        url: "https://www.youtube.com/watch?v=xk5vS7KuH6Y&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=1"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 2 Pt. 1 - Periodic Table  "
-        url: "https://www.youtube.com/watch?v=xzHHROyzgCs&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=2"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 2 Pt. 2 - Periodic Table  "
-        url: "https://www.youtube.com/watch?v=CdEe1OVOcHI&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=3"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 3 - Bonding and Chemical Interactions"
-        url: "https://www.youtube.com/watch?v=56lX0qe8HOQ&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=4"
-        icon: "▶"
-      - label: "Yusuf - Chemistry Ch. 4 - Compounds and Stoichiometry"
-        url: "https://www.youtube.com/watch?v=z3VSu2SjuMU&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=5"
-        icon: "▶"
-      - label: "Yusuf - Orgo Ch. 3 - Bonding"
-        url: "https://www.youtube.com/watch?v=uaNbT-x9yHA&list=PLJO__sTT243EcbUUmbR_gblwz5w62wDPg&index=4"
-        icon: "▶"
+      - label: "Lecture Slideshow"
+        url: "/powerpoints/M-CATS seminar 4 Chemistry 09212026.pdf"
+        icon: "◧"
 
 
 
-
-  - date: "Sept. 16"
-    weekday: "Wednesday"
-    time: "5:00 PM"
-    title: "Biology Seminar"
-    desc: "We will attempt to cover Biology chapters 2 and 12. Prior to the seminar be sure to:"
-    type: "Seminar"
-    color: "blue"
-    location: "CP 222"
-    bullets:
-      - "Read the assosciated Kaplan chapters (Biology 2 & 12) before arriving"
-      - Watch assosciated Yusuf lectures
-      - Come with questions to the seminar!
-    links:
-      - label: "Yusuf - Biology Ch. 2 Pt. 1 - Reproduction "
-        url: "https://www.youtube.com/watch?v=nss44COMa6g&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=3"
-        icon: "▶"
-
-      - label: "Yusuf - Biology Ch. 2 Pt. 2 - Reproduction "
-        url: "https://www.youtube.com/watch?v=3dcXkwftzto&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=4"
-        icon: "▶"
-
-      - label: "Yusuf - Biology Ch. 12 - Genetics "
-        url: "https://www.youtube.com/watch?v=d_O30DwXKfY&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=20"
-        icon: "▶"
 # ── Past meetings ──────────────────────────────────────────────
 # To move an upcoming meeting here, cut it from `upcoming:` and
 # paste it under `past:`. Then optionally add `recording` and/or
@@ -162,6 +118,66 @@ past:
         icon: "▶"
       - label: "Yusuf — Biochemistry Ch. 1 - Amino Acids and Proteins"
         url: "https://www.youtube.com/watch?v=4H9ptoUJgtM&list=PLJO__sTT243FkJ9Bnmv3SmXjv9O7DIKXZ&index=1"
+        icon: "▶"
+
+  - date: "Sept. 14"
+    weekday: "Monday"
+    time: "6:00 PM"
+    title: "Chemistry Seminar"
+    desc: "We will attempt to cover General Chemistry chapters 1 - 4 and Organic Chemistry chapter 3. Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "pink"
+    location: "CP 297"
+    bullets:
+      - "Read the assosciated Kaplan chapters (Gen Chem 1-4, Orgo 3) before arriving"
+      - Watch assosciated Yusuf lectures
+      - Come with questions to the seminar!
+    links:
+      - label: "Yusuf - Chemistry Ch. 1 - Atomic Structure "
+        url: "https://www.youtube.com/watch?v=xk5vS7KuH6Y&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=1"
+        icon: "▶"
+      - label: "Yusuf - Chemistry Ch. 2 Pt. 1 - Periodic Table  "
+        url: "https://www.youtube.com/watch?v=xzHHROyzgCs&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=2"
+        icon: "▶"
+      - label: "Yusuf - Chemistry Ch. 2 Pt. 2 - Periodic Table  "
+        url: "https://www.youtube.com/watch?v=CdEe1OVOcHI&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=3"
+        icon: "▶"
+      - label: "Yusuf - Chemistry Ch. 3 - Bonding and Chemical Interactions"
+        url: "https://www.youtube.com/watch?v=56lX0qe8HOQ&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=4"
+        icon: "▶"
+      - label: "Yusuf - Chemistry Ch. 4 - Compounds and Stoichiometry"
+        url: "https://www.youtube.com/watch?v=z3VSu2SjuMU&list=PLJO__sTT243HMQRf9TwindBo-rl5wOxzc&index=5"
+        icon: "▶"
+      - label: "Yusuf - Orgo Ch. 3 - Bonding"
+        url: "https://www.youtube.com/watch?v=uaNbT-x9yHA&list=PLJO__sTT243EcbUUmbR_gblwz5w62wDPg&index=4"
+        icon: "▶"
+
+
+
+
+  - date: "Sept. 16"
+    weekday: "Wednesday"
+    time: "5:00 PM"
+    title: "Biology Seminar"
+    desc: "We will attempt to cover Biology chapters 2 and 12. Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "blue"
+    location: "CP 222"
+    bullets:
+      - "Read the assosciated Kaplan chapters (Biology 2 & 12) before arriving"
+      - Watch assosciated Yusuf lectures
+      - Come with questions to the seminar!
+    links:
+      - label: "Yusuf - Biology Ch. 2 Pt. 1 - Reproduction "
+        url: "https://www.youtube.com/watch?v=nss44COMa6g&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=3"
+        icon: "▶"
+
+      - label: "Yusuf - Biology Ch. 2 Pt. 2 - Reproduction "
+        url: "https://www.youtube.com/watch?v=3dcXkwftzto&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=4"
+        icon: "▶"
+
+      - label: "Yusuf - Biology Ch. 12 - Genetics "
+        url: "https://www.youtube.com/watch?v=d_O30DwXKfY&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=20"
         icon: "▶"
 
 
