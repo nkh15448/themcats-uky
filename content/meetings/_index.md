@@ -20,6 +20,23 @@ schedule:
 upcoming:
 
 
+  
+  - date: "Sept. 23"
+    weekday: "Wednesday"
+    time: "5:00 PM"
+    title: "Biology Seminar"
+    desc: "We will attempt to cover Biology Chapter 3 and Biochemistry Chapter 2. Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "pink"
+    location: "White Hall 231"
+    bullets:
+      - "Read the assosciated Kaplan chapters before arriving"
+      - Come with questions to the seminar!
+    links:
+      - label: "Lecture Slideshow"
+        url: "/powerpoints/Biology 3 - The M-CATS.pdf"
+        icon: "◧"
+
   - date: "Sept. 21"
     weekday: "Monday"
     time: "6:00 PM"
