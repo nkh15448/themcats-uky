@@ -33,8 +33,11 @@ upcoming:
       - "Read the assosciated Kaplan chapters before arriving"
       - Come with questions to the seminar!
     links:
-      - label: "Lecture Slideshow"
+      - label: "Bio 3"
         url: "/powerpoints/Biology 3 - The M-CATS.pdf"
+        icon: "◧"
+      - label: "Biochem 2"
+        url: "/powerpoints/Biochem 2 Enzymes.pdf"
         icon: "◧"
 
   - date: "Sept. 21"
