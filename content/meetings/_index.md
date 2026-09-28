@@ -20,12 +20,11 @@ schedule:
 upcoming:
 
 
-  
-  - date: "Sept. 23"
-    weekday: "Wednesday"
-    time: "5:00 PM"
-    title: "Biology Seminar"
-    desc: "We will attempt to cover Biology Chapter 3 and Biochemistry Chapter 2. Prior to the seminar be sure to:"
+  - date: "Sept. 28"
+    weekday: "Monday"
+    time: "6:00 PM"
+    title: "Chemistry Seminar"
+    desc: "We will attempt to cover General Chemistry Chapters 4, 7, and 9. Prior to the seminar be sure to:"
     type: "Seminar"
     color: "pink"
     location: "White Hall 231"
@@ -33,28 +32,16 @@ upcoming:
       - "Read the assosciated Kaplan chapters before arriving"
       - Come with questions to the seminar!
     links:
-      - label: "Bio 3"
-        url: "/powerpoints/Biology 3 - The M-CATS.pdf"
+      - label: "Gen Chem 4"
+        url: "/powerpoints/Gen Chem4 - The M-CATS.pdf"
         icon: "◧"
-      - label: "Biochem 2"
-        url: "/powerpoints/Biochem 2 Enzymes.pdf"
+      - label: "Gen Chem 7"
+        url: "/powerpoints/Gen Chem 7 Thermodynamics M-CATS.pdf"
         icon: "◧"
-
-  - date: "Sept. 21"
-    weekday: "Monday"
-    time: "6:00 PM"
-    title: "Chemistry Seminar"
-    desc: "We will attempt to cover Organic Chemistry Chp. 2 and General Chemistry Chapter 5 & 6. Prior to the seminar be sure to:"
-    type: "Seminar"
-    color: "pink"
-    location: "White Hall 231"
-    bullets:
-      - "Read the assosciated Kaplan chapters (Gen Chem 1-4, Orgo 3) before arriving"
-      - Come with questions to the seminar!
-    links:
-      - label: "Lecture Slideshow"
-        url: "/powerpoints/M-CATS seminar 4 Chemistry 09212026.pdf"
+      - label: "Gen Chem 9"
+        url: "/powerpoints/MCAT_Gen_Chem_Solutions_Longaf.pdf"
         icon: "◧"
+  
 
 
 
@@ -200,15 +187,50 @@ past:
         url: "https://www.youtube.com/watch?v=d_O30DwXKfY&list=PLJO__sTT243G_mZNgZ8Jeeb9ZlmUTatWD&index=20"
         icon: "▶"
 
+  - date: "Sept. 23"
+    weekday: "Wednesday"
+    time: "5:00 PM"
+    title: "Biology Seminar"
+    desc: "We will attempt to cover Biology Chapter 3 and Biochemistry Chapter 2. Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "blue"
+    location: "White Hall 231"
+    bullets:
+      - "Read the assosciated Kaplan chapters before arriving"
+      - Come with questions to the seminar!
+    links:
+      - label: "Bio 3"
+        url: "/powerpoints/Biology 3 - The M-CATS.pdf"
+        icon: "◧"
+      - label: "Biochem 2"
+        url: "/powerpoints/Biochem 2 Enzymes.pdf"
+        icon: "◧"
+
+  - date: "Sept. 21"
+    weekday: "Monday"
+    time: "6:00 PM"
+    title: "Chemistry Seminar"
+    desc: "We will attempt to cover Organic Chemistry Chp. 2 and General Chemistry Chapter 5 & 6. Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "pink"
+    location: "White Hall 231"
+    bullets:
+      - "Read the assosciated Kaplan chapters (Gen Chem 1-4, Orgo 3) before arriving"
+      - Come with questions to the seminar!
+    links:
+      - label: "Lecture Slideshow"
+        url: "/powerpoints/M-CATS seminar 4 Chemistry 09212026.pdf"
+        icon: "◧"
+
 
 session_types:
   - name: "General Meetings"
     desc: "A general body meeting to discuss the club"
     color: "violet"
   - name: "Chemistry Seminars (Mondays)"
-    desc: "Chemisry seminars on Monday in CP 297 from 6 - 9 PM. Seminars will mostly focus on practicing and applying the content."
+    desc: "Chemisry seminars on Monday in White hall 231 from 6 - 9 PM. Seminars will mostly focus on practicing and applying the content."
     color: "pink"
   - name: "Biology Seminars (Wednesdays)"
-    desc: "Biology seminars on Wendesdays in CP 222 from 5 - 9 PM. Seminars will mostly focus on practicing and applying the content."
+    desc: "Biology seminars on Wendesdays in White Hall 231 from 5 - 9 PM. Seminars will mostly focus on practicing and applying the content."
     color: "blue"
 ---
