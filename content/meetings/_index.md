@@ -34,6 +34,9 @@ upcoming:
         - label: "Genetics"
           url:  "/powerpoints/Biology 12 Genetics Seminar.pdf"
           icon: "◧"
+        - label: "Nervous System"
+          url:  "/powerpoints/Biology 4 The MCATS.pdf"
+          icon: "◧"
   
 
 
