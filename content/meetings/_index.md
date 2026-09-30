@@ -19,28 +19,19 @@ schedule:
 
 upcoming:
 
-
-  - date: "Sept. 28"
-    weekday: "Monday"
-    time: "6:00 PM"
-    title: "Chemistry Seminar"
-    desc: "We will attempt to cover General Chemistry Chapters 4, 7, and 9. Prior to the seminar be sure to:"
+  - date: "Sept. 30"
+    weekday: "Wednesday"
+    time: "5:00 PM"
+    title: "Biology Seminar"
+    desc: "We will attempt to cover Biology chapters 4 & 12 (Nervous system & Genetics), along with Biochemistry chapter 3 (Nonenzymatic protein function). Prior to the seminar be sure to:"
     type: "Seminar"
-    color: "pink"
+    color: "blue"
     location: "White Hall 231"
     bullets:
       - "Read the assosciated Kaplan chapters before arriving"
       - Come with questions to the seminar!
     links:
-      - label: "Gen Chem 4"
-        url: "/powerpoints/Gen Chem4 - The M-CATS.pdf"
-        icon: "◧"
-      - label: "Gen Chem 7"
-        url: "/powerpoints/Gen Chem 7 Thermodynamics M-CATS.pdf"
-        icon: "◧"
-      - label: "Gen Chem 9"
-        url: "/powerpoints/MCAT_Gen_Chem_Solutions_Longaf.pdf"
-        icon: "◧"
+
   
 
 
@@ -220,6 +211,28 @@ past:
     links:
       - label: "Lecture Slideshow"
         url: "/powerpoints/M-CATS seminar 4 Chemistry 09212026.pdf"
+        icon: "◧"
+
+  - date: "Sept. 28"
+    weekday: "Monday"
+    time: "6:00 PM"
+    title: "Chemistry Seminar"
+    desc: "We will attempt to cover General Chemistry Chapters 4, 7, and 9. Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "pink"
+    location: "White Hall 231"
+    bullets:
+      - "Read the assosciated Kaplan chapters before arriving"
+      - Come with questions to the seminar!
+    links:
+      - label: "Gen Chem 4"
+        url: "/powerpoints/Gen Chem4 - The M-CATS.pdf"
+        icon: "◧"
+      - label: "Gen Chem 7"
+        url: "/powerpoints/Gen Chem 7 Thermodynamics M-CATS.pdf"
+        icon: "◧"
+      - label: "Gen Chem 9"
+        url: "/powerpoints/MCAT_Gen_Chem_Solutions_Longaf.pdf"
         icon: "◧"
 
 
