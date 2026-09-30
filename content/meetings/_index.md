@@ -31,7 +31,9 @@ upcoming:
       - "Read the assosciated Kaplan chapters before arriving"
       - Come with questions to the seminar!
     links:
-
+        - label: "Genetics"
+          url:  "/powerpoints/Biology 12 Genetics Seminar.pdf"
+          icon: "◧"
   
 
 
