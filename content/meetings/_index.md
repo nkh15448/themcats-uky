@@ -37,6 +37,9 @@ upcoming:
         - label: "Nervous System"
           url:  "/powerpoints/Biology 4 The MCATS.pdf"
           icon: "◧"
+        - label: "Nonenyzmatic function of proteins"
+          url:  "/powerpoints/Biochem Chap 3 The MCATS.pdf"
+          icon: "◧"
   
 
 
