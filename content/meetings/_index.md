@@ -5,25 +5,42 @@ subtitle: "Join us for weekly sessions, topic reviews, and strategy discussions.
 schedule:
   - day: "Monday"
     time: "6:00 PM - 9:00 PM"
-    location: "CP 297"
+    location: "White Hall 231"
     type: "Chemistry focused seminars"
     color: "pink"
     recurring: true
         
   - day: "Wednesday"
     time: "5:00 PM - 9:00 PM"
-    location: "CP 222"
+    location: "White Hall 231"
     type: "Biology focused seminars"
     color: "blue"
     recurring: true 
 
 upcoming:
 
-  - date: "Sept. 30"
+  - date: "Oct. 5"
+    weekday: "Monday"
+    time: "6:00 PM"
+    title: "Chemistry Seminar"
+    desc: "We will attempt to cover Chemistry Chapters 10 & 11 (Acids and Bases, Redox Chemistry). Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "pink"
+    location: "White Hall 231"
+    bullets:
+      - "Read the assosciated Kaplan chapters before arriving"
+      - Come with questions to the seminar!
+    links:
+        - label: "Slides"
+          url:  "/powerpoints/THE M-CATS Seminar 8.pdf"
+          icon: "◧"
+  
+
+  - date: "October 7"
     weekday: "Wednesday"
     time: "5:00 PM"
     title: "Biology Seminar"
-    desc: "We will attempt to cover Biology chapters 4 & 12 (Nervous system & Genetics), along with Biochemistry chapter 3 (Nonenzymatic protein function). Prior to the seminar be sure to:"
+    desc: "We will attempt to cover Biology chapter 5 and Biochem chapter 4 (Endocrine system & Carbs). Prior to the seminar be sure to:"
     type: "Seminar"
     color: "blue"
     location: "White Hall 231"
@@ -31,15 +48,6 @@ upcoming:
       - "Read the assosciated Kaplan chapters before arriving"
       - Come with questions to the seminar!
     links:
-        - label: "Genetics"
-          url:  "/powerpoints/Biology 12 Genetics Seminar.pdf"
-          icon: "◧"
-        - label: "Nervous System"
-          url:  "/powerpoints/Biology 4 The MCATS.pdf"
-          icon: "◧"
-        - label: "Nonenyzmatic function of proteins"
-          url:  "/powerpoints/Biochem Chap 3 The MCATS.pdf"
-          icon: "◧"
   
 
 
@@ -242,6 +250,29 @@ past:
       - label: "Gen Chem 9"
         url: "/powerpoints/MCAT_Gen_Chem_Solutions_Longaf.pdf"
         icon: "◧"
+
+  - date: "Sept. 30"
+    weekday: "Wednesday"
+    time: "5:00 PM"
+    title: "Biology Seminar"
+    desc: "We will attempt to cover Biology chapters 4 & 12 (Nervous system & Genetics), along with Biochemistry chapter 3 (Nonenzymatic protein function). Prior to the seminar be sure to:"
+    type: "Seminar"
+    color: "blue"
+    location: "White Hall 231"
+    bullets:
+      - "Read the assosciated Kaplan chapters before arriving"
+      - Come with questions to the seminar!
+    links:
+        - label: "Genetics"
+          url:  "/powerpoints/Biology 12 Genetics Seminar.pdf"
+          icon: "◧"
+        - label: "Nervous System"
+          url:  "/powerpoints/Biology 4 The MCATS.pdf"
+          icon: "◧"
+        - label: "Nonenyzmatic function of proteins"
+          url:  "/powerpoints/Biochem Chap 3 The MCATS.pdf"
+          icon: "◧"
+  
 
 
 session_types:
