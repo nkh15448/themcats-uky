@@ -1,0 +1,527 @@
+---
+import Base from '../layouts/Base.astro';
+import { library, SECTIONS, KIND_LABEL } from '../lib/data';
+import { chapter } from '../lib/kaplan';
+
+const lib = await library();
+
+const GROUPS = [
+  { id: 'anki', label: 'Anki decks', kinds: ['anki'] },
+  { id: 'seminar', label: 'Seminar materials', kinds: ['slides', 'questions', 'recording'] },
+  { id: 'handout', label: 'Handouts', kinds: ['handout'] },
+  { id: 'tool', label: 'Tools', kinds: ['tool'] },
+  { id: 'external', label: 'Courses, books & community', kinds: ['course', 'book', 'community'] },
+];
+const groupOf = (kind: string) => GROUPS.find((g) => g.kinds.includes(kind))!.id;
+
+const isFile = (href: string) => href.startsWith('/');
+const isExternal = (href: string) => /^https?:/.test(href);
+
+const grouped = GROUPS.map((g) => ({
+  ...g,
+  items: lib
+    .filter((r) => g.kinds.includes(r.kind))
+    // seminar materials newest first; everything else keeps file order
+    .sort((a, b) => (g.id === 'seminar' ? (b.date ?? '').localeCompare(a.date ?? '') : 0)),
+}));
+
+const index = lib.map((r) => ({
+  id: r.id,
+  title: r.title,
+  tags: [
+    KIND_LABEL[r.kind],
+    r.subject,
+    r.stats,
+    r.allSections ? '' : r.sections.map((s) => SECTIONS[s as keyof typeof SECTIONS].short).join(' '),
+    // chapter aliases so "gc7", "gen chem 7" and "thermochemistry" all find a deck
+    ...r.chapters.map(chapter).flatMap((c) => [c.short, c.abbr, c.abbr.replace(' ', ''), c.title]),
+  ].filter(Boolean).join(' '),
+  body: [r.summary, r.details, r.note].filter(Boolean).join(' '),
+}));
+---
+<Base title="Resources" description="Every Anki deck, handout, and seminar slide deck from The M-CATS, searchable.">
+  <header class="page-head wrap">
+    <p class="label">Resources · {lib.length} items</p>
+    <h1 class="display ca ca-in">The Library</h1>
+    <p class="intro italic">Curated decks, handouts, and every slide deck from our seminars, all in one place. Start typing to search.</p>
+  </header>
+
+  <div class="toolbar" id="toolbar">
+    <div class="wrap tb-inner">
+      <label class="search">
+        <span class="prompt mono" aria-hidden="true">›</span>
+        <span class="sr-only">Search the library</span>
+        <input id="q" type="search" placeholder="fuzzy search… try “aa deck” or “thermo”" autocomplete="off" spellcheck="false" data-local-search />
+        <kbd>/</kbd>
+      </label>
+      <div class="filters">
+        <div class="chips" role="group" aria-label="Section">
+          <button class="chip" data-section="" aria-pressed="true">All</button>
+          {(Object.keys(SECTIONS) as (keyof typeof SECTIONS)[]).map((s) => (
+            <button class="chip" data-section={s} aria-pressed="false"><span class="dot" data-s={s}></span>{SECTIONS[s].short}</button>
+          ))}
+        </div>
+        <div class="chips" role="group" aria-label="Type">
+          <button class="chip" data-group="" aria-pressed="true">Any type</button>
+          {GROUPS.map((g) => (
+            <button class="chip" data-group={g.id} aria-pressed="false">{g.label.split(/[ ,]/)[0]}</button>
+          ))}
+        </div>
+        <label class="chip toggle">
+          <input type="checkbox" id="free-only" /> Free only
+        </label>
+        <span class="label count" id="count" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <ul class="lib" id="lib">
+      {grouped.map((g) => (
+        <>
+          <li class="group-head" data-group-head={g.id}>
+            <span class="label">{g.label}</span>
+            <span class="label">{String(g.items.length).padStart(2, '0')}</span>
+          </li>
+          {g.items.map((r) => (
+            <li
+              class="item"
+              data-id={r.id}
+              data-group={groupOf(r.kind)}
+              data-sections={r.sections.join(' ')}
+              data-cost={r.cost}
+            >
+              <button class="row" aria-expanded="false" aria-controls={`d-${r.id}`}>
+                <span class="secs" title={r.allSections ? 'All sections' : r.sections.map((s) => SECTIONS[s as keyof typeof SECTIONS].short).join(', ')}>
+                  {r.allSections ? <span class="mono all">ALL</span> : r.sections.map((s) => <span class="dot" data-s={s}></span>)}
+                </span>
+                <span class="main">
+                  <span class="title" data-title>{r.title}</span>
+                  <span class="summary">{r.summary}</span>
+                </span>
+                <span class="kind mono">{KIND_LABEL[r.kind]}</span>
+                <span class="meta mono">{r.stats ?? ''}{r.cost === 'paid' ? <span class="paid">Paid</span> : ''}</span>
+                <span class="chev mono" aria-hidden="true">+</span>
+              </button>
+              <div class="detail" id={`d-${r.id}`} hidden>
+                <div class="d-text">
+                  {r.details && <p>{r.details}</p>}
+                  {r.note && <p class="note mono">! {r.note}</p>}
+                  {r.meetings.length > 0 && (
+                    <p class="from mono">
+                      {r.origin === 'seminar' ? 'From' : 'Discussed in'}{' '}
+                      {r.meetings.map((m, i) => <>{i > 0 && ', '}<a href={m.url}>{m.label} →</a></>)}
+                    </p>
+                  )}
+                </div>
+                <div class="d-actions">
+                  {r.cta && (
+                    <a class="btn" href={r.cta.href} target="_blank" rel="noopener">{r.cta.label} ↗</a>
+                  )}
+                  {isFile(r.href) && /\.(pdf|jpg|png)$/i.test(r.href) && (
+                    <a class="btn" href={encodeURI(r.href)} target="_blank" rel="noopener">View ↗</a>
+                  )}
+                  {isFile(r.href) && (
+                    <a class="btn btn-solid" href={encodeURI(r.href)} download={r.download ?? ''}>Download ↓</a>
+                  )}
+                  {isExternal(r.href) && (
+                    <a class="btn btn-solid" href={r.href} target="_blank" rel="noopener">Open ↗</a>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </>
+      ))}
+      <li class="none" id="none" hidden>
+        <p class="italic">Nothing matches that.</p>
+        <p class="mono">Try fewer letters, or clear the filters.</p>
+      </li>
+    </ul>
+  </div>
+  <script type="application/json" id="lib-index" set:html={JSON.stringify(index)} />
+</Base>
+
+<script>
+  import { search, highlight, escapeHtml } from '../lib/fuzzy';
+
+  type Entry = { id: string; title: string; tags: string; body: string };
+  const data: Entry[] = JSON.parse(document.getElementById('lib-index')!.textContent!);
+
+  const list = document.getElementById('lib')!;
+  const q = document.getElementById('q') as HTMLInputElement;
+  const freeOnly = document.getElementById('free-only') as HTMLInputElement;
+  const count = document.getElementById('count')!;
+  const none = document.getElementById('none')!;
+  const items = [...list.querySelectorAll<HTMLLIElement>('li.item')];
+  const heads = [...list.querySelectorAll<HTMLLIElement>('li.group-head')];
+  const original = [...list.children];
+  const titles = new Map(items.map((li) => [li.dataset.id!, li.querySelector<HTMLElement>('[data-title]')!]));
+  const rawTitle = new Map(items.map((li) => [li.dataset.id!, titles.get(li.dataset.id!)!.textContent!]));
+
+  const state = { section: '', group: '' };
+
+  // Restore filters from the URL (e.g. /resources/?section=bb from the homepage).
+  const params = new URLSearchParams(location.search);
+  state.section = params.get('section') ?? '';
+  state.group = params.get('type') ?? '';
+  q.value = params.get('q') ?? '';
+  freeOnly.checked = params.get('free') === '1';
+
+  function apply() {
+    const query = q.value.trim();
+    let order: string[] | null = null;
+    const hits = new Map<string, [number, number][]>();
+    if (query) {
+      const res = search(query, data);
+      order = res.map((r) => r.doc.id);
+      res.forEach((r) => hits.set(r.doc.id, r.hit.ranges));
+    }
+
+    let shown = 0;
+    for (const li of items) {
+      const id = li.dataset.id!;
+      const ok =
+        (!state.section || li.dataset.sections!.split(' ').includes(state.section)) &&
+        (!state.group || li.dataset.group === state.group) &&
+        (!freeOnly.checked || li.dataset.cost === 'free') &&
+        (!order || hits.has(id));
+      li.hidden = !ok;
+      if (ok) shown++;
+      titles.get(id)!.innerHTML = hits.has(id) ? highlight(rawTitle.get(id)!, hits.get(id)!) : escapeHtml(rawTitle.get(id)!);
+    }
+
+    if (order) {
+      // Ranked: flat list in score order, no group headers.
+      heads.forEach((h) => (h.hidden = true));
+      const byId = new Map(items.map((li) => [li.dataset.id!, li]));
+      order.forEach((id) => list.insertBefore(byId.get(id)!, none));
+    } else {
+      original.forEach((el) => list.appendChild(el));
+      heads.forEach((h) => (h.hidden = !items.some((li) => li.dataset.group === h.dataset.groupHead && !li.hidden)));
+    }
+
+    none.hidden = shown > 0;
+    count.textContent = `${shown} / ${items.length}`;
+
+    document.querySelectorAll<HTMLButtonElement>('[data-section]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.section === state.section)));
+    document.querySelectorAll<HTMLButtonElement>('[data-group]').forEach((b) => {
+      if (b.classList.contains('chip')) b.setAttribute('aria-pressed', String(b.dataset.group === state.group));
+    });
+
+    const p = new URLSearchParams();
+    if (query) p.set('q', query);
+    if (state.section) p.set('section', state.section);
+    if (state.group) p.set('type', state.group);
+    if (freeOnly.checked) p.set('free', '1');
+    history.replaceState(null, '', p.size ? `?${p}` : location.pathname);
+  }
+
+  q.addEventListener('input', apply);
+  freeOnly.addEventListener('change', apply);
+  document.querySelectorAll<HTMLButtonElement>('.chip[data-section]').forEach((b) =>
+    b.addEventListener('click', () => { state.section = b.dataset.section!; apply(); }),
+  );
+  document.querySelectorAll<HTMLButtonElement>('.chip[data-group]').forEach((b) =>
+    b.addEventListener('click', () => { state.group = b.dataset.group!; apply(); }),
+  );
+
+  // Expand / collapse rows.
+  list.addEventListener('click', (e) => {
+    const row = (e.target as HTMLElement).closest('button.row') as HTMLButtonElement | null;
+    if (!row) return;
+    const open = row.getAttribute('aria-expanded') !== 'true';
+    row.setAttribute('aria-expanded', String(open));
+    row.closest('li')!.classList.toggle('open', open);
+    document.getElementById(row.getAttribute('aria-controls')!)!.hidden = !open;
+  });
+
+  // On this page "/" focuses the local search instead of the global palette.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement !== q && !(e.target as HTMLElement).closest('input, textarea, dialog')) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      q.focus();
+      q.select();
+    } else if (e.key === 'Escape' && document.activeElement === q && q.value) {
+      q.value = '';
+      apply();
+    }
+  }, { capture: true });
+
+  apply();
+</script>
+
+<style>
+  .page-head {
+    padding-block: clamp(3rem, 8vw, 6rem) 2.5rem;
+  }
+  .page-head h1 {
+    font-size: clamp(3.6rem, 13vw, 11rem);
+    letter-spacing: -0.035em;
+    margin: 1rem 0 1.5rem;
+  }
+  .intro {
+    font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+    color: var(--fg-dim);
+    max-width: 34ch;
+    line-height: 1.25;
+  }
+
+  .toolbar {
+    position: sticky;
+    top: 64px;
+    z-index: 40;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-block: 1px solid var(--rule);
+  }
+  .tb-inner {
+    padding-block: 1rem;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .search {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    border: 1px solid var(--rule-strong);
+    padding: 0.85rem 1rem;
+    transition: border-color 0.2s;
+  }
+  .search:focus-within {
+    border-color: var(--fg);
+  }
+  .search input {
+    flex: 1;
+    background: none;
+    border: 0;
+    outline: 0;
+    color: var(--fg);
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 1rem;
+  }
+  .search input::placeholder {
+    color: var(--faint);
+  }
+  .search input::-webkit-search-cancel-button {
+    filter: invert(1) opacity(0.5);
+  }
+  .prompt {
+    color: var(--muted);
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .chip:hover {
+    color: var(--fg);
+    border-color: var(--rule-strong);
+  }
+  .chip[aria-pressed='true'] {
+    color: var(--bg);
+    background: var(--fg);
+    border-color: var(--fg);
+  }
+  .toggle input {
+    accent-color: var(--fg);
+  }
+  .count {
+    margin-left: auto;
+  }
+
+  .lib {
+    list-style: none;
+    padding-bottom: 6rem;
+  }
+  .group-head {
+    display: flex;
+    justify-content: space-between;
+    padding: 3rem 0 0.75rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .item {
+    border-bottom: 1px solid var(--rule);
+  }
+  .row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 3rem 1fr 8rem 10rem 1.5rem;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.35rem 0;
+    text-align: left;
+    transition: background 0.25s;
+  }
+  .row:hover {
+    background: linear-gradient(90deg, transparent, rgba(238, 235, 228, 0.03) 30%, transparent);
+  }
+  .secs {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .all {
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+  .main {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+  .title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(1.25rem, 2vw, 1.6rem);
+    line-height: 1.1;
+  }
+  .title :global(mark) {
+    background: none;
+    color: var(--fg);
+    text-decoration: underline;
+    text-decoration-color: var(--neb-violet);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .summary {
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--fg-dim);
+    line-height: 1.3;
+  }
+  .kind,
+  .meta {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+  .meta {
+    display: flex;
+    flex-direction: column;
+  }
+  .paid {
+    color: var(--cars);
+  }
+  .chev {
+    color: var(--muted);
+    font-size: 1rem;
+    transition: transform 0.35s var(--ease), color 0.2s;
+    justify-self: end;
+  }
+  .item.open .chev {
+    transform: rotate(45deg);
+    color: var(--fg);
+  }
+  .detail {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    padding: 0 0 2rem 4.5rem;
+    animation: open 0.4s var(--ease);
+  }
+  @keyframes open {
+    from { opacity: 0; transform: translateY(-6px); }
+  }
+  .d-text {
+    max-width: 62ch;
+    display: grid;
+    gap: 1rem;
+    color: var(--fg-dim);
+    font-size: 1.15rem;
+  }
+  .note {
+    font-size: 0.75rem;
+    color: var(--cars);
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .from {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .from a {
+    color: var(--fg);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .d-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  .none {
+    padding: 5rem 0;
+    text-align: center;
+    color: var(--muted);
+  }
+  .none .italic {
+    font-size: 2rem;
+    color: var(--fg-dim);
+  }
+
+  @media (max-width: 860px) {
+    .row {
+      grid-template-columns: 2.2rem 1fr 1.5rem;
+      gap: 1rem;
+    }
+    .kind,
+    .meta {
+      display: none;
+    }
+    .detail {
+      grid-template-columns: 1fr;
+      padding-left: 3.2rem;
+    }
+    /* filters become a single row you swipe sideways, so the sticky bar stays short */
+    .filters {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      margin-inline: calc(var(--gutter) * -1);
+      padding-inline: var(--gutter);
+      gap: 0.35rem;
+      mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - 2.5rem), transparent);
+    }
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+    .chips {
+      flex-wrap: nowrap;
+    }
+    .chip {
+      white-space: nowrap;
+      flex: none;
+    }
+    .count {
+      margin-left: 0.5rem;
+      white-space: nowrap;
+    }
+    .tb-inner {
+      padding-block: 0.75rem;
+      gap: 0.6rem;
+    }
+  }
+</style>

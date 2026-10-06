@@ -1,0 +1,81 @@
+---
+// Dev-only panel for dialing in effect strength. Never ships: Base.astro only
+// renders it when import.meta.env.DEV is true.
+const controls = [
+  { v: '--grain', label: 'Grain', min: 0, max: 0.4, step: 0.01, unit: '' },
+  { v: '--ca-rest', label: 'Aberration', min: 0, max: 0.14, step: 0.005, unit: 'em' },
+  { v: '--soft-rest', label: 'Lens blur', min: 0, max: 2.5, step: 0.1, unit: 'px' },
+  { v: '--nebula-glow', label: 'Nebula', min: 0, max: 1, step: 0.05, unit: '' },
+];
+---
+<details class="tuner">
+  <summary class="label">Tune</summary>
+  {controls.map((c) => (
+    <label>
+      <span class="label">{c.label} <output data-for={c.v}></output></span>
+      <input type="range" min={c.min} max={c.max} step={c.step} data-var={c.v} data-unit={c.unit} />
+    </label>
+  ))}
+  <button class="label" id="tuner-reset">Reset</button>
+</details>
+
+<script>
+  const root = document.documentElement;
+  const KEY = 'mcats-tuner';
+  let saved: Record<string, string> = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch {}
+  document.querySelectorAll<HTMLInputElement>('.tuner input').forEach((input) => {
+    const v = input.dataset.var!;
+    const unit = input.dataset.unit!;
+    const out = document.querySelector<HTMLOutputElement>(`output[data-for="${v}"]`)!;
+    const initial = saved[v] ?? getComputedStyle(root).getPropertyValue(v).trim();
+    input.value = String(parseFloat(initial));
+    const apply = () => {
+      const val = `${input.value}${unit}`;
+      root.style.setProperty(v, val);
+      out.textContent = val;
+      saved[v] = val;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch {}
+    };
+    if (saved[v]) apply(); else out.textContent = initial;
+    input.addEventListener('input', apply);
+  });
+  document.getElementById('tuner-reset')!.addEventListener('click', () => {
+    try { localStorage.removeItem(KEY); } catch {}
+    location.reload();
+  });
+</script>
+
+<style>
+  .tuner {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 200;
+    background: var(--bg-raise);
+    border: 1px solid var(--rule-strong);
+    padding: 0.6rem 0.9rem;
+    width: 230px;
+  }
+  .tuner summary {
+    cursor: pointer;
+    color: var(--fg-dim);
+  }
+  .tuner label {
+    display: grid;
+    gap: 0.2rem;
+    margin-top: 0.7rem;
+  }
+  output {
+    color: var(--fg);
+    float: right;
+  }
+  input[type='range'] {
+    width: 100%;
+    accent-color: var(--fg);
+  }
+  #tuner-reset {
+    margin-top: 0.8rem;
+    color: var(--muted);
+  }
+</style>

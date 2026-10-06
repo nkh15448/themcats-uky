@@ -1,0 +1,12 @@
+title: Chemistry Seminar
+type: chemistry
+date: 2026-09-28
+time: "6:00 PM"
+end: "9:00 PM"
+location: White Hall 231
+covers: [gc-4, gc-7, gc-9]
+materials:
+  - { kind: slides, chapters: [gc-4], href: "/powerpoints/Gen Chem4 - The M-CATS.pdf" }
+  - { kind: slides, chapters: [gc-7], href: "/powerpoints/Gen Chem 7 Thermodynamics M-CATS.pdf" }
+  - { kind: slides, chapters: [gc-9], href: "/powerpoints/MCAT_Gen_Chem_Solutions_Longaf.pdf" }
+resources: [equations-constants-deck]

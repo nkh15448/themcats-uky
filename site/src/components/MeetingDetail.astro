@@ -1,0 +1,280 @@
+---
+import { url } from '../lib/url';
+import { chapter } from '../lib/kaplan';
+import {
+  fmtDate, materialTitle, meetingUrl, seminarNumber, googleCalendarUrl,
+  KIND_LABEL, MEETING_TYPE, type Meeting,
+} from '../lib/data';
+import { getCollection } from 'astro:content';
+
+interface Props {
+  m: Meeting;
+  all: Meeting[];
+  /** "panel" is the compact calendar side panel; "page" is the full meeting page. */
+  variant?: 'panel' | 'page';
+}
+const { m, all, variant = 'panel' } = Astro.props;
+const t = MEETING_TYPE[m.data.type];
+const num = seminarNumber(m, all);
+const chapters = m.data.covers.map(chapter);
+const iso = m.data.date.toISOString().slice(0, 10);
+const resources = (await getCollection('resources')).filter((r) => m.data.resources.includes(r.id));
+const recordings = m.data.materials.filter((x) => x.kind === 'recording');
+const isSeminar = m.data.type !== 'general';
+const ICON: Record<string, string> = { slides: '▣', recording: '▶', questions: '?', handout: '◧', link: '↗' };
+---
+<article class={`md md-${variant}`} data-date={iso}>
+  <p class="md-kicker mono">
+    <span class="dot" data-s={t.section}></span>
+    {m.data.type === 'general' ? m.data.title : `${t.label} seminar`}
+    {num && <span class="md-num">· {String(num.n).padStart(2, '0')} / {num.of}</span>}
+  </p>
+
+  <h2 class="md-date display">
+    {fmtDate(m.data.date, { weekday: 'short' })}, {fmtDate(m.data.date, { month: 'short', day: 'numeric' })}
+  </h2>
+  <p class="md-where mono">
+    {m.data.time}{m.data.end && ` – ${m.data.end}`} · {m.data.location}
+    <span class="md-state" data-state></span>
+  </p>
+
+  {chapters.length > 0 && (
+    <ol class="md-chapters">
+      {chapters.map((c) => {
+        const mats = m.data.materials.filter((x) => x.chapters.includes(c.code));
+        return (
+          <li>
+            <span class="mono md-code"><span class="dot" data-s={c.section}></span>{c.short}</span>
+            <span class="md-title">{c.title}</span>
+            <span class="md-icons">
+              {mats.map((x) => (
+                <a href={encodeURI(url(x.href))} target="_blank" rel="noopener" title={`${KIND_LABEL[x.kind]}: ${materialTitle(x)}`}>{ICON[x.kind]}</a>
+              ))}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  )}
+
+  {m.data.topics.length > 0 && (
+    <ul class="md-topics">
+      {m.data.topics.map((x) => <li class="italic">{x}</li>)}
+    </ul>
+  )}
+
+  {m.data.summary && <p class="md-summary italic">{m.data.summary}</p>}
+
+  {m.data.recap && (
+    <div class="md-block">
+      <p class="label">Recap</p>
+      <ul class="md-recap">{m.data.recap.map((x) => <li>{x}</li>)}</ul>
+    </div>
+  )}
+
+  <div class="md-block">
+    <p class="label">Materials</p>
+    {m.data.materials.length > 0 ? (
+      <ul class="md-mats">
+        {m.data.materials.map((x) => (
+          <li>
+            <a href={encodeURI(url(x.href))} target="_blank" rel="noopener">
+              <span class="mono md-kind">{ICON[x.kind]} {KIND_LABEL[x.kind]}</span>
+              <span class="md-mtitle">{materialTitle(x)}</span>
+              <span class="mono md-go">↗</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="md-empty mono" data-when-upcoming>Slides will be posted here before the seminar.</p>
+    )}
+    {isSeminar && recordings.length === 0 && (
+      <p class="md-empty mono" data-when-past>▶ Recording coming soon</p>
+    )}
+  </div>
+
+  {isSeminar && (
+    <div class="md-block" data-when-upcoming>
+      <p class="label">Before you come</p>
+      <ul class="md-prep mono">
+        <li>Read the Kaplan chapters above</li>
+        <li>Bring your questions</li>
+      </ul>
+    </div>
+  )}
+
+  {resources.length > 0 && (
+    <div class="md-block">
+      <p class="label">From the library</p>
+      <ul class="md-mats">
+        {resources.map((r) => (
+          <li>
+            <a href={url(`/resources/?q=${encodeURIComponent(r.data.title)}`)}>
+              <span class="mono md-kind">{KIND_LABEL[r.data.kind]}</span>
+              <span class="md-mtitle">{r.data.title}</span>
+              <span class="mono md-go">→</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <div class="md-actions">
+    <a class="btn" href={googleCalendarUrl(m)} target="_blank" rel="noopener" data-when-upcoming>Add to Google Calendar ↗</a>
+    {variant === 'panel' && <a class="arrow-link" href={meetingUrl(m)}>Open page →</a>}
+  </div>
+</article>
+
+<style>
+  .md {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .md-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+  .md-num {
+    color: var(--faint);
+  }
+  .md-date {
+    font-size: clamp(2.6rem, 4.5vw, 3.6rem);
+    text-transform: none;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+  .md-page .md-date {
+    font-size: clamp(3.4rem, 9vw, 7.5rem);
+  }
+  .md-where {
+    color: var(--fg-dim);
+    font-size: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .md-state:empty {
+    display: none;
+  }
+  .md-state {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--rule-strong);
+    color: var(--fg);
+  }
+  .md-chapters {
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+  .md-chapters li {
+    display: grid;
+    grid-template-columns: 7.2rem 1fr auto;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .md-code {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .md-title {
+    font-size: 1.35rem;
+    line-height: 1.15;
+  }
+  .md-page .md-title {
+    font-size: 1.7rem;
+  }
+  .md-icons {
+    display: flex;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .md-icons a:hover {
+    color: var(--fg);
+  }
+  .md-topics {
+    list-style: none;
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+  .md-summary {
+    font-size: 1.3rem;
+    color: var(--fg-dim);
+  }
+  .md-block {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .md-recap {
+    padding-left: 1.1rem;
+    color: var(--fg-dim);
+    font-size: 1.1rem;
+    display: grid;
+    gap: 0.3rem;
+  }
+  .md-mats {
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+  .md-mats a {
+    display: grid;
+    grid-template-columns: 7.2rem 1fr auto;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--rule);
+    transition: padding 0.3s var(--ease);
+  }
+  .md-mats a:hover {
+    padding-left: 0.35rem;
+  }
+  .md-kind {
+    font-size: 0.66rem;
+    color: var(--muted);
+  }
+  .md-mtitle {
+    font-size: 1.1rem;
+  }
+  .md-go {
+    color: var(--muted);
+  }
+  .md-empty {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0.04em;
+  }
+  .md-prep {
+    list-style: none;
+    font-size: 0.72rem;
+    color: var(--fg-dim);
+    display: grid;
+    gap: 0.2rem;
+  }
+  .md-prep li::before {
+    content: '→ ';
+    color: var(--muted);
+  }
+  .md-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+  /* Past/upcoming state is decided in the browser (see meetings page script). */
+  .md.is-past [data-when-upcoming],
+  .md:not(.is-past) [data-when-past] {
+    display: none;
+  }
+</style>

@@ -1,0 +1,328 @@
+---
+// Telescope-style fuzzy finder over every resource, seminar material, meeting and page.
+// Opens with ⌘K / Ctrl-K or "/", or any element with [data-open-palette].
+import { library, meetings, fmtDate, meetingUrl, materialTitle, MEETING_TYPE, KIND_LABEL, SECTIONS } from '../lib/data';
+import { chapter } from '../lib/kaplan';
+import { links } from '../data/join';
+import { url } from '../lib/url';
+
+const lib = await library();
+const mtgs = await meetings();
+
+const index = [
+  ...lib.map((r) => ({
+    t: r.title,
+    k: KIND_LABEL[r.kind],
+    g: r.origin === 'seminar' ? 'Seminar material' : 'Resource',
+    s: r.allSections ? 'All sections' : r.sections.map((s) => SECTIONS[s as keyof typeof SECTIONS].short).join(' · '),
+    d: r.summary,
+    x: [r.details, r.subject, r.stats, r.note, ...r.chapters.map(chapter).flatMap((c) => [c.short, c.abbr, c.abbr.replace(' ', ''), c.title])].filter(Boolean).join(' '),
+    u: r.href,
+    ext: /^https?:/.test(r.href) || /\.(pdf|jpg|png|xlsx|apkg)$/i.test(r.href),
+  })),
+  ...mtgs.map((m) => {
+    const ch = m.data.covers.map(chapter);
+    return {
+      t: `${MEETING_TYPE[m.data.type].label} — ${fmtDate(m.data.date, { month: 'short', day: 'numeric', year: 'numeric' })}`,
+      k: 'Meeting',
+      g: 'Meeting',
+      s: m.data.location,
+      d: ch.length ? ch.map((c) => `${c.short}: ${c.title}`).join(' · ') : m.data.topics.join(' · ') || (m.data.summary ?? ''),
+      x: [m.data.title, ...ch.flatMap((c) => [c.abbr, c.abbr.replace(' ', '')]), ...m.data.materials.map(materialTitle)].join(' '),
+      u: meetingUrl(m),
+      ext: false,
+    };
+  }),
+  ...[
+    ['Resources', '/resources/', 'The full library'],
+    ['Meetings', '/meetings/', 'Schedule and archive'],
+    ['Scholarship', '/scholarship/', 'MCAT registration scholarship'],
+    ['Team', '/team/', 'Leadership and the officer application'],
+    ['Join', '/join/', 'GroupMe and BBNvolved'],
+    ['About', '/about/', 'A message from the founder'],
+  ].map(([t, u, d]) => ({ t, k: 'Page', g: 'Page', s: '', d, x: '', u: url(u), ext: false })),
+  { t: 'Book 1:1 peer tutoring', k: 'Link', g: 'Tutoring', s: 'Free', d: 'Book a free one-on-one session with an M-CATS officer.', x: 'tutor tutoring book booking appointment session help one on one 1:1', u: links.tutoring, ext: true },
+];
+---
+<dialog id="palette" class="palette" aria-label="Search">
+  <div class="pal-frame">
+    <div class="pal-head">
+      <span class="prompt" aria-hidden="true">›</span>
+      <input id="pal-input" type="text" placeholder="Search resources, slides, meetings…" autocomplete="off" spellcheck="false" aria-controls="pal-results" />
+      <span class="count label" id="pal-count"></span>
+    </div>
+    <div class="pal-body">
+      <ul id="pal-results" class="results" role="listbox"></ul>
+      <aside id="pal-preview" class="preview" aria-live="polite"></aside>
+    </div>
+    <div class="pal-foot label">
+      <span><kbd>↑</kbd> <kbd>↓</kbd> move</span>
+      <span><kbd>↵</kbd> open</span>
+      <span><kbd>esc</kbd> close</span>
+    </div>
+  </div>
+  <script type="application/json" id="pal-index" set:html={JSON.stringify(index)} />
+</dialog>
+
+<script>
+  import { search, highlight, escapeHtml as esc } from '../lib/fuzzy';
+
+  type Entry = { t: string; k: string; g: string; s: string; d: string; x: string; u: string; ext: boolean };
+
+  const dlg = document.getElementById('palette') as HTMLDialogElement;
+  const input = document.getElementById('pal-input') as HTMLInputElement;
+  const list = document.getElementById('pal-results')!;
+  const preview = document.getElementById('pal-preview')!;
+  const count = document.getElementById('pal-count')!;
+  const data: Entry[] = JSON.parse(document.getElementById('pal-index')!.textContent!);
+
+  const docs = data.map((e) => ({ title: e.t, tags: `${e.k} ${e.g} ${e.s}`, body: `${e.d} ${e.x}`, e }));
+
+  let results: { item: Entry; idx?: [number, number][] }[] = [];
+  let sel = 0;
+
+  function run() {
+    const q = input.value.trim();
+    if (!q) {
+      results = data.map((item) => ({ item }));
+    } else {
+      results = search(q, docs).slice(0, 60).map((r) => ({ item: r.doc.e, idx: r.hit.ranges }));
+    }
+    sel = 0;
+    count.textContent = `${results.length} / ${data.length}`;
+    render();
+  }
+
+  function render() {
+    list.innerHTML = results
+      .map(
+        (r, i) => `<li role="option" id="pal-opt-${i}" data-i="${i}" aria-selected="${i === sel}">
+          <span class="r-kind">${esc(r.item.k)}</span>
+          <span class="r-title">${highlight(r.item.t, r.idx ?? [])}</span>
+        </li>`,
+      )
+      .join('');
+    if (!results.length) list.innerHTML = '<li class="empty">No matches. Try fewer letters.</li>';
+    input.setAttribute('aria-activedescendant', results.length ? `pal-opt-${sel}` : '');
+    renderPreview();
+  }
+
+  function renderPreview() {
+    const r = results[sel]?.item;
+    if (!r) {
+      preview.innerHTML = '';
+      return;
+    }
+    preview.innerHTML = `
+      <p class="label">${esc(r.g)}${r.s ? ' · ' + esc(r.s) : ''}</p>
+      <h3>${esc(r.t)}</h3>
+      <p class="p-desc">${esc(r.d)}</p>
+      ${r.x ? `<p class="p-more">${esc(r.x.slice(0, 280))}${r.x.length > 280 ? '…' : ''}</p>` : ''}
+      <p class="p-go label">↵ ${r.ext ? 'Open file / link ↗' : 'Go to page'}</p>`;
+  }
+
+  function move(d: number) {
+    if (!results.length) return;
+    sel = (sel + d + results.length) % results.length;
+    list.querySelectorAll('[aria-selected]').forEach((el) => el.setAttribute('aria-selected', String(Number((el as HTMLElement).dataset.i) === sel)));
+    list.querySelector(`[data-i="${sel}"]`)?.scrollIntoView({ block: 'nearest' });
+    input.setAttribute('aria-activedescendant', `pal-opt-${sel}`);
+    renderPreview();
+  }
+
+  function go(i = sel) {
+    const r = results[i]?.item;
+    if (!r) return;
+    if (r.ext) window.open(r.u, '_blank', 'noopener');
+    else location.href = r.u;
+    dlg.close();
+  }
+
+  function open(prefill = '') {
+    if (dlg.open) return;
+    dlg.showModal();
+    input.value = prefill;
+    run();
+    input.focus();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const t = e.target as HTMLElement;
+    const typing = t.closest('input, textarea, [contenteditable]') && t !== input;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      dlg.open ? dlg.close() : open();
+    } else if (e.key === '/' && !typing && !dlg.open) {
+      e.preventDefault();
+      open();
+    }
+  });
+
+  input.addEventListener('input', run);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || (e.ctrlKey && (e.key === 'n' || e.key === 'j'))) { e.preventDefault(); move(1); }
+    else if (e.key === 'ArrowUp' || (e.ctrlKey && (e.key === 'p' || e.key === 'k'))) { e.preventDefault(); move(-1); }
+    else if (e.key === 'Enter') { e.preventDefault(); go(); }
+  });
+  list.addEventListener('mousemove', (e) => {
+    const li = (e.target as HTMLElement).closest('li[data-i]') as HTMLElement | null;
+    if (li && Number(li.dataset.i) !== sel) move(Number(li.dataset.i) - sel);
+  });
+  list.addEventListener('click', (e) => {
+    const li = (e.target as HTMLElement).closest('li[data-i]') as HTMLElement | null;
+    if (li) go(Number(li.dataset.i));
+  });
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  document.querySelectorAll('[data-open-palette]').forEach((b) => b.addEventListener('click', () => open()));
+  window.addEventListener('palette:open', (e) => open((e as CustomEvent).detail ?? ''));
+</script>
+
+<style>
+  .palette {
+    margin: auto;
+    margin-top: 10vh;
+    width: min(980px, calc(100vw - 2rem));
+    max-height: 76vh;
+    background: var(--bg-raise);
+    color: var(--fg);
+    border: 1px solid var(--rule-strong);
+    padding: 0;
+  }
+  .palette::backdrop {
+    background: rgba(5, 5, 5, 0.72);
+    backdrop-filter: blur(6px);
+  }
+  .palette[open] {
+    animation: pal-in 0.28s var(--ease);
+  }
+  @keyframes pal-in {
+    from { opacity: 0; transform: translateY(-8px) scale(0.985); }
+  }
+  .pal-frame {
+    display: flex;
+    flex-direction: column;
+    height: min(76vh, 620px);
+  }
+  .pal-head {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .prompt {
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+  input {
+    flex: 1;
+    background: none;
+    border: 0;
+    outline: 0;
+    color: var(--fg);
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 1rem;
+  }
+  input::placeholder {
+    color: var(--faint);
+  }
+  .pal-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    min-height: 0;
+  }
+  .results {
+    list-style: none;
+    overflow-y: auto;
+    border-right: 1px solid var(--rule);
+    padding: 0.4rem 0;
+  }
+  .results :global(li) {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: 0.75rem;
+    padding: 0.45rem 1.25rem;
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 0.82rem;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+  }
+  .results :global(li[aria-selected='true']) {
+    background: rgba(238, 235, 228, 0.06);
+    border-left-color: var(--fg);
+  }
+  .results :global(.r-kind) {
+    color: var(--muted);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding-top: 0.1rem;
+  }
+  .results :global(.r-title) {
+    color: var(--fg-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .results :global(li[aria-selected='true'] .r-title) {
+    color: var(--fg);
+  }
+  .results :global(mark) {
+    background: none;
+    color: var(--fg);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--neb-violet);
+    text-underline-offset: 3px;
+  }
+  .results :global(.empty) {
+    color: var(--muted);
+    display: block;
+  }
+  .preview {
+    padding: 1.5rem 1.5rem;
+    overflow-y: auto;
+  }
+  .preview :global(h3) {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.9rem;
+    line-height: 1;
+    margin: 0.6rem 0 1rem;
+  }
+  .preview :global(.p-desc) {
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.35;
+    color: var(--fg);
+  }
+  .preview :global(.p-more) {
+    margin-top: 1rem;
+    font-size: 1rem;
+    color: var(--fg-dim);
+  }
+  .preview :global(.p-go) {
+    margin-top: 1.5rem;
+  }
+  .pal-foot {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.7rem 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+  @media (max-width: 720px) {
+    .pal-body {
+      grid-template-columns: 1fr;
+    }
+    .preview,
+    .pal-foot {
+      display: none;
+    }
+    .results {
+      border-right: 0;
+    }
+  }
+</style>

@@ -1,0 +1,9 @@
+title: Biology Seminar
+type: biology
+date: 2026-11-04
+time: "5:00 PM"
+end: "9:00 PM"
+location: White Hall 231
+covers: [biochem-6, biochem-7]
+topics:
+  - "Overflow from lipid metabolism"

@@ -1,0 +1,11 @@
+---
+import raw from '../assets/logo.svg?raw';
+interface Props { class?: string; label?: string }
+const { class: cls = '', label = 'The M-CATS' } = Astro.props;
+// Strip the XML prolog and let the strokes inherit the text colour.
+const svg = raw
+  .replace(/<\?xml[^>]*\?>/, '')
+  .replace(/stroke:\s*#fff;/g, 'stroke: currentColor;')
+  .replace('<svg ', `<svg role="img" aria-label="${label}" class="logo ${cls}" `);
+---
+<Fragment set:html={svg} />

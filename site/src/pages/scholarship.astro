@@ -1,0 +1,775 @@
+---
+import Base from '../layouts/Base.astro';
+import { scholarship as s } from '../data/scholarship';
+
+const total = s.awards.need + s.awards.merit;
+const fmt = (iso: string, o: Intl.DateTimeFormatOptions) =>
+  new Date(iso.length === 10 ? `${iso}T12:00:00Z` : iso).toLocaleDateString('en-US', { timeZone: 'America/New_York', ...o });
+
+// Milestones are evenly spaced (so close dates never collide); the browser
+// places "today" proportionally within whichever gap it falls in.
+const pos = (i: number) => (i / (s.timeline.length - 1)) * 100;
+// Rubric bars: the heaviest criterion sets the full length and the full gradient.
+const maxPts = Math.max(...s.rubric.flatMap((r) => [r.need, r.merit]));
+
+const gcal = (() => {
+  const end = new Date(s.closes);
+  const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const p = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: 'M-CATS scholarship application due',
+    dates: `${stamp(new Date(+end - 36e5))}/${stamp(end)}`,
+    details: 'MCAT Registration Scholarship: https://themcats.org/scholarship/',
+  });
+  return `https://calendar.google.com/calendar/render?${p}`;
+})();
+---
+<Base title="Scholarship" description={`The M-CATS MCAT Registration Scholarship: ${total} awards covering the $${s.amount} registration fee.`}>
+  {import.meta.env.DEV && s.placeholder && (
+    <p class="draft mono wrap">Draft: dates, criteria and FAQ are placeholders. Edit src/data/scholarship.ts</p>
+  )}
+
+  <header class="wrap head">
+    <p class="label">Scholarship · {s.term}</p>
+    <h1 class="display ca ca-in">MCAT<br />Registration<br />Scholarship</h1>
+    <p class="intro italic">{s.summary}</p>
+  </header>
+
+  <!-- ── Countdown ─────────────────────────────────────────── -->
+  <section class="wrap cd-wrap" id="countdown" data-opens={s.opens} data-closes={s.closes}>
+    <div class="cd-head">
+      <p class="label" data-cd-label>Applications open in</p>
+      <p class="mono cd-date" data-cd-date>{fmt(s.opens, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+    </div>
+    <div class="cd" data-cd-clock>
+      {['days', 'hours', 'minutes', 'seconds'].map((u) => (
+        <div class="cd-unit">
+          <span class="display cd-n" data-u={u}>--</span>
+          <span class="label">{u}</span>
+        </div>
+      ))}
+    </div>
+    <p class="cd-closed italic" data-cd-closed hidden>
+      Applications are closed. Recipients will be announced {fmt(s.timeline.at(-1)!.date, { month: 'long', day: 'numeric' })}.
+    </p>
+    <div class="cd-actions">
+      {s.applyUrl ? (
+        <a class="btn btn-solid" href={s.applyUrl} target="_blank" rel="noopener" data-apply>Apply now ↗</a>
+      ) : (
+        <span class="btn btn-disabled" data-apply-soon>Application form coming soon</span>
+      )}
+      <a class="btn" href={gcal} target="_blank" rel="noopener">Add deadline to Google Calendar ↗</a>
+    </div>
+  </section>
+
+  <!-- ── The award, in numbers ──────────────────────────────── -->
+  <section class="wrap facts" data-reveal>
+    <div><span class="display">{String(total).padStart(2, '0')}</span><span class="label">Awards</span></div>
+    <div><span class="display">{String(s.awards.need).padStart(2, '0')}</span><span class="label">Need-based</span></div>
+    <div><span class="display">{String(s.awards.merit).padStart(2, '0')}</span><span class="label">Merit-based</span></div>
+    <div><span class="display">${s.amount}</span><span class="label">Each · full registration fee</span></div>
+  </section>
+
+  <!-- ── Timeline ──────────────────────────────────────────── -->
+  <section class="wrap section-tight">
+    <div class="section-head"><p class="label">Timeline</p></div>
+    <div class="tl" data-reveal>
+      <div class="tl-track"><div class="tl-fill" data-tl-fill></div></div>
+      <span class="tl-today mono" data-tl-today hidden>Today</span>
+      <ol>
+        {s.timeline.map((m, i) => (
+          <li style={`--x:${pos(i)}%`} class={m.key ? 'key' : ''} data-date={m.date}>
+            <span class="tl-dot"></span>
+            <span class="mono tl-d">
+              {m.prefix && `${m.prefix} `}{fmt(m.date, { month: 'short', day: 'numeric' })}{m.end && ` – ${fmt(m.end, { day: 'numeric' })}`}
+            </span>
+            <span class="tl-l">{m.label}</span>
+            {m.note && <span class="tl-n italic">{m.note}</span>}
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- ── Two tracks ─────────────────────────────────────────── -->
+  <section class="wrap section-tight">
+    <div class="section-head"><p class="label">Two tracks</p><p class="label">{s.cycle}</p></div>
+    <div class="tracks">
+      {s.tracks.map((t) => (
+        <article class="track" data-reveal>
+          <p class="mono tr-count">{String(t.count).padStart(2, '0')} awards · scored out of {t.outOf}</p>
+          <h2 class="tr-name display">{t.name}</h2>
+          <p class="tr-body">{t.body}</p>
+          <ul class="tr-crit mono">{t.requires.map((c) => <li>{c}</li>)}</ul>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- ── The application ────────────────────────────────────── -->
+  <section class="wrap section-tight">
+    <div class="section-head"><p class="label">What you’ll submit</p><p class="label">Via UK Qualtrics</p></div>
+    <ol class="essays">
+      {s.essays.map((e, i) => (
+        <li data-reveal>
+          <span class="mono es-n">{String(i + 1).padStart(2, '0')}</span>
+          <div class="es-main">
+            <h3 class="es-t">{e.title}</h3>
+            <p class="es-p">{e.prompt}</p>
+            {e.extra && <p class="es-x">{e.extra}</p>}
+          </div>
+          <div class="es-meta mono">
+            <span>{e.words}</span>
+            <span class="es-tracks">
+              {(e.tracks ?? ['need', 'merit']).map((t) => (
+                <span class="es-tag">{t === 'need' ? 'Need' : 'Merit'}</span>
+              ))}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- ── Rubric ─────────────────────────────────────────────── -->
+  <section class="wrap section-tight">
+    <div class="section-head"><p class="label">How it’s scored</p><p class="label">Need /100 · Merit /65</p></div>
+    <div class="rubric" data-reveal>
+      <div class="rb-row rb-head mono">
+        <span>Criterion</span><span>Need-based</span><span>Merit-based</span>
+      </div>
+      {s.rubric.map((r) => (
+        <div class="rb-row">
+          <div>
+            <p class="rb-c">{r.criterion}</p>
+            <p class="rb-d">{r.detail}</p>
+          </div>
+          {(['need', 'merit'] as const).map((k) => (
+            <div class="rb-bar">
+              {r[k] ? (
+                <>
+                  <span
+                    class="rb-fill"
+                    style={`width:${((r[k] / maxPts) * 75).toFixed(2)}%;background-size:${((maxPts / r[k]) * 100).toFixed(2)}% 100%`}
+                  ></span>
+                  <span class="mono rb-v">{r[k]}</span>
+                </>
+              ) : (
+                <span class="mono rb-na">—</span>
+              )}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+    <p class="committee italic" data-reveal>{s.committee}</p>
+  </section>
+
+  <!-- ── How it works ───────────────────────────────────────── -->
+  <section class="wrap section-tight">
+    <div class="section-head"><p class="label">How it works</p></div>
+    <ol class="steps">
+      {s.steps.map((st, i) => (
+        <li data-reveal>
+          <span class="display st-n">{String(i + 1).padStart(2, '0')}</span>
+          <h3 class="st-t">{st.title}</h3>
+          <p class="st-b">{st.body}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- ── FAQ + FAP ───────────────────────────────────────────── -->
+  <section class="wrap section-tight faq-grid">
+    <div>
+      <div class="section-head"><p class="label">Questions</p></div>
+      <div class="faq">
+        {s.faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span><span class="mono plus" aria-hidden="true">+</span></summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+    <aside class="fap" data-reveal>
+      <p class="label">Also apply for this</p>
+      <h3 class="display fap-t">AAMC Fee Assistance Program</h3>
+      <p>
+        The AAMC’s own program reduces the MCAT registration fee and includes other benefits for applicants with
+        financial need. It’s separate from ours, and you can use both.
+      </p>
+      <a class="arrow-link" href="https://students-residents.aamc.org/fee-assistance-program/fee-assistance-program" target="_blank" rel="noopener">Learn about FAP ↗</a>
+    </aside>
+  </section>
+</Base>
+
+<script>
+  const root = document.getElementById('countdown')!;
+  const opens = Date.parse(root.dataset.opens!);
+  const closes = Date.parse(root.dataset.closes!);
+  const label = root.querySelector('[data-cd-label]')!;
+  const dateEl = root.querySelector('[data-cd-date]')!;
+  const clock = root.querySelector<HTMLElement>('[data-cd-clock]')!;
+  const closed = root.querySelector<HTMLElement>('[data-cd-closed]')!;
+  const units = Object.fromEntries([...root.querySelectorAll<HTMLElement>('[data-u]')].map((el) => [el.dataset.u!, el]));
+  const apply = root.querySelector<HTMLElement>('[data-apply]');
+  if (apply) apply.hidden = Date.now() < opens || Date.now() >= closes; // only while applications are open
+  const long = (t: number) => new Date(t).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+  function tick() {
+    const now = Date.now();
+    let target: number;
+    if (now < opens) {
+      target = opens;
+      label.textContent = 'Applications open in';
+      dateEl.textContent = long(opens);
+    } else if (now < closes) {
+      target = closes;
+      label.textContent = 'Applications close in';
+      dateEl.textContent = long(closes);
+    } else {
+      label.textContent = 'Applications closed';
+      dateEl.textContent = '';
+      clock.hidden = true;
+      closed.hidden = false;
+      return;
+    }
+    let s = Math.max(0, Math.floor((target - now) / 1000));
+    const parts = { days: Math.floor(s / 86400), hours: Math.floor((s % 86400) / 3600), minutes: Math.floor((s % 3600) / 60), seconds: s % 60 };
+    for (const [u, v] of Object.entries(parts)) {
+      const txt = String(v).padStart(2, '0');
+      const el = units[u];
+      if (el.textContent !== txt) {
+        el.textContent = txt;
+        el.classList.remove('flip');
+        void el.offsetWidth; // restart the animation
+        el.classList.add('flip');
+      }
+    }
+    requestAnimationFrame(() => setTimeout(tick, 1000 - (Date.now() % 1000)));
+  }
+  tick();
+
+  // Timeline: fill up to today and place the marker, interpolating within the current gap.
+  const tl = document.querySelector<HTMLElement>('.tl')!;
+  const items = [...tl.querySelectorAll<HTMLElement>('li[data-date]')];
+  const times = items.map((li) => Date.parse(`${li.dataset.date}T12:00:00Z`));
+  const now = Date.now();
+  let p = 0;
+  if (now >= times.at(-1)!) p = 100;
+  else if (now > times[0]) {
+    const i = times.findIndex((t) => t > now) - 1;
+    const step = 100 / (times.length - 1);
+    p = step * (i + (now - times[i]) / (times[i + 1] - times[i]));
+  }
+  tl.querySelector<HTMLElement>('[data-tl-fill]')!.style.width = `${p}%`;
+  const today = tl.querySelector<HTMLElement>('[data-tl-today]')!;
+  if (p > 0 && p < 100) {
+    today.style.left = `${p}%`;
+    today.hidden = false;
+  }
+  items.forEach((li, i) => li.classList.toggle('done', times[i] + 12 * 36e5 < now));
+</script>
+
+<style>
+  .draft {
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    border: 1px dashed var(--cars);
+    color: var(--cars);
+    font-size: 0.7rem;
+    text-transform: none;
+    letter-spacing: 0.04em;
+  }
+  .head {
+    padding-block: clamp(3rem, 7vw, 5rem) 2rem;
+  }
+  .head h1 {
+    font-size: clamp(3.2rem, 11vw, 10rem);
+    letter-spacing: -0.035em;
+    line-height: 0.84;
+    margin: 1rem 0 2rem;
+  }
+  .intro {
+    font-size: clamp(1.4rem, 2.4vw, 1.9rem);
+    line-height: 1.25;
+    color: var(--fg-dim);
+    max-width: 36ch;
+  }
+  .section-tight {
+    padding-block: clamp(3rem, 7vw, 5rem);
+  }
+
+  /* Countdown */
+  .cd-wrap {
+    margin-top: 2rem;
+    padding-block: 2.5rem;
+    border-block: 1px solid var(--rule);
+  }
+  .cd-head {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .cd-date {
+    color: var(--fg-dim);
+  }
+  .cd {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .cd-unit {
+    display: grid;
+    gap: 0.4rem;
+    padding-right: 1rem;
+  }
+  .cd-unit + .cd-unit {
+    border-left: 1px solid var(--rule);
+    padding-left: clamp(0.75rem, 3vw, 2rem);
+  }
+  .cd-n {
+    font-size: clamp(3.4rem, 11vw, 9rem);
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+  }
+  /* each changed digit settles in, like a lens refocusing */
+  .cd-n.flip {
+    animation: refocus 0.6s var(--ease);
+  }
+  @keyframes refocus {
+    from { filter: blur(5px); opacity: 0.4; }
+  }
+  .cd-closed {
+    font-size: 2rem;
+  }
+  .cd-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.25rem;
+  }
+  .btn-disabled {
+    color: var(--muted);
+    border-style: dashed;
+    cursor: default;
+  }
+  .btn-disabled:hover {
+    border-color: var(--rule-strong);
+  }
+
+  /* Facts */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding-block: 2.5rem;
+  }
+  .facts div {
+    display: grid;
+    gap: 0.5rem;
+    padding-right: 1rem;
+  }
+  .facts div + div {
+    border-left: 1px solid var(--rule);
+    padding-left: clamp(0.75rem, 3vw, 2rem);
+  }
+  .facts .display {
+    font-size: clamp(2.6rem, 6vw, 4.6rem);
+    line-height: 1;
+  }
+
+  /* Timeline */
+  .tl {
+    position: relative;
+    padding: 1.5rem 0 0;
+  }
+  .tl-track {
+    height: 1px;
+    background: var(--rule-strong);
+    position: relative;
+  }
+  .tl-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0;
+    background: var(--nebula);
+    box-shadow: 0 0 8px rgba(160, 140, 246, 0.35);
+    transition: width 1.6s var(--ease);
+  }
+  .tl-today {
+    position: absolute;
+    top: -0.4rem;
+    translate: -50% 0;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--neb-violet);
+  }
+  .tl-today::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 1.3rem;
+    width: 1px;
+    height: 1.25rem;
+    background: var(--neb-violet);
+  }
+  .tl ol {
+    list-style: none;
+    position: relative;
+    height: 9rem;
+  }
+  .tl li {
+    position: absolute;
+    left: var(--x);
+    top: 0;
+    width: 10.5rem;
+    display: grid;
+    gap: 0.3rem;
+    padding-top: 1.4rem;
+    translate: -0.35rem 0;
+  }
+  .tl li:last-child {
+    translate: calc(-100% + 0.35rem) 0;
+    text-align: right;
+    justify-items: end;
+  }
+  .tl-dot {
+    position: absolute;
+    top: -4px;
+    left: 0;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--fg-dim);
+  }
+  .tl li:last-child .tl-dot {
+    left: auto;
+    right: 0;
+  }
+  .tl li.done .tl-dot {
+    background: var(--fg);
+    border-color: var(--fg);
+  }
+  .tl li.key .tl-dot {
+    box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--fg-dim);
+  }
+  .tl-d {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .tl-l {
+    font-size: 1.25rem;
+    line-height: 1.15;
+  }
+  .tl li.key .tl-l {
+    font-family: var(--display);
+    font-weight: 700;
+  }
+  .tl-n {
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+
+  /* Tracks */
+  .tracks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+  }
+  .track {
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
+  .tr-count {
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+  .tr-name {
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    text-transform: none;
+  }
+  .tr-body {
+    color: var(--fg-dim);
+    font-size: 1.25rem;
+    max-width: 44ch;
+  }
+  .tr-crit {
+    list-style: none;
+    border-top: 1px solid var(--rule);
+    font-size: 0.72rem;
+    color: var(--fg-dim);
+  }
+  .tr-crit li {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tr-crit li::before {
+    content: '→ ';
+    color: var(--muted);
+  }
+
+
+  /* Essays */
+  .essays {
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+  .essays li {
+    display: grid;
+    grid-template-columns: 3rem 1fr 11rem;
+    gap: 1.5rem;
+    padding: 1.6rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .es-n {
+    color: var(--muted);
+    font-size: 0.75rem;
+    padding-top: 0.4rem;
+  }
+  .es-t {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+  .es-p {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    max-width: 62ch;
+  }
+  .es-x {
+    margin-top: 0.75rem;
+    color: var(--fg-dim);
+    font-size: 1.05rem;
+    max-width: 62ch;
+  }
+  .es-meta {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    justify-items: end;
+    font-size: 0.68rem;
+    color: var(--muted);
+    padding-top: 0.4rem;
+  }
+  .es-tracks {
+    display: flex;
+    gap: 0.35rem;
+  }
+  .es-tag {
+    padding: 0.15rem 0.5rem;
+    border: 1px solid var(--rule-strong);
+    color: var(--fg-dim);
+  }
+
+  /* Rubric */
+  .rubric {
+    border-top: 1px solid var(--rule);
+  }
+  .rb-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .rb-head {
+    font-size: 0.66rem;
+    color: var(--muted);
+    padding-block: 0.7rem;
+  }
+  .rb-c {
+    font-size: 1.3rem;
+    line-height: 1.15;
+  }
+  .rb-d {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
+  }
+  .rb-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .rb-fill {
+    display: block;
+    flex: none;
+    height: 2px;
+    background-color: var(--neb-violet); /* fallback if gradients fail */
+    background-image: linear-gradient(90deg, #6f86f2, #a08cf6 40%, #e58fc4 75%, #f3d3a0);
+    background-repeat: no-repeat;
+    box-shadow: 0 0 10px rgba(160, 140, 246, 0.25);
+    transform-origin: left;
+  }
+  /* Bars are always visible; the grow-in is only a flourish when the rubric scrolls into view. */
+  .rubric.in .rb-fill {
+    animation: grow 1.2s var(--ease) both;
+  }
+  @keyframes grow {
+    from { transform: scaleX(0); }
+  }
+  .rb-v {
+    font-size: 0.9rem;
+    color: var(--fg);
+  }
+  .rb-na {
+    color: var(--faint);
+  }
+  .committee {
+    margin-top: 2rem;
+    color: var(--fg-dim);
+    font-size: 1.2rem;
+    max-width: 60ch;
+  }
+
+  /* Steps */
+  .steps {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2rem;
+  }
+  .steps li {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    padding-top: 1rem;
+    border-top: 1px solid var(--rule-strong);
+  }
+  .st-n {
+    font-size: 2.6rem;
+    color: var(--muted);
+    line-height: 1;
+  }
+  .st-t {
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+  .st-b {
+    color: var(--fg-dim);
+    font-size: 1.1rem;
+  }
+
+  /* FAQ + FAP */
+  .faq-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: start;
+  }
+  .faq details {
+    border-bottom: 1px solid var(--rule);
+  }
+  .faq summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 0;
+    cursor: pointer;
+    font-size: 1.3rem;
+  }
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .plus {
+    color: var(--muted);
+    transition: transform 0.35s var(--ease);
+  }
+  .faq details[open] .plus {
+    transform: rotate(45deg);
+    color: var(--fg);
+  }
+  .faq details p {
+    padding-bottom: 1.25rem;
+    color: var(--fg-dim);
+    max-width: 60ch;
+  }
+  .fap {
+    display: grid;
+    gap: 1rem;
+    padding: 1.75rem;
+    border: 1px solid var(--rule-strong);
+  }
+  .fap-t {
+    font-size: 1.9rem;
+    text-transform: none;
+    line-height: 1.05;
+  }
+  .fap p:not(.label) {
+    color: var(--fg-dim);
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 860px) {
+    .facts,
+    .cd {
+      grid-template-columns: 1fr 1fr;
+      row-gap: 1.5rem;
+    }
+    .facts div:nth-child(3),
+    .cd-unit:nth-child(3) {
+      border-left: 0;
+      padding-left: 0;
+    }
+    .tracks,
+    .faq-grid {
+      grid-template-columns: 1fr;
+    }
+    .steps {
+      grid-template-columns: 1fr 1fr;
+    }
+    .essays li {
+      grid-template-columns: 2rem 1fr;
+    }
+    .es-meta {
+      grid-column: 2;
+      justify-items: start;
+    }
+    .rb-row {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem 1.5rem;
+    }
+    .rb-row > div:first-child,
+    .rb-head span:first-child {
+      grid-column: 1 / -1;
+    }
+    /* vertical timeline on small screens */
+    .tl-track,
+    .tl-today {
+      display: none;
+    }
+    .tl ol {
+      height: auto;
+      border-left: 1px solid var(--rule-strong);
+      display: grid;
+      gap: 1.75rem;
+      padding-left: 1.5rem;
+    }
+    .tl li,
+    .tl li:last-child {
+      position: relative;
+      left: auto;
+      width: auto;
+      translate: none;
+      padding-top: 0;
+      text-align: left;
+      justify-items: start;
+    }
+    .tl-dot,
+    .tl li:last-child .tl-dot {
+      top: 0.3rem;
+      left: calc(-1.5rem - 0.35rem - 0.5px);
+      right: auto;
+    }
+  }
+</style>

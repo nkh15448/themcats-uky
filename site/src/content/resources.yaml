@@ -1,0 +1,332 @@
+# ─────────────────────────────────────────────────────────────
+#  Resource library
+#
+#  kind:      anki | handout | tool | course | book | community
+#  sections:  any of cp, cars, bb, ps   (omit for "all sections")
+#  cost:      free | paid
+#  href:      a /path to a file in public/ or a full https:// URL
+#  download:  optional filename to save as (local files only)
+#
+#  Seminar slides are NOT listed here: they live on each meeting
+#  in src/content/meetings/ and appear in the library automatically.
+# ─────────────────────────────────────────────────────────────
+
+# ── Anki decks ───────────────────────────────────────────────
+
+- id: captain-hook-deck
+  title: The Captain Hook Deck V2
+  kind: anki
+  cost: free
+  summary: A comprehensive deck for every section, based on Jacksparrow but with much cleaner formatting.
+  stats: 4,747 cards
+  href: https://drive.google.com/file/d/14ZUvw22dNdhYZKVEvDNygCnwcjOV1rn3/view?usp=sharing
+  details: >-
+    A reformatted version of the deck created by u/jacksparrow2048. It has all of the same
+    content as Jacksparrow without the many formatting errors, which makes it a good middle
+    ground between the comprehensive Jacksparrow deck and the polished AnKing deck. It adds
+    extra notes, formulae, and links to the Khan Academy videos for each card. The original
+    included the Pankow deck for P/S; we left it out because the version in our library is
+    better formatted.
+
+- id: milesdown-deck
+  title: The Milesdown Deck
+  kind: anki
+  cost: free
+  summary: A well formatted, digestible, high-yield all-in-one MCAT deck.
+  stats: ~2,888 cards
+  href: https://drive.google.com/file/d/1Gr87VeYlvUhTAMVp2b_ttOmUsRPapPdx/view?usp=sharing
+  note: Talk to someone on the leadership board before you start this one.
+  details: >-
+    Made by a Reddit user and updated and reformatted frequently. It is organized by Kaplan
+    chapter, uses cloze deletions generously, and covers the high-yield content without much
+    low-yield material.
+
+- id: pankow-deck
+  title: The Pankow Deck
+  kind: anki
+  sections: [ps]
+  cost: free
+  summary: A well written deck built just for Psych/Soc.
+  stats: ~2,681 cards
+  href: https://drive.google.com/file/d/1-VwOZ1TDLL5UWei1yn5jrCVj2sSM-g1e/view?usp=sharing
+  details: >-
+    Made by Reddit user Pankow specifically for the P/S section, following the structure of the
+    Khan Academy P/S course. Well made cards and … funny memes. Pair it with the Khan Academy
+    course and the KA 300 or 86 page document.
+
+- id: jacksparrow-deck
+  title: The Jacksparrow Deck
+  kind: anki
+  cost: free
+  summary: A high-quality, comprehensive deck for all subjects.
+  stats: 6,398 cards
+  href: https://drive.google.com/file/d/1NFWIVwMGuj1TF0kC0kZc6Ve2JCexw0pX/view?usp=sharing
+  details: >-
+    Created by u/jacksparrow2048 while working through all of the Kaplan books. More
+    comprehensive than Milesdown or AnKing, though some cards need tailoring: many have little
+    context on the front and a lot of answer on the back. When that happens, simplify the back
+    or split the card. Ask leadership for advice.
+
+- id: aidan-deck
+  title: The Aidan Deck
+  kind: anki
+  cost: free
+  summary: The most comprehensive deck there is. Very good, but it has to be approached correctly.
+  stats: ~15,171 cards
+  href: https://drive.google.com/drive/folders/1ufM77XxXdpdlel-5mPDb6nb9X43AJiF7?usp=sharing
+  note: Read the "How to use" file in the folder, and talk to leadership about whether it fits your timeline.
+  details: >-
+    Often called the 528 deck because it truly has everything. Its creator believed nothing was
+    too low yield, so everything has a card. The cards are cloze deletions, but the deck is very
+    dense and difficult to get through.
+
+- id: equations-constants-deck
+  title: Equations & Constants Deck
+  kind: anki
+  sections: [cp, bb]
+  cost: free
+  summary: Every equation and constant you need for the exam.
+  stats: 172 cards
+  href: /decks/MCAT Equations and Constants_040526_TheMCATS.apkg
+  download: Eqs and Constants 040526 TheMCATS.apkg
+  details: >-
+    A simple deck with all of the equations and constants you need to know for the MCAT. There
+    are plenty of equation decks out there, each with pros and cons; this one has the fewest
+    annoying problems. We may add more in the future.
+
+- id: amino-acids-deck
+  title: Amino Acids Deck
+  kind: anki
+  sections: [bb]
+  subject: Biochemistry
+  cost: free
+  summary: Structures, properties, and nomenclature for all 20 amino acids.
+  stats: 135 cards
+  href: /decks/Amino_Acids_040526_TheMCATS.apkg
+  download: Amino_Acids_040526_TheMCATS.apkg
+  details: >-
+    Covers all 20 amino acids: structures, one- and three-letter codes, pKa values,
+    classifications, and high-yield mnemonics. Based on the amino acids handout in this library.
+    Know this deck like the back of your hand.
+
+# ── Handouts & study guides ──────────────────────────────────
+
+- id: study-planner
+  title: MCAT Planning Sheet
+  kind: tool
+  cost: free
+  summary: A spreadsheet template for laying out your MCAT study plan.
+  stats: Excel
+  href: /handouts/Plan.xlsx
+  download: MCAT_Planner_The_MCATS_UK.xlsx
+  cta:
+    label: Book a planning session
+    href: https://bookings.cloud.microsoft/book/TheMCATSPeerTutoring-Bookings@l.uky.edu/?ismsaljsauthenabled
+  details: >-
+    Going in with a plan sets you up for success. Use this as a template and adjust it to your
+    timeline as things go according to (and against) plan. If your situation is different or you
+    want a second opinion, book time with one of us and we will build a custom plan with you.
+
+- id: metabolism-map
+  title: Metabolism Map
+  kind: handout
+  sections: [bb]
+  subject: Biochemistry
+  cost: free
+  summary: A comprehensive, legible metabolism map for review.
+  stats: PDF
+  href: /handouts/Metabolism_Map_TheMCATS040726.pdf
+  download: Metabolism_Map_TheMCATS040726.pdf
+  details: >-
+    Made by Reddit user u/mit18myfsuedu. One of the most comprehensive maps that is still
+    legible. It is missing the specifics of the pyruvate dehydrogenase complex and the fructose
+    and galactose entry points into glycolysis. We plan to make our own with structures.
+
+- id: metabolic-pathways-quiz
+  title: Metabolic Pathways Quiz
+  kind: tool
+  sections: [bb]
+  subject: Biochemistry
+  cost: free
+  summary: Test how well you actually know the metabolic pathways.
+  stats: Google Form
+  href: https://docs.google.com/forms/d/e/1FAIpQLSdet8719OskoCjS5Hm9ct6nlqFZ-aA5WZ6-khSXSd1iQ-1V0w/viewform
+  details: >-
+    A Google Form made by "drdaph12" that tests the high-yield content of most metabolic
+    pathways.
+
+- id: orgo-lab-techniques
+  title: Orgo Lab Techniques
+  kind: handout
+  sections: [cp]
+  subject: Organic Chemistry
+  cost: free
+  summary: A one-page overview of the organic chemistry lab techniques the MCAT tests.
+  stats: Image
+  href: /handouts/MCAT Orgo Lab Techniques Simple Overview TheMCATS040726.jpg
+  download: MCAT Orgo Lab Techniques Simple Overview TheMCATS040726.jpg
+  details: >-
+    Lab techniques are tested heavily. Made by Reddit user u/ExtensionOne. We plan to make our
+    own with more depth, but this works well as a mini review.
+
+- id: physics-overview
+  title: Physics Overview
+  kind: handout
+  sections: [cp]
+  subject: Physics
+  cost: free
+  summary: Key takeaways from the entire Khan Academy MCAT physics series.
+  stats: PDF
+  href: https://drive.google.com/file/d/1ma0TVesZaP4ZI5E1pELb4R440hcdb8zD/view?usp=sharing
+  details: >-
+    Written by u/thatonepremed16 after going through every Khan Academy physics video. All
+    formulae are outlined and each topic has a short explanation. Highly recommended.
+
+- id: ps-overview
+  title: Psych/Soc Overview
+  kind: handout
+  sections: [ps]
+  cost: free
+  summary: Key takeaways from some of the Khan Academy Psych/Soc series.
+  stats: PDF
+  href: https://drive.google.com/file/d/1E67nClm4eeNa-z6e2XuhS3Ensr_9X26m/view?usp=sharing
+  details: >-
+    By u/thatonepremed16. Best used at the end of your studies as a review. It does not replace
+    the video series or the KA 300 & 86 page docs.
+
+- id: amino-acids-handout
+  title: Amino Acids Overview
+  kind: handout
+  sections: [bb]
+  subject: Biochemistry
+  cost: free
+  summary: Essentially everything relevant about amino acids, on a few pages.
+  stats: PDF
+  href: /handouts/AminoAcids_Handout_TheMCATS040726.pdf
+  download: AminoAcids_Handout_TheMCATS040726.pdf
+  details: >-
+    Made by u/FiendingforCaffeine (amazing username). Knowing the content in this document is
+    highly recommended.
+
+- id: ka-ps-300
+  title: KA Psych/Soc 300 Page Doc
+  kind: handout
+  sections: [ps]
+  cost: free
+  summary: The essential companion document for Khan Academy Psych/Soc.
+  stats: PDF · 300 pages
+  href: /handouts/KA PS_300PgDoc_TheMCATS040726.pdf
+  download: KA PS_300PgDoc_TheMCATS040726.pdf
+  details: >-
+    Made by the MCAT Bros: the bullet points from every Khan Academy P/S video. Use it while
+    watching to track the main notes, and again for review. If you are short on time, the
+    86 page version is a condensed alternative; the trade-off is small if you pair either with
+    the videos and Anki.
+
+- id: ka-ps-86
+  title: KA Psych/Soc Lazy 86 Page Doc
+  kind: handout
+  sections: [ps]
+  cost: free
+  summary: The condensed, reorganized alternative to the 300 page doc.
+  stats: PDF · 86 pages
+  href: /handouts/KA PS_86PgDoc_TheMCATs040726.pdf
+  download: KA PS_86PgDoc_TheMCATs040726.pdf
+  details: >-
+    By u/augiram, condensed from the 300 page doc and reorganized down to 86 pages. Either doc
+    works as long as you pair it with the videos and Anki (we recommend the Pankow deck).
+
+- id: unscored-fl-converter
+  title: AAMC Unscored FL Converter
+  kind: tool
+  cost: free
+  summary: The AAMC doesn't convert the unscored full length to the 528 scale. Reddit does.
+  stats: Spreadsheet
+  href: https://docs.google.com/spreadsheets/d/1R6xwXsnPagtjfAyf9qW61J7tMOuxLNMkHLrM0YwP1vI/edit?usp=sharing
+  details: >-
+    The AAMC offers two free full lengths, but only one converts to the 528 scale. This
+    community converter, built from user data, is scarily accurate.
+
+# ── External ─────────────────────────────────────────────────
+
+- id: aamc-official
+  title: AAMC Official Materials
+  kind: course
+  cost: paid
+  summary: The official source for MCAT practice, and the closest thing to the real exam.
+  stats: aamc.org
+  href: https://students-residents.aamc.org/prepare-mcat-exam/prepare-mcat-exam
+  details: >-
+    Full-length practice tests, section-specific question packs, the Official Guide, and the
+    Section Bank. Save these for the final weeks of prep, once content review is done.
+
+- id: yusuf-hasan
+  title: Yusuf Hasan
+  kind: course
+  cost: free
+  summary: A med student teaching the high-yield content of the Kaplan books. Highly recommended.
+  stats: YouTube
+  href: https://www.youtube.com/@yusufahasan
+  details: >-
+    He taught Brooklyn College students the high-yield content from almost every Kaplan book and
+    breaks it down intuitively. He doesn't cover the Behavioral Sciences or Physics & Math books.
+    Watch the matching video before reading each Kaplan chapter.
+
+- id: khan-academy
+  title: Khan Academy MCAT
+  kind: course
+  cost: free
+  summary: A free video series covering the entire MCAT content outline.
+  stats: khanacademy.org
+  href: https://www.khanacademy.org/test-prep/mcat
+  details: >-
+    Developed with the AAMC and organized by subject, with practice questions. Especially useful
+    for filling content gaps early in prep alongside a review book.
+
+- id: uworld
+  title: UWorld
+  kind: course
+  cost: paid
+  summary: The one third-party resource we think is worth the money.
+  stats: ~4,000 questions
+  href: https://gradschool.uworld.com/mcat/
+  note: Talk to us before buying. Members can get a discount.
+  details: >-
+    Videos and textbooks, but most importantly a question bank of roughly 4,000 MCAT questions
+    with detailed, annotated explanations.
+
+- id: jack-westin
+  title: Jack Westin CARS
+  kind: course
+  sections: [cars]
+  cost: free
+  summary: Free daily CARS passages with explanations.
+  stats: jackwestin.com
+  href: https://jackwestin.com
+  details: >-
+    A free daily passage in your inbox plus a large library of practice passages, each with
+    explanations for every answer choice. Consistent daily CARS practice is one of the most
+    effective ways to improve.
+
+- id: kaplan-books
+  title: Kaplan Books
+  kind: book
+  cost: paid
+  summary: The seven-book set covering essentially all discretely tested content.
+  stats: 7 books
+  href: https://www.amazon.com/Complete-7-Book-Subject-2026-2027-Practice-dp-1506297544/dp/1506297544
+  note: Talk to the leadership team before you buy these. Trust us.
+  details: >-
+    Concise but detailed, with relatively intuitive explanations. They can still be dense, so we
+    recommend pairing them with Yusuf Hasan's videos.
+
+- id: r-mcat
+  title: r/MCAT
+  kind: community
+  cost: free
+  summary: The largest MCAT community online. Proceed with caution.
+  stats: 200k+ members
+  href: https://www.reddit.com/r/Mcat
+  details: >-
+    Score reports, schedules, resource recommendations, and support. It can also become a time
+    sink and a place for toxic comparison. Use it mostly to get help with questions.
