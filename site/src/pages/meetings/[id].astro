@@ -1,0 +1,81 @@
+---
+import { url } from '../../lib/url';
+import Base from '../../layouts/Base.astro';
+import MeetingDetail from '../../components/MeetingDetail.astro';
+import { meetings, fmtDate, meetingUrl, MEETING_TYPE, type Meeting } from '../../lib/data';
+import { chapter } from '../../lib/kaplan';
+
+export async function getStaticPaths() {
+  const all = await meetings();
+  return all.map((m, i) => ({ params: { id: m.id }, props: { m, all, prev: all[i - 1], next: all[i + 1] } }));
+}
+interface Props { m: Meeting; all: Meeting[]; prev?: Meeting; next?: Meeting }
+const { m, all, prev, next } = Astro.props;
+const name = (x: Meeting) =>
+  x.data.covers.length ? x.data.covers.map((c) => chapter(c).abbr).join(' · ') : x.data.topics[0] ?? x.data.title;
+const desc = m.data.covers.length
+  ? `Covers ${m.data.covers.map((c) => `${chapter(c).short} (${chapter(c).title})`).join(', ')}.`
+  : m.data.summary ?? m.data.topics.join('. ');
+---
+<Base title={`${MEETING_TYPE[m.data.type].label} · ${fmtDate(m.data.date, { month: 'short', day: 'numeric' })}`} description={desc}>
+  <div class="wrap page">
+    <a class="arrow-link back" href={url('/meetings/')}>← All meetings</a>
+    <MeetingDetail m={m} all={all} variant="page" />
+    <nav class="pn" aria-label="Other meetings">
+      {prev ? (
+        <a href={meetingUrl(prev)} class="pn-a">
+          <span class="label">← Previous · {fmtDate(prev.data.date, { month: 'short', day: 'numeric' })}</span>
+          <span class="pn-t">{name(prev)}</span>
+        </a>
+      ) : <span />}
+      {next && (
+        <a href={meetingUrl(next)} class="pn-a right">
+          <span class="label">Next · {fmtDate(next.data.date, { month: 'short', day: 'numeric' })} →</span>
+          <span class="pn-t">{name(next)}</span>
+        </a>
+      )}
+    </nav>
+  </div>
+</Base>
+
+<script>
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const d = new Date();
+  const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  document.querySelectorAll<HTMLElement>('.md[data-date]').forEach((el) => {
+    el.classList.toggle('is-past', el.dataset.date! < today);
+    if (el.dataset.date === today) el.querySelector('[data-state]')!.textContent = 'Today';
+  });
+</script>
+
+<style>
+  .page {
+    max-width: 920px;
+    padding-block: 3rem 6rem;
+  }
+  .back {
+    margin-bottom: 2.5rem;
+  }
+  .pn {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+  }
+  .pn-a {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .pn-a.right {
+    text-align: right;
+  }
+  .pn-t {
+    font-size: 1.2rem;
+    color: var(--fg-dim);
+  }
+  .pn-a:hover .pn-t {
+    color: var(--fg);
+  }
+</style>

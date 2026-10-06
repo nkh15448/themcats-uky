@@ -1,0 +1,815 @@
+---
+import { url } from '../../lib/url';
+import Base from '../../layouts/Base.astro';
+import MeetingDetail from '../../components/MeetingDetail.astro';
+import { chapter, chaptersOf, BOOKS } from '../../lib/kaplan';
+import { meetings, fmtDate, meetingUrl, materialTitle, MEETING_TYPE, KIND_LABEL, type Meeting } from '../../lib/data';
+
+const all = await meetings();
+const iso = (m: Meeting) => m.data.date.toISOString().slice(0, 10);
+
+// The calendar shows the semester of the latest meeting.
+const last = all.at(-1)!.data.date;
+const fall = last.getUTCMonth() >= 7;
+const semester = all.filter((m) => {
+  const d = m.data.date;
+  return d.getUTCFullYear() === last.getUTCFullYear() && (d.getUTCMonth() >= 7) === fall;
+});
+const semesterName = `${fall ? 'Fall' : 'Spring'} ${last.getUTCFullYear()}`;
+
+const months: { y: number; m: number }[] = [];
+for (let d = new Date(Date.UTC(semester[0].data.date.getUTCFullYear(), semester[0].data.date.getUTCMonth(), 1)); d <= last; d.setUTCMonth(d.getUTCMonth() + 1)) {
+  months.push({ y: d.getUTCFullYear(), m: d.getUTCMonth() });
+}
+const byDay = new Map(all.map((m) => [iso(m), m]));
+const monthGrid = ({ y, m }: { y: number; m: number }) => {
+  const first = new Date(Date.UTC(y, m, 1));
+  const days = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const lead = (first.getUTCDay() + 6) % 7; // Monday-first
+  const cells: ({ day: number; iso: string; meeting?: Meeting } | null)[] = Array(lead).fill(null);
+  for (let d = 1; d <= days; d++) {
+    const key = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    cells.push({ day: d, iso: key, meeting: byDay.get(key) });
+  }
+  while (cells.length % 7) cells.push(null);
+  return cells;
+};
+const monthName = ({ y, m }: { y: number; m: number }) => fmtDate(new Date(Date.UTC(y, m, 1)), { month: 'long' });
+
+const ICON: Record<string, string> = { slides: '▣', recording: '▶', questions: '?', handout: '◧', link: '↗' };
+
+// List view: every meeting, grouped by month.
+const groups = new Map<string, Meeting[]>();
+for (const m of all) {
+  const k = fmtDate(m.data.date, { month: 'long', year: 'numeric' });
+  groups.set(k, [...(groups.get(k) ?? []), m]);
+}
+
+// By-chapter view: for each Kaplan chapter, when we cover it and what exists for it.
+const bookIds = ['gc', 'orgo', 'bio', 'biochem'] as const;
+const books = bookIds.map((b) => ({
+  id: b,
+  ...BOOKS[b],
+  type: BOOKS[b].section === 'cp' ? 'chemistry' : 'biology',
+  chapters: chaptersOf(b).map((c) => {
+    const ms = all.filter((m) => m.data.covers.includes(c.code));
+    const mats = all.flatMap((m) => m.data.materials.filter((x) => x.chapters.includes(c.code)));
+    return { ...c, meetings: ms, mats };
+  }),
+}));
+const covered = books.flatMap((b) => b.chapters).filter((c) => c.meetings.length).length;
+const total = books.flatMap((b) => b.chapters).length;
+
+// Small payload for the browser: which meeting is next, and the banner text.
+const clientData = semester.map((m) => ({
+  id: m.id,
+  date: iso(m),
+  when: `${fmtDate(m.data.date, { weekday: 'short', month: 'short', day: 'numeric' })} · ${m.data.time}`,
+  type: m.data.type,
+  what: m.data.covers.length ? m.data.covers.map((c) => `${chapter(c).short} ${chapter(c).title}`).join(' / ') : m.data.topics.join(' / ') || m.data.title,
+  where: m.data.location,
+  url: meetingUrl(m),
+}));
+---
+<Base title="Meetings" description="The M-CATS seminar calendar: chemistry on Mondays, biology on Wednesdays, with slides and recordings for every session.">
+  <header class="page-head wrap">
+    <div class="ph-top">
+      <p class="label">Meetings · {semesterName}</p>
+      <a class="arrow-link" href={url('/meetings.ics')} download="the-mcats.ics" title="Download the calendar feed, or subscribe to it in Google or Apple Calendar">Subscribe to calendar ↓</a>
+    </div>
+    <h1 class="display ca ca-in">Seminars</h1>
+    <div class="ph-sched">
+      <p class="mono"><span class="dot" data-s="cp"></span>Mon 6 – 9 PM · Chemistry</p>
+      <p class="mono"><span class="dot" data-s="bb"></span>Wed 5 – 9 PM · Biology / Biochem</p>
+      <p class="mono">→ White Hall 231</p>
+    </div>
+  </header>
+
+  <!-- Next up: filled in by the browser so it is right even between site rebuilds -->
+  <section class="wrap">
+    <a class="next" id="next" href="#" hidden>
+      <span class="label">Next up</span>
+      <span class="next-when mono" data-k="when"></span>
+      <span class="next-what" data-k="what"></span>
+      <span class="next-in mono" data-k="in"></span>
+    </a>
+  </section>
+
+  <div class="bar wrap">
+    <div class="tabs" role="tablist" aria-label="View">
+      <button role="tab" data-view="calendar" aria-selected="true">Calendar</button>
+      <button role="tab" data-view="list" aria-selected="false">List</button>
+      <button role="tab" data-view="chapters" aria-selected="false">By chapter</button>
+    </div>
+    <div class="chips" role="group" aria-label="Filter">
+      <button class="chip" data-filter="" aria-pressed="true">All</button>
+      <button class="chip" data-filter="chemistry" aria-pressed="false"><span class="dot" data-s="cp"></span>Chemistry</button>
+      <button class="chip" data-filter="biology" aria-pressed="false"><span class="dot" data-s="bb"></span>Biology</button>
+    </div>
+  </div>
+
+  <!-- ── Calendar ─────────────────────────────────────────── -->
+  <section class="wrap view" data-panel="calendar">
+    <div class="cal-layout">
+      <div class="cal">
+        <div class="cal-nav">
+          <button class="mono cal-btn" data-month-step="-1" aria-label="Previous month">←</button>
+          <div class="cal-titles">
+            {months.map((mo, i) => (
+              <h2 class="cal-title display" data-month={i} hidden={i !== 0}>
+                {monthName(mo)} <span class="cal-year">{mo.y}</span>
+              </h2>
+            ))}
+          </div>
+          <button class="mono cal-btn" data-month-step="1" aria-label="Next month">→</button>
+        </div>
+        <div class="dow mono" aria-hidden="true">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => <span>{d}</span>)}
+        </div>
+        {months.map((mo, i) => (
+          <div class="grid" data-month={i} hidden={i !== 0}>
+            {monthGrid(mo).map((c) =>
+              !c ? (
+                <span class="cell blank" />
+              ) : c.meeting ? (
+                <button class="cell has" data-id={c.meeting.id} data-date={c.iso} data-type={c.meeting.data.type} aria-pressed="false">
+                  <span class="c-top">
+                    <span class="c-num mono">{c.day}</span>
+                    <span class="dot" data-s={MEETING_TYPE[c.meeting.data.type].section}></span>
+                  </span>
+                  <span class="c-chs">
+                    {c.meeting.data.covers.length
+                      ? c.meeting.data.covers.map((x) => <span class="mono">{chapter(x).abbr}</span>)
+                      : <span class="c-topic italic">{c.meeting.data.type === 'general' ? c.meeting.data.title : c.meeting.data.topics[0]}</span>}
+                  </span>
+                  <span class="c-mats mono">
+                    {c.meeting.data.materials.map((x) => ICON[x.kind]).join(' ')}
+                  </span>
+                </button>
+              ) : (
+                <span class="cell" data-date={c.iso}><span class="c-num mono">{c.day}</span></span>
+              ),
+            )}
+          </div>
+        ))}
+        <p class="cal-key mono">
+          <span>▣ Slides</span><span>▶ Recording</span><span>? Question set</span>
+          <span class="key-hint">← → to move between seminars</span>
+        </p>
+      </div>
+
+      <aside class="panel" aria-live="polite">
+        {semester.map((m) => (
+          <div data-detail={m.id} hidden>
+            <MeetingDetail m={m} all={all} />
+          </div>
+        ))}
+      </aside>
+    </div>
+  </section>
+
+  <!-- ── List ─────────────────────────────────────────────── -->
+  <section class="wrap view" data-panel="list" hidden>
+    {[...groups].map(([month, ms]) => (
+      <div class="l-group">
+        <p class="label l-month">{month}</p>
+        <ol class="l-list">
+          {ms.map((m) => (
+            <li data-type={m.data.type} data-date={iso(m)}>
+              <a href={meetingUrl(m)} class="l-row">
+                <span class="l-date">
+                  <span class="display l-day">{fmtDate(m.data.date, { day: '2-digit' })}</span>
+                  <span class="mono l-wd">{fmtDate(m.data.date, { weekday: 'short' })}</span>
+                </span>
+                <span class="mono l-type"><span class="dot" data-s={MEETING_TYPE[m.data.type].section}></span>{MEETING_TYPE[m.data.type].short}</span>
+                <span class="l-what">
+                  {m.data.covers.length
+                    ? m.data.covers.map((c, i) => <span>{i > 0 && <span class="l-sep"> / </span>}<span class="mono l-code">{chapter(c).abbr}</span> {chapter(c).title}</span>)
+                    : <span class="italic">{m.data.topics.join(' / ') || m.data.title}</span>}
+                </span>
+                <span class="mono l-mats">{m.data.materials.map((x) => ICON[x.kind]).join(' ') || '—'}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    ))}
+  </section>
+
+  <!-- ── By chapter ───────────────────────────────────────── -->
+  <section class="wrap view" data-panel="chapters" hidden>
+    <p class="ch-intro italic">
+      Every Kaplan chapter we teach, when we teach it, and what’s posted for it.
+      <span class="mono ch-count">{covered} / {total} chapters scheduled</span>
+    </p>
+    <div class="books">
+      {books.map((b) => (
+        <div class="book" data-type={b.type}>
+          <h3 class="book-name mono"><span class="dot" data-s={b.section}></span>{b.name}</h3>
+          <ol>
+            {b.chapters.map((c) => {
+              const m = c.meetings[0];
+              return (
+                <li class={m ? '' : 'none'} data-date={m ? iso(m) : undefined}>
+                  <span class="mono ch-n">{String(c.num).padStart(2, '0')}</span>
+                  <span class="ch-t">{c.title}</span>
+                  <span class="ch-icons mono">
+                    {c.mats.map((x) => (
+                      <a href={encodeURI(url(x.href))} target="_blank" rel="noopener" title={`${KIND_LABEL[x.kind]}: ${materialTitle(x)}`}>{ICON[x.kind]}</a>
+                    ))}
+                  </span>
+                  {m ? (
+                    <a class="mono ch-d" href={meetingUrl(m)}>{fmtDate(m.data.date, { month: 'short', day: 'numeric' })}</a>
+                  ) : (
+                    <span class="mono ch-d">{c.bookId === 'orgo' && c.num === 1 ? 'Practice' : '—'}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      ))}
+    </div>
+    <p class="ch-foot mono">Physics & Math and Behavioral Sciences aren’t on this semester’s seminar plan. See the library for P/S and physics resources.</p>
+  </section>
+
+  <script type="application/json" id="mtg-data" set:html={JSON.stringify(clientData)} />
+</Base>
+
+<script>
+  type M = { id: string; date: string; when: string; type: string; what: string; where: string; url: string };
+  const data: M[] = JSON.parse(document.getElementById('mtg-data')!.textContent!);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const now = new Date();
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  // ── Next up banner ──
+  const next = data.find((m) => m.date >= today);
+  const banner = document.getElementById('next') as HTMLAnchorElement;
+  if (next) {
+    const days = Math.round((Date.parse(next.date) - Date.parse(today)) / 864e5);
+    banner.href = next.url;
+    banner.querySelector('[data-k="when"]')!.textContent = next.when;
+    banner.querySelector('[data-k="what"]')!.textContent = next.what;
+    banner.querySelector('[data-k="in"]')!.textContent = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `In ${days} days`;
+    banner.hidden = false;
+  }
+
+  // ── Calendar ──
+  const grids = [...document.querySelectorAll<HTMLElement>('.grid[data-month]')];
+  const titles = [...document.querySelectorAll<HTMLElement>('.cal-title[data-month]')];
+  const cells = [...document.querySelectorAll<HTMLButtonElement>('.cell.has')];
+  const details = new Map([...document.querySelectorAll<HTMLElement>('[data-detail]')].map((d) => [d.dataset.detail!, d]));
+  let month = 0;
+
+  document.querySelectorAll<HTMLElement>('.cell[data-date]').forEach((c) => {
+    if (c.dataset.date! < today) c.classList.add('past');
+    if (c.dataset.date === today) c.classList.add('today');
+  });
+
+  function showMonth(i: number) {
+    month = Math.max(0, Math.min(grids.length - 1, i));
+    grids.forEach((g, j) => (g.hidden = j !== month));
+    titles.forEach((t, j) => (t.hidden = j !== month));
+  }
+  function select(id: string, focus = false) {
+    cells.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.id === id)));
+    details.forEach((d, k) => (d.hidden = k !== id));
+    const cell = cells.find((c) => c.dataset.id === id);
+    if (cell) {
+      showMonth(grids.indexOf(cell.closest('.grid') as HTMLElement));
+      if (focus) cell.focus();
+    }
+  }
+  const narrow = matchMedia('(max-width: 900px)');
+  cells.forEach((c) =>
+    c.addEventListener('click', () => {
+      select(c.dataset.id!);
+      // on phones the details sit below the calendar, so bring them into view
+      if (narrow.matches) document.querySelector('.panel')!.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }),
+  );
+  document.querySelectorAll<HTMLButtonElement>('[data-month-step]').forEach((b) =>
+    b.addEventListener('click', () => showMonth(month + Number(b.dataset.monthStep))),
+  );
+  document.addEventListener('keydown', (e) => {
+    if (document.querySelector('[data-panel="calendar"]')!.hasAttribute('hidden')) return;
+    if ((e.target as HTMLElement).closest('input, textarea, dialog')) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const visible = cells.filter((c) => !c.classList.contains('filtered'));
+    const i = visible.findIndex((c) => c.getAttribute('aria-pressed') === 'true');
+    const n = visible[i + (e.key === 'ArrowRight' ? 1 : -1)];
+    if (n) { e.preventDefault(); select(n.dataset.id!, true); }
+  });
+  select(next?.id ?? data.at(-1)!.id);
+
+  // ── Past / today state on every meeting detail ──
+  document.querySelectorAll<HTMLElement>('.md[data-date]').forEach((el) => {
+    const d = el.dataset.date!;
+    el.classList.toggle('is-past', d < today);
+    const state = el.querySelector('[data-state]');
+    if (state && d === today) state.textContent = 'Today';
+  });
+  document.querySelectorAll<HTMLElement>('.l-list li[data-date], .book li[data-date]').forEach((el) => {
+    el.classList.toggle('past', el.dataset.date! < today);
+  });
+
+  // ── Views (remembered in the URL hash) ──
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-view]')];
+  function setView(v: string) {
+    if (!tabs.some((t) => t.dataset.view === v)) v = 'calendar';
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === v)));
+    document.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== v));
+    history.replaceState(null, '', v === 'calendar' ? location.pathname : `#${v}`);
+  }
+  tabs.forEach((t) => t.addEventListener('click', () => setView(t.dataset.view!)));
+  setView(location.hash.slice(1));
+  window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
+
+  // ── Filter ──
+  document.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const f = b.dataset.filter!;
+      document.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      document.querySelectorAll<HTMLElement>('[data-type]').forEach((el) => {
+        const off = !!f && el.dataset.type !== f && el.dataset.type !== 'general';
+        el.classList.toggle('filtered', off);
+      });
+    }),
+  );
+</script>
+
+<style>
+  .page-head {
+    padding-block: clamp(3rem, 7vw, 5rem) 2rem;
+  }
+  .ph-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .page-head h1 {
+    font-size: clamp(3.6rem, 13vw, 11rem);
+    letter-spacing: -0.035em;
+    margin: 1rem 0 1.5rem;
+  }
+  .ph-sched {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 2.5rem;
+    color: var(--fg-dim);
+  }
+  .ph-sched p {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .next {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    gap: 1.5rem;
+    align-items: baseline;
+    padding: 1.25rem 1.5rem;
+    margin-block: 1rem 0.5rem;
+    border: 1px solid var(--rule-strong);
+    transition: border-color 0.2s, background 0.3s;
+  }
+  .next:hover {
+    border-color: var(--fg);
+    background: rgba(238, 235, 228, 0.03);
+  }
+  .next-when {
+    color: var(--fg);
+  }
+  .next-what {
+    font-size: 1.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .next-in {
+    color: var(--muted);
+    font-size: 0.72rem;
+  }
+
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-block: 1.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tabs {
+    display: flex;
+    gap: 1.75rem;
+  }
+  .tabs button {
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tabs button:hover {
+    color: var(--fg);
+  }
+  .tabs button[aria-selected='true'] {
+    color: var(--fg);
+    border-bottom-color: var(--fg);
+  }
+  .chips {
+    display: flex;
+    gap: 0.35rem;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .chip:hover {
+    color: var(--fg);
+  }
+  .chip[aria-pressed='true'] {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+  .view {
+    padding-block: 2.5rem 6rem;
+  }
+  .filtered {
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  /* Calendar */
+  .cal-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: clamp(2rem, 4vw, 4rem);
+    align-items: start;
+  }
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .cal-title {
+    font-size: clamp(2.2rem, 4vw, 3.4rem);
+    text-transform: none;
+  }
+  .cal-year {
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    vertical-align: 0.6em;
+  }
+  .cal-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .cal-btn:hover {
+    color: var(--fg);
+    border-color: var(--rule-strong);
+  }
+  .dow,
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .dow {
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding-bottom: 0.6rem;
+  }
+  .grid {
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+  }
+  .cell {
+    position: relative;
+    min-height: 6.4rem;
+    padding: 0.55rem 0.6rem;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-align: left;
+    align-items: stretch;
+  }
+  .cell.blank {
+    background: repeating-linear-gradient(135deg, transparent 0 6px, rgba(238, 235, 228, 0.025) 6px 7px);
+  }
+  .c-num {
+    font-size: 0.7rem;
+    color: var(--faint);
+  }
+  .c-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .has {
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .has .c-num {
+    color: var(--fg);
+  }
+  .has:hover {
+    background: rgba(238, 235, 228, 0.04);
+  }
+  .has[aria-pressed='true'] {
+    background: rgba(238, 235, 228, 0.07);
+    box-shadow: inset 0 0 0 1px var(--fg);
+  }
+  .c-chs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.1rem 0.45rem;
+    font-size: 0.66rem;
+    color: var(--fg-dim);
+    letter-spacing: 0.04em;
+  }
+  .c-chs .mono {
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .c-topic {
+    font-size: 0.95rem;
+    line-height: 1.1;
+    color: var(--fg-dim);
+    text-transform: none;
+  }
+  .c-mats {
+    margin-top: auto;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+  }
+  .cell.past:not([aria-pressed='true']) {
+    opacity: 0.5;
+  }
+  .cell.today::after {
+    content: 'Today';
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.45rem;
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--neb-violet);
+  }
+  .cell.today .c-num {
+    align-self: flex-start;
+    color: var(--bg);
+    background: var(--nebula);
+    padding: 0 0.3rem;
+  }
+  .cal-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.64rem;
+    color: var(--muted);
+  }
+  .key-hint {
+    margin-left: auto;
+    color: var(--faint);
+  }
+  .panel {
+    position: sticky;
+    top: 88px;
+    padding-left: clamp(0rem, 3vw, 2.5rem);
+    border-left: 1px solid var(--rule);
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+  }
+
+  /* List */
+  .l-group + .l-group {
+    margin-top: 3rem;
+  }
+  .l-month {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .l-list {
+    list-style: none;
+  }
+  .l-row {
+    display: grid;
+    grid-template-columns: 5.5rem 5.5rem 1fr 5rem;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--rule);
+    transition: padding 0.3s var(--ease), background 0.3s;
+  }
+  .l-row:hover {
+    padding-left: 0.5rem;
+    background: linear-gradient(90deg, rgba(238, 235, 228, 0.03), transparent);
+  }
+  .l-list li.past .l-row {
+    opacity: 0.55;
+  }
+  .l-list li.past .l-row:hover {
+    opacity: 1;
+  }
+  .l-date {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+  .l-day {
+    font-size: 2.3rem;
+    line-height: 1;
+  }
+  .l-wd,
+  .l-type {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+  .l-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .l-what {
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+  .l-code {
+    font-size: 0.64rem;
+    color: var(--muted);
+    vertical-align: 0.25em;
+  }
+  .l-sep {
+    color: var(--faint);
+  }
+  .l-mats {
+    text-align: right;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    font-size: 0.75rem;
+  }
+
+  /* By chapter */
+  .ch-intro {
+    font-size: 1.4rem;
+    color: var(--fg-dim);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .ch-count {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-style: normal;
+  }
+  .books {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2rem;
+  }
+  .book-name {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.74rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .book ol {
+    list-style: none;
+  }
+  .book li {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr auto auto;
+    gap: 0.6rem;
+    align-items: baseline;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .ch-n {
+    font-size: 0.64rem;
+    color: var(--faint);
+  }
+  .ch-t {
+    font-size: 1.02rem;
+    line-height: 1.2;
+  }
+  .book li.none .ch-t {
+    color: var(--faint);
+  }
+  .book li.past .ch-t::after {
+    content: ' ✓';
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .ch-icons {
+    display: flex;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .ch-icons a:hover,
+  a.ch-d:hover {
+    color: var(--fg);
+  }
+  .ch-d {
+    font-size: 0.64rem;
+    color: var(--fg-dim);
+    white-space: nowrap;
+  }
+  .book li.none .ch-d {
+    color: var(--faint);
+  }
+  .ch-foot {
+    margin-top: 2.5rem;
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 1100px) {
+    .books {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 900px) {
+    .cal-layout {
+      grid-template-columns: 1fr;
+    }
+    .panel {
+      position: static;
+      scroll-margin-top: 80px;
+      max-height: none;
+      border-left: 0;
+      padding-left: 0;
+      border-top: 1px solid var(--rule);
+      padding-top: 2rem;
+    }
+    .next {
+      grid-template-columns: 1fr;
+      gap: 0.4rem;
+    }
+    .next-what {
+      white-space: normal;
+    }
+  }
+  @media (max-width: 640px) {
+    .cell {
+      min-height: 3.6rem;
+      padding: 0.35rem;
+    }
+    .c-chs,
+    .c-mats,
+    .key-hint {
+      display: none;
+    }
+    .books {
+      grid-template-columns: 1fr;
+    }
+    .l-row {
+      grid-template-columns: 4.5rem 1fr;
+      gap: 0.9rem;
+    }
+    .l-type,
+    .l-mats {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,13 @@
+title: Biology Seminar
+type: biology
+date: 2026-09-09
+time: "5:00 PM"
+end: "9:00 PM"
+covers: [bio-1, biochem-1]
+materials:
+  - { kind: questions, chapters: [bio-1, biochem-1], href: "https://docs.google.com/presentation/d/1GugeBLQFNvnecxrUij_5vvfxVVFSJxt8h9-iJpx3e1I/edit?usp=sharing" }
+recap:
+  - Thank you all for showing up! We know the first one was a bit wonky. We're working hard on the next.
+  - We stopped halfway through biology, right before prokaryotes.
+  - If you can answer everything in the question slides, you understood most of these chapters.
+location: CP 222

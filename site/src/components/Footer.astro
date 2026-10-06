@@ -1,0 +1,124 @@
+---
+import { url } from '../lib/url';
+import Logo from './Logo.astro';
+import { links } from '../data/join';
+---
+<footer class="footer">
+  <div class="wrap">
+    <p class="motto italic">Together we prepare, together we succeed.</p>
+    <div class="cols">
+      <div>
+        <p class="label">The M-CATS</p>
+        <p class="mono small">University of Kentucky<br />Lexington, KY</p>
+      </div>
+      <div>
+        <p class="label">Find us</p>
+        <ul>
+          <li><a href={links.groupme} target="_blank" rel="noopener">GroupMe ↗</a></li>
+          <li><a href={links.bbnvolved} target="_blank" rel="noopener">BBNvolved ↗</a></li>
+          <li><a href={links.tutoring} target="_blank" rel="noopener">Book tutoring ↗</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="label">Site</p>
+        <ul>
+          <li><a href={url('/resources/')}>Resources</a></li>
+          <li><a href={url('/meetings/')}>Meetings</a></li>
+          <li><a href={url('/scholarship/')}>Scholarship</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="label">&nbsp;</p>
+        <ul>
+          <li><a href={url('/team/')}>Team</a></li>
+          <li><a href={url('/join/')}>Join</a></li>
+          <li><a href={url('/about/')}>About</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="base">
+      <span class="label">© {new Date().getFullYear()} The M-CATS · Free, always</span>
+      <span class="label">themcats.org</span>
+    </div>
+  </div>
+  <Logo class="watermark" label="" />
+</footer>
+
+<style>
+  .footer {
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid var(--rule);
+    padding-block: clamp(4rem, 8vw, 6rem) 2rem;
+  }
+  .motto {
+    font-size: clamp(2rem, 5vw, 3.6rem);
+    line-height: 1.1;
+    max-width: 16ch;
+    margin-bottom: 4rem;
+  }
+  .cols {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
+    padding-bottom: 4rem;
+  }
+  .small {
+    color: var(--fg-dim);
+    font-size: 0.75rem;
+  }
+  ul {
+    list-style: none;
+    display: grid;
+    gap: 0.4rem;
+  }
+  li a {
+    font-family: var(--mono);
+    font-weight: 300;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+  }
+  li a:hover {
+    color: var(--fg);
+  }
+  .base {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+  }
+  .footer::before {
+    content: '';
+    position: absolute;
+    right: -10%;
+    bottom: -30%;
+    width: 60vw;
+    height: 70%;
+    background:
+      radial-gradient(closest-side, rgba(160, 140, 246, 0.1), transparent),
+      radial-gradient(closest-side at 70% 60%, rgba(229, 143, 196, 0.06), transparent);
+    opacity: var(--nebula-glow);
+    pointer-events: none;
+  }
+  .footer :global(.watermark) {
+    position: absolute;
+    right: -4%;
+    bottom: -18%;
+    width: min(46vw, 520px);
+    height: auto;
+    color: var(--fg);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  @media (max-width: 720px) {
+    .cols {
+      grid-template-columns: 1fr 1fr;
+    }
+    .base {
+      flex-direction: column;
+    }
+  }
+</style>

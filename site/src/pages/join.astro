@@ -1,0 +1,621 @@
+---
+import { url } from '../lib/url';
+import QRCode from 'qrcode';
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import { links, perks, faq } from '../data/join';
+import { meetings, isUpcoming, fmtDate, meetingUrl, googleCalendarUrl, MEETING_TYPE } from '../lib/data';
+import { chapter } from '../lib/kaplan';
+
+// QR codes are generated at build time: dark modules on a light tile, so every phone camera reads them.
+const qr = (url: string) =>
+  QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0d0d0c', light: '#eeebe4' } });
+const [qrGroupme, qrBbn] = await Promise.all([qr(links.groupme), qr(links.bbnvolved)]);
+
+// Upcoming meetings for step 3; the browser picks the next one by today's date.
+const upcoming = (await meetings())
+  .filter((m) => isUpcoming(m))
+  .slice(0, 6)
+  .map((m) => ({
+    date: m.data.date.toISOString().slice(0, 10),
+    when: `${fmtDate(m.data.date, { weekday: 'long', month: 'long', day: 'numeric' })} · ${m.data.time}`,
+    what: m.data.covers.length
+      ? m.data.covers.map((c) => `${chapter(c).short}: ${chapter(c).title}`).join(' · ')
+      : m.data.topics.join(' · ') || m.data.title,
+    type: MEETING_TYPE[m.data.type].label,
+    where: m.data.location,
+    url: meetingUrl(m),
+    gcal: googleCalendarUrl(m),
+  }));
+
+const steps = [
+  { id: 'groupme', n: '01', title: 'Join the GroupMe', body: 'Our main channel: seminar reminders, slides, quick questions, and announcements.', href: links.groupme, cta: 'Open GroupMe', qr: qrGroupme },
+  { id: 'bbnvolved', n: '02', title: 'Join us on BBNvolved', body: 'Make it official: join The M-CATS on UK’s student organization platform.', href: links.bbnvolved, cta: 'Open BBNvolved', qr: qrBbn },
+];
+---
+<Base title="Join" description="Join The M-CATS: free MCAT preparation at the University of Kentucky. GroupMe, BBNvolved, and the next seminar.">
+  <!-- ── Membership card ───────────────────────────────────── -->
+  <section class="wrap hero">
+    <div class="hero-text">
+      <p class="label">Join · Free, always</p>
+      <h1 class="display ca ca-in">Become<br />an M-CAT.</h1>
+      <p class="intro italic">Open to every UK student preparing for the MCAT. No dues, no prerequisites, no registration. Three steps and you’re in.</p>
+      <label class="name-field">
+        <span class="label">Your name, for the card</span>
+        <input id="card-name" type="text" maxlength="28" placeholder="Type your name" autocomplete="name" spellcheck="false" />
+      </label>
+      <p class="privacy mono">Stays in your browser. We never see it.</p>
+    </div>
+
+    <div class="card-stage">
+      <div class="card" id="card" aria-label="Your M-CATS membership card">
+        <div class="card-foil" aria-hidden="true"></div>
+        <div class="card-top">
+          <span class="mono card-org">The M-CATS</span>
+          <span class="mono card-kind">Member</span>
+        </div>
+        <Logo class="card-lion" label="" />
+        <div class="card-bottom">
+          <p class="card-name" id="card-name-out">Your Name</p>
+          <div class="card-meta mono">
+            <span>University of Kentucky</span>
+            <span id="card-since">Member since —</span>
+          </div>
+          <p class="card-free mono">Free, always</p>
+        </div>
+      </div>
+      <p class="card-hint mono" aria-hidden="true">Move your cursor over the card</p>
+    </div>
+  </section>
+
+  <!-- ── Steps ─────────────────────────────────────────────── -->
+  <section class="wrap steps-wrap">
+    <div class="section-head">
+      <p class="label">Three steps</p>
+      <p class="label"><span id="done-count">0</span> / 3 done</p>
+    </div>
+    <ol class="steps">
+      {steps.map((s) => (
+        <li class="step" data-step={s.id} data-reveal>
+          <div class="step-main">
+            <span class="mono step-n"><span class="tick" aria-hidden="true">✓</span>{s.n}</span>
+            <h2 class="step-title display">{s.title}</h2>
+            <p class="step-body">{s.body}</p>
+            <a class="btn btn-solid" href={s.href} target="_blank" rel="noopener" data-mark={s.id}>{s.cta} ↗</a>
+          </div>
+          <figure class="qr">
+            <div class="qr-code" set:html={s.qr} />
+            <figcaption class="mono">Or scan with your phone</figcaption>
+          </figure>
+        </li>
+      ))}
+
+      <li class="step" data-step="show-up" data-reveal>
+        <div class="step-main">
+          <span class="mono step-n"><span class="tick" aria-hidden="true">✓</span>03</span>
+          <h2 class="step-title display">Show up</h2>
+          <p class="step-body">Come to any seminar. No sign-up needed. Read the matching Kaplan chapters beforehand if you can, and bring your questions.</p>
+          <div class="next" id="next" hidden>
+            <p class="label">Next seminar</p>
+            <p class="next-when mono" data-k="when"></p>
+            <p class="next-what" data-k="what"></p>
+            <p class="next-where mono" data-k="where"></p>
+            <div class="next-actions">
+              <a class="btn btn-solid" data-k="gcal" data-mark="show-up" target="_blank" rel="noopener">Add to Google Calendar ↗</a>
+              <a class="arrow-link" data-k="url">Details →</a>
+            </div>
+          </div>
+          <p class="next-none mono" id="next-none" hidden>The next semester’s schedule is coming soon. Watch the GroupMe.</p>
+        </div>
+        <div class="weekly">
+          <p class="label">Every week</p>
+          <p class="mono"><span class="dot" data-s="cp"></span>Mon 6 – 9 PM · Chemistry</p>
+          <p class="mono"><span class="dot" data-s="bb"></span>Wed 5 – 9 PM · Bio / Biochem</p>
+          <p class="mono">→ White Hall 231</p>
+          <a class="arrow-link" href={url('/meetings.ics')} download="the-mcats.ics">Subscribe to the calendar ↓</a>
+        </div>
+      </li>
+    </ol>
+    <p class="welcome italic" id="welcome" hidden>That’s everything. Welcome to the M-CATS. See you in White Hall.</p>
+  </section>
+
+  <!-- ── What you get ───────────────────────────────────────── -->
+  <section class="wrap section-tight">
+    <div class="section-head"><p class="label">What you get</p></div>
+    <ul class="perks">
+      {perks.map((p) => (
+        <li data-reveal>
+          <h3 class="perk-t">{p.title}</h3>
+          <p class="perk-b">{p.body}</p>
+          {p.cta && <a class="arrow-link perk-cta" href={links[p.cta.href as keyof typeof links]} target="_blank" rel="noopener">{p.cta.label} ↗</a>}
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- ── FAQ ───────────────────────────────────────────────── -->
+  <section class="wrap section-tight faq-wrap">
+    <div class="section-head"><p class="label">Quick questions</p></div>
+    <div class="faq">
+      {faq.map((f) => (
+        <details>
+          <summary><span>{f.q}</span><span class="mono plus" aria-hidden="true">+</span></summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <script type="application/json" id="join-data" set:html={JSON.stringify(upcoming)} />
+</Base>
+
+<script>
+  const KEY = 'mcats-join';
+  const store = {
+    get(): Record<string, any> {
+      try { return JSON.parse(localStorage.getItem(KEY) ?? '{}'); } catch { return {}; }
+    },
+    set(v: Record<string, any>) {
+      try { localStorage.setItem(KEY, JSON.stringify({ ...store.get(), ...v })); } catch {}
+    },
+  };
+
+  // ── Card: name + "member since" ──
+  const input = document.getElementById('card-name') as HTMLInputElement;
+  const out = document.getElementById('card-name-out')!;
+  const saved = store.get();
+  const render = () => (out.textContent = input.value.trim() || 'Your Name');
+  input.value = saved.name ?? '';
+  render();
+  input.addEventListener('input', () => {
+    render();
+    store.set({ name: input.value });
+  });
+  const since = saved.since ?? new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  document.getElementById('card-since')!.textContent = `Member since ${since}`;
+
+  // ── Card: tilt and foil follow the pointer ──
+  const card = document.getElementById('card')!;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      card.style.setProperty('--rx', `${(0.5 - y) * 14}deg`);
+      card.style.setProperty('--ry', `${(x - 0.5) * 18}deg`);
+      card.style.setProperty('--mx', `${x * 100}%`);
+      card.style.setProperty('--my', `${y * 100}%`);
+      card.classList.add('live');
+    });
+    card.addEventListener('pointerleave', () => {
+      card.classList.remove('live');
+      card.style.setProperty('--rx', '0deg');
+      card.style.setProperty('--ry', '0deg');
+    });
+  }
+
+  // ── Steps: tick off as you go, remembered in this browser ──
+  const steps = [...document.querySelectorAll<HTMLElement>('[data-step]')];
+  const doneCount = document.getElementById('done-count')!;
+  const welcome = document.getElementById('welcome')!;
+  function paint() {
+    const done: string[] = store.get().done ?? [];
+    steps.forEach((s) => s.classList.toggle('done', done.includes(s.dataset.step!)));
+    doneCount.textContent = String(done.length);
+    welcome.hidden = done.length < steps.length;
+    if (done.length) store.set({ since });
+  }
+  document.querySelectorAll<HTMLElement>('[data-mark]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const done = new Set<string>(store.get().done ?? []);
+      done.add(a.dataset.mark!);
+      store.set({ done: [...done] });
+      paint();
+    }),
+  );
+  paint();
+
+  // ── Step 3: the next seminar, by today's date ──
+  type M = { date: string; when: string; what: string; type: string; where: string; url: string; gcal: string };
+  const list: M[] = JSON.parse(document.getElementById('join-data')!.textContent!);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const d = new Date();
+  const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const next = list.find((m) => m.date >= today);
+  const box = document.getElementById('next')!;
+  if (next) {
+    box.querySelector('[data-k="when"]')!.textContent = next.when;
+    box.querySelector('[data-k="what"]')!.textContent = next.what;
+    box.querySelector('[data-k="where"]')!.textContent = `${next.type} · ${next.where}`;
+    box.querySelector<HTMLAnchorElement>('[data-k="gcal"]')!.href = next.gcal;
+    box.querySelector<HTMLAnchorElement>('[data-k="url"]')!.href = next.url;
+    box.hidden = false;
+  } else {
+    document.getElementById('next-none')!.hidden = false;
+  }
+</script>
+
+<style>
+  /* ── Hero + card ── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: clamp(2rem, 6vw, 6rem);
+    align-items: center;
+    padding-block: clamp(3rem, 7vw, 5rem) clamp(3rem, 7vw, 5rem);
+  }
+  .hero h1 {
+    font-size: clamp(3.4rem, 9vw, 8rem);
+    letter-spacing: -0.035em;
+    line-height: 0.86;
+    margin: 1rem 0 1.5rem;
+  }
+  .intro {
+    font-size: clamp(1.3rem, 2.1vw, 1.65rem);
+    line-height: 1.3;
+    color: var(--fg-dim);
+    max-width: 34ch;
+  }
+  .name-field {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 2.25rem;
+    max-width: 24rem;
+  }
+  .name-field input {
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--rule-strong);
+    padding: 0.5rem 0;
+    color: var(--fg);
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.6rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .name-field input:focus {
+    border-color: var(--neb-violet);
+  }
+  .name-field input::placeholder {
+    color: var(--faint);
+  }
+  .privacy {
+    margin-top: 0.6rem;
+    font-size: 0.6rem;
+    color: var(--faint);
+    text-transform: none;
+    letter-spacing: 0.04em;
+  }
+
+  .card-stage {
+    perspective: 1100px;
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+  }
+  .card {
+    --rx: 0deg;
+    --ry: 0deg;
+    --mx: 50%;
+    --my: 50%;
+    position: relative;
+    width: min(100%, 440px);
+    aspect-ratio: 1.586; /* a real ID card */
+    border-radius: 16px;
+    padding: 1.4rem 1.5rem;
+    background:
+      radial-gradient(ellipse 70% 60% at 85% 10%, rgba(111, 134, 242, 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 10% 100%, rgba(229, 143, 196, 0.12), transparent 60%),
+      linear-gradient(160deg, #1a1a1c, #0f0f10 60%);
+    border: 1px solid rgba(238, 235, 228, 0.18);
+    box-shadow:
+      0 40px 80px -30px rgba(0, 0, 0, 0.9),
+      0 0 0 1px rgba(0, 0, 0, 0.6) inset;
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transform-style: preserve-3d;
+    transition: transform 0.6s var(--ease);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    animation: card-in 1.4s 0.3s var(--ease) both;
+  }
+  .card.live {
+    transition: transform 0.08s linear;
+  }
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: rotateX(18deg) rotateY(-24deg) translateY(20px);
+      filter: blur(10px);
+    }
+  }
+  /* holographic foil: a galaxy sheen that follows the pointer */
+  .card-foil {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.16), transparent 40%),
+      linear-gradient(115deg, transparent 20%, rgba(111, 134, 242, 0.22) 38%, rgba(160, 140, 246, 0.22) 46%, rgba(229, 143, 196, 0.2) 54%, rgba(243, 211, 160, 0.18) 62%, transparent 80%);
+    background-size: 100% 100%, 250% 250%;
+    background-position: center, calc(var(--mx) * 1.2) calc(var(--my) * 1.2);
+    mix-blend-mode: screen;
+    opacity: 0.55;
+    transition: opacity 0.4s;
+  }
+  .card.live .card-foil {
+    opacity: 1;
+  }
+  .card-top,
+  .card-bottom {
+    position: relative;
+    z-index: 1;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+  }
+  .card-kind {
+    color: var(--neb-violet);
+  }
+  .card :global(.card-lion) {
+    position: absolute;
+    right: 6%;
+    top: 50%;
+    translate: 0 -50%;
+    width: 28%;
+    height: auto;
+    color: var(--fg);
+    opacity: 0.85;
+  }
+  .card-name {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    line-height: 1;
+    margin-bottom: 0.7rem;
+    max-width: 68%;
+    overflow-wrap: anywhere;
+  }
+  .card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 1.2rem;
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+    color: var(--fg-dim);
+  }
+  .card-free {
+    margin-top: 0.4rem;
+    font-size: 0.56rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+  }
+  .card-hint {
+    font-size: 0.58rem;
+    color: var(--faint);
+  }
+
+  /* ── Steps ── */
+  .steps-wrap {
+    padding-block: 2rem clamp(3rem, 7vw, 5rem);
+  }
+  .steps {
+    list-style: none;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem 4rem;
+    align-items: center;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .step-main {
+    display: grid;
+    gap: 0.8rem;
+    justify-items: start;
+  }
+  .step-n {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .tick {
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    color: transparent;
+    transition: all 0.4s var(--ease);
+  }
+  .step.done .tick {
+    color: var(--bg);
+    background: var(--nebula);
+    border-color: transparent;
+    box-shadow: 0 0 12px rgba(160, 140, 246, 0.5);
+  }
+  .step-title {
+    font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+    text-transform: none;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .step.done .step-title {
+    color: var(--fg-dim);
+  }
+  .step-body {
+    color: var(--fg-dim);
+    font-size: 1.2rem;
+    max-width: 46ch;
+    margin-bottom: 0.4rem;
+  }
+  .qr {
+    display: grid;
+    gap: 0.6rem;
+    justify-items: center;
+  }
+  .qr-code {
+    width: 132px;
+    padding: 8px;
+    background: #eeebe4;
+    border-radius: 6px;
+    transform: rotate(1.5deg);
+    box-shadow: 0 18px 30px -16px rgba(0, 0, 0, 0.9);
+  }
+  .qr-code :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  .qr figcaption {
+    font-size: 0.58rem;
+    color: var(--muted);
+  }
+
+  .next {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--rule-strong);
+    width: 100%;
+    max-width: 38rem;
+  }
+  .next-when {
+    color: var(--fg);
+    font-size: 0.8rem;
+  }
+  .next-what {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+  .next-where {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+  .next-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 0.8rem;
+  }
+  .next-none {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0.04em;
+  }
+  .weekly {
+    display: grid;
+    gap: 0.5rem;
+    color: var(--fg-dim);
+    align-self: start;
+    padding-top: 2.5rem;
+  }
+  .weekly .mono {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+  }
+  .weekly .arrow-link {
+    margin-top: 0.6rem;
+  }
+  .welcome {
+    margin-top: 2rem;
+    font-size: 1.6rem;
+    text-align: center;
+  }
+
+  /* ── Perks ── */
+  .section-tight {
+    padding-block: clamp(3rem, 7vw, 5rem);
+  }
+  .perks {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+  }
+  .perks li {
+    border-top: 1px solid var(--rule-strong);
+    padding-top: 1rem;
+    display: grid;
+    gap: 0.4rem;
+    align-content: start;
+  }
+  .perk-t {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.1;
+  }
+  .perk-cta {
+    margin-top: 0.4rem;
+  }
+  .perk-b {
+    color: var(--fg-dim);
+    font-size: 1.1rem;
+  }
+
+  /* ── FAQ ── */
+  .faq {
+    max-width: 52rem;
+  }
+  .faq details {
+    border-bottom: 1px solid var(--rule);
+  }
+  .faq summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 0;
+    cursor: pointer;
+    font-size: 1.3rem;
+  }
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .plus {
+    color: var(--muted);
+    transition: transform 0.35s var(--ease);
+  }
+  .faq details[open] .plus {
+    transform: rotate(45deg);
+    color: var(--fg);
+  }
+  .faq details p {
+    padding-bottom: 1.25rem;
+    color: var(--fg-dim);
+    max-width: 60ch;
+  }
+
+  @media (max-width: 900px) {
+    .hero {
+      grid-template-columns: 1fr;
+    }
+    .card-hint {
+      display: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .step {
+      grid-template-columns: 1fr;
+    }
+    .qr {
+      display: none; /* on a phone, the button is the way in */
+    }
+  }
+</style>

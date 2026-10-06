@@ -1,0 +1,9 @@
+title: Biology Seminar
+type: biology
+date: 2026-10-28
+time: "5:00 PM"
+end: "9:00 PM"
+location: White Hall 231
+covers: [biochem-11, biochem-12]
+topics:
+  - "Overflow from last week’s carbohydrate metabolism"

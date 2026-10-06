@@ -1,0 +1,9 @@
+title: Chemistry Seminar
+type: chemistry
+date: 2026-11-16
+time: "6:00 PM"
+end: "9:00 PM"
+location: White Hall 231
+covers: [orgo-11]
+topics:
+  - "Lab techniques in general"

@@ -1,0 +1,12 @@
+title: Biology Seminar
+type: biology
+date: 2026-09-30
+time: "5:00 PM"
+end: "9:00 PM"
+location: White Hall 231
+covers: [bio-12, bio-4, biochem-3]
+materials:
+  - { kind: slides, chapters: [bio-12], href: "/powerpoints/Biology 12 Genetics Seminar.pdf" }
+  - { kind: slides, chapters: [bio-4], href: "/powerpoints/Biology 4 The MCATS.pdf" }
+  - { kind: slides, chapters: [biochem-3], href: "/powerpoints/Biochem Chap 3 The MCATS.pdf" }
+resources: [amino-acids-handout, amino-acids-deck]

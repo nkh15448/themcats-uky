@@ -1,0 +1,426 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import { leadership, officerApp as app } from '../data/team';
+
+const GROUPME = 'https://groupme.com/join_group/113607612/J0DBPuPV';
+
+// Every photo under src/assets/team/<id>/, grouped by person, in filename order.
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/team/*/*.{jpg,jpeg,png,webp,avif,JPG,JPEG,PNG,WEBP}', { eager: true });
+const photosOf = (id: string) =>
+  Object.entries(files)
+    .filter(([path]) => path.split('/').at(-2) === id)
+    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+    .map(([, mod]) => mod.default)
+    .slice(0, 3);
+
+const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2);
+
+const members = leadership.map((m) => ({ ...m, photos: photosOf(m.id) }));
+const rows = (m: (typeof members)[number]) =>
+  [
+    ['Year', m.year],
+    ['Studying', [m.majors, m.minors && `Minor: ${m.minors}`].filter(Boolean).join(' · ')],
+    ['Favorite MCAT Subject(s)', m.subjects],
+    ['Off the clock', m.hobbies],
+  ].filter(([, v]) => v) as [string, string][];
+---
+<Base title="Team" description="Meet the students behind The M-CATS, and apply to join the officer team.">
+  <header class="wrap head">
+    <p class="label">Team · {leadership.length} officers</p>
+    <h1 class="display ca ca-in">The Team</h1>
+    <p class="intro italic">
+      Pre-meds who have been through the MCAT, or are in the middle of it right now, building the support we wished we’d had.
+    </p>
+  </header>
+
+  <section class="wrap">
+    <ol class="grid">
+      {members.map((m, i) => (
+        <li class="card" data-reveal style={`--d:${(i % 3) * 90}ms`}>
+          <div
+            class="stack"
+            data-count={Math.max(1, m.photos.length)}
+            role={m.photos.length > 1 ? 'button' : undefined}
+            tabindex={m.photos.length > 1 ? 0 : undefined}
+            aria-label={m.photos.length > 1 ? `Photos of ${m.name}: show next` : undefined}
+          >
+            {m.photos.length > 0 ? (
+              m.photos.map((p, j) => (
+                <figure class="print" data-pos={j}>
+                  <Image src={p} alt={j === 0 ? m.name : ''} widths={[360, 560, 760]} sizes="(max-width: 700px) 90vw, 380px" loading={i < 3 ? "eager" : "lazy"} />
+                </figure>
+              ))
+            ) : (
+              <figure class="print empty" data-pos="0" aria-hidden="true">
+                <Logo class="ph-lion" label="" />
+                <span class="ph-initials display ca">{initials(m.name)}</span>
+                <span class="ph-note mono">Photo coming soon</span>
+              </figure>
+            )}
+            {m.photos.length > 1 && (
+              <span class="count mono" aria-hidden="true"><span data-n>1</span> / {m.photos.length}</span>
+            )}
+          </div>
+
+          <div class="info">
+            <p class="role mono">{m.role}</p>
+            <h2 class="name display">{m.name}</h2>
+            {m.quote && <p class="quote italic">“{m.quote}”</p>}
+            <dl class="spec">
+              {rows(m).map(([k, v]) => (
+                <div><dt class="mono">{k}</dt><dd>{v}</dd></div>
+              ))}
+              {m.food && <div class="food"><dt class="mono">Comfort food</dt><dd class="italic">{m.food}</dd></div>}
+            </dl>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- ── Officer application ──────────────────────────────── -->
+  <section class="wrap ta">
+    <div class="section-head"><p class="label">Join the officer team</p><p class="label">Now recruiting</p></div>
+    <div class="ta-grid">
+      <div data-reveal>
+        <h2 class="ta-title display">Help us<br />build this.</h2>
+        <p class="ta-body">
+          Everything here, from the seminars to the scholarship to this website, is run by a small group of students. We need
+          more people. It’s a real commitment, and it’s also the most direct way to help other pre-meds get through the MCAT.
+        </p>
+        {app.formUrl ? (
+          <a class="btn btn-solid" href={app.formUrl} target="_blank" rel="noopener">Officer application ↗</a>
+        ) : (
+          <a class="btn btn-solid" href={GROUPME} target="_blank" rel="noopener">Message us in the GroupMe ↗</a>
+        )}
+      </div>
+      <div class="ta-side" data-reveal>
+        <p class="label">Open roles</p>
+        <ul class="roles">
+          {app.roles.map((r) => (
+            <li>
+              <span class="role-name">{r.name}</span>
+              <span class="role-body">{r.body}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="label">Why do it</p>
+        <ul class="ta-perks">{app.perks.map((p) => <li>{p}</li>)}</ul>
+        <p class="label">How it works</p>
+        <ol class="ta-steps">
+          {app.process.map((p, i) => (
+            <li><span class="mono">{String(i + 1).padStart(2, '0')}</span><span>{p}</span></li>
+          ))}
+        </ol>
+      </div>
+    </div>
+    <p class="contact italic" data-reveal>Have a question for leadership? Reach out in the <a href={GROUPME} target="_blank" rel="noopener">GroupMe ↗</a>.</p>
+  </section>
+</Base>
+
+<script>
+  // Click (or Enter/Space) deals the next photo to the front of the stack.
+  document.querySelectorAll<HTMLElement>('.stack[role="button"]').forEach((stack) => {
+    const prints = [...stack.querySelectorAll<HTMLElement>('.print')];
+    const n = prints.length;
+    const counter = stack.querySelector('[data-n]');
+    let offset = 0;
+    const deal = () => {
+      offset = (offset + 1) % n;
+      prints.forEach((p, i) => (p.dataset.pos = String((i - offset + n) % n)));
+      if (counter) counter.textContent = String(offset + 1);
+    };
+    stack.addEventListener('click', deal);
+    stack.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        deal();
+      }
+    });
+  });
+</script>
+
+<style>
+  .head {
+    padding-block: clamp(3rem, 7vw, 5rem) 3rem;
+  }
+  .head h1 {
+    font-size: clamp(3.6rem, 13vw, 11rem);
+    letter-spacing: -0.035em;
+    margin: 1rem 0 1.5rem;
+  }
+  .intro {
+    font-size: clamp(1.35rem, 2.3vw, 1.8rem);
+    line-height: 1.25;
+    color: var(--fg-dim);
+    max-width: 38ch;
+  }
+
+  .grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(3rem, 6vw, 5rem) clamp(2rem, 4vw, 3.5rem);
+    padding-block: 2rem 4rem;
+  }
+  .card[data-reveal] {
+    transition-delay: var(--d);
+  }
+
+  /* ── The stack of prints ── */
+  .stack {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    margin: 0.75rem 0.75rem 2rem;
+  }
+  .stack[role='button'] {
+    cursor: pointer;
+  }
+  .print {
+    position: absolute;
+    inset: 0;
+    padding: 7px;
+    background: #171716;
+    border: 1px solid var(--rule-strong);
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9);
+    transition:
+      transform 0.6s var(--ease),
+      box-shadow 0.6s var(--ease),
+      opacity 0.4s;
+    overflow: hidden;
+  }
+  .print :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+    filter: grayscale(1) contrast(1.06) brightness(0.9);
+    transition: filter 0.8s var(--ease);
+  }
+  /* film grain on every print */
+  .print::after {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    opacity: 0.35;
+  }
+
+  /* resting positions: a loose pile */
+  .print[data-pos='0'] { z-index: 3; transform: rotate(-1.2deg); }
+  .print[data-pos='1'] { z-index: 2; transform: translate(10px, 8px) rotate(3.2deg); }
+  .print[data-pos='2'] { z-index: 1; transform: translate(-10px, 12px) rotate(-4.6deg); }
+  .stack[data-count='1'] .print[data-pos='0'] { transform: rotate(-1.2deg); }
+
+  /* hover: the pile fans out and the top print develops into colour */
+  .card:hover .print[data-pos='0'],
+  .stack:focus-visible .print[data-pos='0'] {
+    transform: rotate(0deg) translateY(-6px);
+    box-shadow:
+      -3px 0 0 rgba(255, 30, 70, 0.45),
+      3px 0 0 rgba(30, 140, 255, 0.45),
+      0 26px 50px -20px rgba(0, 0, 0, 0.95);
+  }
+  .card:hover .print[data-pos='0'] :global(img) {
+    filter: none;
+  }
+  .card:hover .print[data-pos='1'] { transform: translate(34px, 4px) rotate(7deg); }
+  .card:hover .print[data-pos='2'] { transform: translate(-34px, 10px) rotate(-9deg); }
+  .stack:focus-visible {
+    outline: none;
+  }
+
+  .count {
+    position: absolute;
+    right: 0;
+    bottom: -1.9rem;
+    font-size: 0.64rem;
+    color: var(--muted);
+  }
+
+  /* placeholder print */
+  .empty {
+    display: grid;
+    place-items: center;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 7px, rgba(238, 235, 228, 0.025) 7px 8px),
+      radial-gradient(ellipse at 50% 40%, rgba(160, 140, 246, 0.08), transparent 70%),
+      #141413;
+  }
+  .empty :global(.ph-lion) {
+    position: absolute;
+    width: 62%;
+    height: auto;
+    color: var(--fg);
+    opacity: 0.07;
+    transition: opacity 0.6s var(--ease);
+  }
+  .card:hover .empty :global(.ph-lion) {
+    opacity: 0.14;
+  }
+  .ph-initials {
+    position: relative;
+    font-size: clamp(4rem, 7vw, 6rem);
+    --ca-rest: 0.035em;
+  }
+  .ph-note {
+    position: absolute;
+    bottom: 1.1rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+
+  /* ── Details ── */
+  .info {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .role {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+  .name {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    text-transform: none;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+  .quote {
+    font-size: 1.2rem;
+    color: var(--fg-dim);
+    margin-top: 0.3rem;
+  }
+  .spec {
+    margin-top: 1rem;
+    border-top: 1px solid var(--rule);
+  }
+  .spec div {
+    display: grid;
+    grid-template-columns: 7.2rem 1fr;
+    gap: 0.75rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .spec dt {
+    font-size: 0.6rem;
+    color: var(--muted);
+  }
+  .spec dd {
+    font-size: 1.05rem;
+    line-height: 1.3;
+    color: var(--fg-dim);
+  }
+  .spec .food dd {
+    color: var(--fg);
+    font-size: 1.15rem;
+  }
+
+  /* ── Officer application ── */
+  .ta {
+    padding-block: clamp(4rem, 8vw, 6rem);
+  }
+  .ta-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: clamp(2rem, 6vw, 6rem);
+    align-items: start;
+  }
+  .ta-title {
+    font-size: clamp(2.8rem, 6vw, 5.2rem);
+    text-transform: none;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+  }
+  .ta-body {
+    margin: 1.5rem 0 2rem;
+    color: var(--fg-dim);
+    font-size: 1.3rem;
+    max-width: 42ch;
+  }
+  .ta-side {
+    display: grid;
+    gap: 0.9rem;
+  }
+  .ta-perks,
+  .ta-steps {
+    list-style: none;
+    border-top: 1px solid var(--rule);
+    margin-bottom: 1.25rem;
+  }
+  .ta-perks li,
+  .ta-steps li {
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 1.1rem;
+  }
+  .roles {
+    list-style: none;
+    border-top: 1px solid var(--rule);
+    margin-bottom: 1.25rem;
+  }
+  .roles li {
+    display: grid;
+    gap: 0.2rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .role-name {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.35rem;
+  }
+  .role-body {
+    color: var(--fg-dim);
+    font-size: 1.05rem;
+  }
+  .ta-perks li::before {
+    content: '✦ ';
+    color: var(--neb-violet);
+    font-size: 0.8rem;
+  }
+  .ta-steps li {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    align-items: baseline;
+  }
+  .ta-steps .mono {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .contact {
+    margin-top: 3rem;
+    font-size: 1.35rem;
+    color: var(--fg-dim);
+  }
+  .contact a {
+    color: var(--fg);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  @media (max-width: 1000px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 640px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+    .ta-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (hover: none) {
+    /* touch: show colour on the front print, since there is no hover */
+    .print[data-pos='0'] :global(img) {
+      filter: none;
+    }
+  }
+</style>

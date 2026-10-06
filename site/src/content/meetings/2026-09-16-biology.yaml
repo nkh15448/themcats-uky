@@ -1,0 +1,9 @@
+title: Biology Seminar
+type: biology
+date: 2026-09-16
+time: "5:00 PM"
+end: "9:00 PM"
+covers: [bio-2]
+location: CP 222
+materials:
+  - { kind: slides, chapters: [bio-2], href: "/powerpoints/Bio 2 - Reproduction The M-CATS.pdf" }

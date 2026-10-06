@@ -1,0 +1,75 @@
+---
+import { url } from '../lib/url';
+import '@fontsource/ibm-plex-mono/300.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/500.css';
+import '@fontsource-variable/cormorant-garamond/wght.css';
+import '@fontsource-variable/cormorant-garamond/wght-italic.css';
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import Palette from '../components/Palette.astro';
+import Tuner from '../components/Tuner.astro';
+import playfair from '../assets/fonts/playfair-mcats.woff2?url';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title,
+  description = 'A free, peer-driven MCAT preparation community at the University of Kentucky.',
+} = Astro.props;
+const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · University of Kentucky';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0d0d0c" />
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <link rel="preload" href={playfair} as="font" type="font/woff2" crossorigin />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <slot name="head" />
+    {import.meta.env.PUBLIC_PREVIEW === '1' && <meta name="robots" content="noindex, nofollow" />}
+  </head>
+  <body>
+    <a href="#main" class="sr-only">Skip to content</a>
+    <Nav />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <Palette />
+    {import.meta.env.DEV && <Tuner />}
+    {import.meta.env.PUBLIC_PREVIEW === '1' && <p class="preview-tag mono">Preview build · not the live site</p>}
+    <script>
+      // Fade sections in as they scroll into view.
+      const io = new IntersectionObserver(
+        (entries) => entries.forEach((e) => e.isIntersecting && (e.target.classList.add('in'), io.unobserve(e.target))),
+        { rootMargin: '0px 0px -8% 0px' },
+      );
+      document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+    </script>
+  </body>
+</html>
+
+
+<style>
+  .preview-tag {
+    position: fixed;
+    left: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 120;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--neb-violet);
+    background: var(--bg);
+    color: var(--neb-violet);
+    font-size: 0.58rem;
+    pointer-events: none;
+  }
+</style>

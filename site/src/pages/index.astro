@@ -1,0 +1,906 @@
+---
+import { url } from '../lib/url';
+import Base from '../layouts/Base.astro';
+import { meetings, isUpcoming, library, fmtDate, meetingUrl, MEETING_TYPE, SECTIONS } from '../lib/data';
+import { chapter } from '../lib/kaplan';
+import { orbitGeometry } from '../lib/orbit';
+import { scholarship } from '../data/scholarship';
+import { impact } from '../data/impact';
+import { links } from '../data/join';
+
+const all = await meetings();
+const upcoming = all.filter((m) => isUpcoming(m)).slice(0, 2);
+const lib = await library();
+const count = (fn: (r: (typeof lib)[number]) => boolean) => lib.filter(fn).length;
+const stats = [
+  { n: lib.length, label: 'Resources' },
+  { n: count((r) => r.kind === 'anki'), label: 'Anki decks' },
+  { n: count((r) => r.origin === 'seminar'), label: 'Seminar materials' },
+  { n: all.length, label: 'Meetings archived' },
+];
+const bySection = (Object.keys(SECTIONS) as (keyof typeof SECTIONS)[]).map((s) => ({
+  s,
+  ...SECTIONS[s],
+  n: count((r) => !r.allSections && r.sections.includes(s)),
+}));
+// Server-render the orbit at a nominal size; the browser recomputes it in real pixels.
+const orb = orbitGeometry(1000, 400);
+
+// Headline impact numbers (hand-counted); the strip appears once any exist.
+const schTotal = scholarship.amount * (scholarship.awards.need + scholarship.awards.merit);
+const headline = [
+  impact.hoursTeaching != null && { n: impact.hoursTeaching.toLocaleString('en-US'), label: 'Hours teaching & tutoring' },
+  impact.studentsTutored != null && { n: impact.studentsTutored.toLocaleString('en-US'), label: 'Students tutored' },
+  impact.uworldSavings != null && { n: `$${(impact.uworldSavings + schTotal).toLocaleString('en-US')}`, label: 'Saved for members' },
+].filter(Boolean) as { n: string; label: string }[];
+const layers = [
+  { id: 'back', clip: { y: -60, height: orb.cy + 60 } },
+  { id: 'front', clip: { y: orb.cy, height: 400 - orb.cy + 60 } },
+] as const;
+---
+<Base>
+  <!-- ── Hero ─────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-top">
+        <p class="label">Free MCAT preparation · Est. 2026</p>
+        <div class="hero-aside">
+          <p class="mono">@ University of Kentucky</p>
+          <span class="aside-rule"></span>
+          <p class="italic aside-text">A peer-driven community<br />developing future physicians.</p>
+        </div>
+      </div>
+
+      <h1 class="wordmark display">
+        <span class="w-the ca ca-in">The</span>
+        <span class="w-mcats ca ca-in">M-CATS</span>
+        {layers.map((l) => (
+          <span class={`orbit orbit-${l.id}`} aria-hidden="true">
+            <svg viewBox={orb.viewBox} preserveAspectRatio="none" data-orbit={l.id}>
+              <defs>
+                {l.id === 'back' && (
+                  <linearGradient id="orb-grad" x1="0" y1="1" x2="1" y2="0">
+                    <stop offset="0" stop-color="#6f86f2" />
+                    <stop offset="0.4" stop-color="#a08cf6" />
+                    <stop offset="0.72" stop-color="#e58fc4" />
+                    <stop offset="1" stop-color="#f3d3a0" />
+                  </linearGradient>
+                )}
+                <clipPath id={`orb-${l.id}-clip`}>
+                  <rect x="-60" y={l.clip.y} width="1120" height={l.clip.height} />
+                </clipPath>
+                <mask id={`orb-${l.id}-mask`} maskUnits="userSpaceOnUse" x="-100" y="-100" width="1200" height="600">
+                  <path class="o-draw" d={orb.line} pathLength="1000" />
+                </mask>
+              </defs>
+              <g clip-path={`url(#orb-${l.id}-clip)`} mask={`url(#orb-${l.id}-mask)`}>
+                <path class="o-ring" d={orb.ring} />
+              </g>
+            </svg>
+            {l.id === 'front' && (
+              <span class="glint" style={`left:${orb.glint.left.toFixed(2)}%;top:${orb.glint.top.toFixed(2)}%`}>
+                <span class="g-core"></span>
+                <span class="g-ray g-h"></span>
+                <span class="g-ray g-v"></span>
+                <span class="g-ray g-d1"></span>
+                <span class="g-ray g-d2"></span>
+              </span>
+            )}
+          </span>
+        ))}
+      </h1>
+
+      <p class="tagline italic">You don’t have to face the MCAT alone.</p>
+
+      <div class="hero-cta">
+        <a href={url('/join/')} class="btn btn-solid">Join the community →</a>
+        <button class="btn" data-open-palette>Search resources <kbd>/</kbd></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── What we offer (the flier, translated) ────────────── -->
+  <section class="section offer">
+    <div class="wrap">
+      <h2 class="offer-title display" data-reveal>Free MCAT Preparation</h2>
+      <div class="offer-grid" data-reveal>
+        <div class="offer-col">
+          <p class="mono col-head">MCAT Classes</p>
+          <dl class="sched">
+            <div><dt class="mono">Mon 6 – 9 PM</dt><dd class="mono"><span class="dot" data-s="cp"></span>Chemistry</dd></div>
+            <div><dt class="mono">Wed 5 – 9 PM</dt><dd class="mono"><span class="dot" data-s="bb"></span>Biology / Biochemistry</dd></div>
+          </dl>
+          <p class="mono where">→ White Hall 231</p>
+        </div>
+        <div class="offer-divider" aria-hidden="true"></div>
+        <div class="offer-col right">
+          <p class="mono col-head">1:1 Tutoring</p>
+          <ul class="mono tut">
+            <li>Free</li>
+            <li>Personalized</li>
+            <li>Peer-led</li>
+            <li>MCAT support</li>
+          </ul>
+          <a class="btn btn-solid book" href={links.tutoring} target="_blank" rel="noopener">Book a session ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {headline.length > 0 && (
+    <section class="wrap impact" data-reveal>
+      {headline.map((h) => (
+        <div><span class="display imp-n">{h.n}</span><span class="label">{h.label}</span></div>
+      ))}
+      <a class="arrow-link imp-more" href={url('/about/')}>Our story →</a>
+    </section>
+  )}
+
+  <!-- ── Next up ──────────────────────────────────────────── -->
+  <section class="section next">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">Next up</p>
+        <a href={url('/meetings/')} class="arrow-link">Schedule & archive →</a>
+      </div>
+      <ol class="next-list">
+        {upcoming.map((m) => {
+          const t = MEETING_TYPE[m.data.type];
+          const ch = m.data.covers.map(chapter);
+          return (
+            <li data-reveal>
+              <a href={meetingUrl(m)} class="next-row">
+                <div class="n-date">
+                  <span class="n-day display">{fmtDate(m.data.date, { day: '2-digit' })}</span>
+                  <span class="mono n-month">{fmtDate(m.data.date, { month: 'short' })} · {fmtDate(m.data.date, { weekday: 'short' })}</span>
+                </div>
+                <div class="n-main">
+                  <p class="mono n-type"><span class="dot" data-s={t.section}></span>{m.data.type === 'general' ? m.data.title : `${t.label} seminar`}</p>
+                  <h3 class="n-chapters">
+                    {!ch.length && m.data.topics.join(' / ')}
+                    {ch.map((c, i) => (
+                      <span>
+                        <span class="n-code mono">{c.short}</span> {c.title}{i < ch.length - 1 ? <span class="n-sep"> / </span> : ''}
+                      </span>
+                    ))}
+                  </h3>
+                </div>
+                <div class="n-meta mono">
+                  <span>{m.data.time}</span>
+                  <span>{m.data.location}</span>
+                  <span class="n-mat">{m.data.materials.length ? `${m.data.materials.length} material${m.data.materials.length > 1 ? 's' : ''}` : 'Slides soon'}</span>
+                </div>
+                <span class="n-arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+      <p class="prep italic" data-reveal>Before each seminar: read the matching Kaplan chapters, and come with questions.</p>
+    </div>
+  </section>
+
+  <!-- ── Library ──────────────────────────────────────────── -->
+  <section class="section library">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">The library</p>
+        <a href={url('/resources/')} class="arrow-link">Browse everything →</a>
+      </div>
+      <div class="lib-grid">
+        <div data-reveal>
+          <h2 class="lib-title display ca-hover ca" style="--ca-rest:0.018em">Every deck,<br />handout &amp; slide.<br />One search.</h2>
+          <button class="fake-search" data-open-palette>
+            <span class="mono">› Try “amino acids”, “gen chem 7”, “P/S”…</span>
+            <kbd>/</kbd>
+          </button>
+        </div>
+        <div class="lib-side" data-reveal>
+          <dl class="stats">
+            {stats.map((s) => (
+              <div><dt class="label">{s.label}</dt><dd class="display">{String(s.n).padStart(2, '0')}</dd></div>
+            ))}
+          </dl>
+          <ul class="sections">
+            {bySection.map((s) => (
+              <li>
+                <a href={url(`/resources/?section=${s.s}`)} class="mono">
+                  <span class="dot" data-s={s.s}></span>
+                  <span>{s.short}</span>
+                  <span class="sec-name">{s.name}</span>
+                  <span class="sec-n">{s.n}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Scholarship ──────────────────────────────────────── -->
+  <section class="section scholarship">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label">Scholarship · Applications due {new Date(scholarship.closes).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'America/New_York' })}</p>
+        <a href={url('/scholarship/')} class="arrow-link">Details →</a>
+      </div>
+      <h2 class="sch-title display ca" data-reveal>MCAT<br />Registration<br />Scholarship</h2>
+      <div class="sch-facts mono" data-reveal>
+        <span>5 awards total</span><i></i><span>3 need-based</span><i></i><span>2 merit-based</span>
+      </div>
+      <p class="sch-cover" data-reveal>
+        <span class="italic">Covers the full MCAT registration fee</span>
+        <span class="display sch-amt">${scholarship.amount}</span>
+      </p>
+      <div class="sch-cta" data-reveal data-opens={scholarship.opens} data-closes={scholarship.closes}>
+        <a class="btn btn-solid" href={scholarship.applyUrl} target="_blank" rel="noopener" data-sch-apply hidden>Apply now ↗</a>
+        <a class="btn" href={url('/scholarship/')}>How it works →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Q-bank teaser ────────────────────────────────────── -->
+  <section class="section qbank">
+    <div class="wrap qb-grid">
+      <div data-reveal>
+        <p class="label">In development</p>
+        <h2 class="qb-title">A free question bank<br /><span class="italic">that lives on your computer.</span></h2>
+      </div>
+      <div class="qb-body" data-reveal>
+        <p>
+          We’re building a desktop app in the spirit of the big paid question banks: timed blocks,
+          detailed explanations, and performance tracking by topic. It downloads the questions to
+          your machine, so it stays free for you and for us.
+        </p>
+        <p class="mono qb-status"><span class="pulse"></span> macOS & Windows · Coming later this year</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Founder note ─────────────────────────────────────── -->
+  <section class="section quote">
+    <div class="wrap">
+      <blockquote data-reveal>
+        <p class="italic">“The MCAT is not just about proving what you know. It’s about perseverance, resilience, and growth. And those are things no one should have to build alone.”</p>
+        <footer class="mono">— Nikhil Kumar, Founder · <a href={url('/about/')} class="arrow-link">Read the letter →</a></footer>
+      </blockquote>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { orbitGeometry } from '../lib/orbit';
+
+  // Redraw the orbit in actual pixels so its thickness is exact at every size.
+  const layers = document.querySelectorAll<SVGSVGElement>('svg[data-orbit]');
+  const host = layers[0]?.parentElement;
+  function layout() {
+    if (!host) return;
+    const w = host.offsetWidth;
+    const h = host.offsetHeight;
+    const g = orbitGeometry(w, h);
+    layers.forEach((svg) => {
+      svg.setAttribute('viewBox', g.viewBox);
+      svg.querySelector('.o-ring')!.setAttribute('d', g.ring);
+      svg.querySelector('.o-draw')!.setAttribute('d', g.line);
+      const front = svg.dataset.orbit === 'front';
+      const rect = svg.querySelector('clipPath rect')!;
+      rect.setAttribute('width', String(w + 120));
+      rect.setAttribute('y', String(front ? g.cy : -60));
+      rect.setAttribute('height', String(front ? h - g.cy + 60 : g.cy + 60));
+      const mask = svg.querySelector('mask')!;
+      mask.setAttribute('width', String(w + 200));
+      mask.setAttribute('height', String(h + 200));
+    });
+  }
+  if (host) {
+    layout();
+    new ResizeObserver(layout).observe(host);
+  }
+
+  // Show the scholarship Apply button only while applications are open.
+  const cta = document.querySelector<HTMLElement>('.sch-cta');
+  if (cta) {
+    const now = Date.now();
+    const open = now >= Date.parse(cta.dataset.opens!) && now < Date.parse(cta.dataset.closes!);
+    cta.querySelector<HTMLElement>('[data-sch-apply]')!.hidden = !open;
+  }
+</script>
+
+<style>
+  /* Hero */
+  .hero {
+    min-height: calc(100svh - 64px);
+    display: flex;
+    align-items: center;
+    padding-block: 3rem 4rem;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  /* A faint nebula drifting behind the wordmark. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: -10% -5%;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 34% 28% at 62% 42%, rgba(111, 134, 242, 0.13), transparent 70%),
+      radial-gradient(ellipse 26% 22% at 38% 58%, rgba(160, 140, 246, 0.11), transparent 70%),
+      radial-gradient(ellipse 22% 18% at 78% 30%, rgba(229, 143, 196, 0.08), transparent 70%),
+      radial-gradient(ellipse 14% 12% at 86% 26%, rgba(243, 211, 160, 0.06), transparent 70%);
+    will-change: transform, opacity;
+    opacity: 0;
+    animation:
+      nebula-in 3s 0.4s var(--ease) forwards,
+      nebula-drift 48s ease-in-out infinite alternate;
+  }
+  @keyframes nebula-in {
+    to { opacity: var(--nebula-glow); }
+  }
+  @keyframes nebula-drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(-3%, 2%) scale(1.06); }
+  }
+  .hero-grid {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+  .hero-aside {
+    text-align: right;
+    display: grid;
+    justify-items: end;
+    gap: 0.5rem;
+  }
+  .aside-rule {
+    width: 7rem;
+    border-top: 1px solid var(--rule-strong);
+  }
+  .aside-text {
+    font-size: 1.15rem;
+    line-height: 1.25;
+    color: var(--fg-dim);
+  }
+  .wordmark {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    font-size: clamp(4.5rem, 17.5vw, 15.5rem);
+    line-height: 0.82;
+    margin-block: 1rem;
+  }
+  .w-the,
+  .w-mcats {
+    position: relative;
+    z-index: 1;
+  }
+  .w-the {
+    animation-delay: 0.1s !important;
+  }
+  .w-mcats {
+    animation-delay: 0.35s !important;
+    letter-spacing: -0.035em;
+  }
+
+  /* The orbit is split in two: the far (upper) arc sits behind the letters,
+     the near (lower) arc crosses in front of them. */
+  .orbit {
+    position: absolute;
+    left: 4%;
+    top: -12%;
+    width: 98%;
+    height: 125%;
+    transform: rotate(-11deg);
+    pointer-events: none;
+  }
+  .orbit-back {
+    z-index: 0;
+  }
+  .orbit-front {
+    z-index: 2;
+  }
+  .orbit :global(svg) {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  /* blue at the lower left, through violet and rose, to star-gold at the glint */
+  .orbit :global(.o-ring) {
+    fill: url(#orb-grad);
+    fill-opacity: 0.75;
+    fill-rule: evenodd;
+  }
+  /* The ring is revealed by a thick stroke drawn along its centreline. */
+  .orbit :global(.o-draw) {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 18;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: draw 2.6s 0.9s cubic-bezier(0.55, 0.1, 0.25, 1) forwards;
+  }
+  @keyframes draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* The glint: a small hot core with fine diffraction spikes, like a star
+     caught in a lens. It focuses in as the orbit closes, then breathes. */
+  .glint {
+    position: absolute;
+    width: 0;
+    height: 0;
+    transform: rotate(11deg); /* undo the orbit tilt so the spikes stay upright */
+    opacity: 0;
+    filter: blur(14px);
+    animation: glint-in 1.6s 3.25s var(--ease) forwards;
+  }
+  .glint > span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    translate: -50% -50%;
+  }
+  .g-core {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow:
+      0 0 4px 1px rgba(255, 255, 255, 0.9),
+      0 0 14px 3px rgba(255, 255, 255, 0.35),
+      0 0 26px 8px rgba(243, 211, 160, 0.18),
+      -2px 0 10px rgba(255, 40, 80, 0.35),
+      2px 0 10px rgba(40, 150, 255, 0.35);
+    animation: core 4.8s 4.9s ease-in-out infinite;
+  }
+  .g-ray {
+    border-radius: 50%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95) 50%, transparent);
+  }
+  .g-h {
+    width: 92px;
+    height: 1px;
+    animation: ray 4.8s 4.9s ease-in-out infinite;
+  }
+  .g-v {
+    width: 1px;
+    height: 64px;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.95) 50%, transparent);
+    animation: ray 4.8s 5.5s ease-in-out infinite;
+  }
+  .g-d1,
+  .g-d2 {
+    width: 22px;
+    height: 1px;
+    opacity: 0.55;
+  }
+  .g-d1 { rotate: 45deg; }
+  .g-d2 { rotate: -45deg; }
+  @keyframes glint-in {
+    to { opacity: 1; filter: blur(0); }
+  }
+  @keyframes ray {
+    0%, 100% { scale: 1 1; opacity: 0.9; }
+    50% { scale: 0.55 1; opacity: 0.45; }
+  }
+  .g-v {
+    animation-name: ray-v;
+  }
+  @keyframes ray-v {
+    0%, 100% { scale: 1 1; opacity: 0.9; }
+    50% { scale: 1 0.5; opacity: 0.4; }
+  }
+  @keyframes core {
+    0%, 100% { scale: 1; opacity: 1; }
+    50% { scale: 0.8; opacity: 0.75; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .orbit :global(.o-draw) { stroke-dashoffset: 0; }
+    .glint { opacity: 1; filter: none; }
+    .hero::before { opacity: var(--nebula-glow); }
+  }
+  .tagline {
+    font-size: clamp(1.6rem, 3.6vw, 2.9rem);
+    line-height: 1.1;
+    text-transform: uppercase;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    color: var(--fg-dim);
+    opacity: 0;
+    animation: fade 1.2s 1s var(--ease) forwards;
+  }
+  .hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    opacity: 0;
+    animation: fade 1.2s 1.3s var(--ease) forwards;
+  }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* Offer */
+  .offer {
+    border-top: 1px solid var(--rule);
+  }
+  .offer-title {
+    font-size: clamp(2.6rem, 7.4vw, 6.4rem);
+    text-align: center;
+    letter-spacing: -0.03em;
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+  }
+  .offer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: clamp(1.5rem, 5vw, 5rem);
+  }
+  .offer-divider {
+    background: var(--rule);
+  }
+  .col-head {
+    font-size: clamp(1rem, 1.8vw, 1.35rem);
+    letter-spacing: 0.12em;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 1.75rem;
+  }
+  .sched {
+    display: grid;
+    gap: 1.5rem;
+  }
+  .sched dt {
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+  }
+  .sched dd {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--fg-dim);
+  }
+  .where {
+    margin-top: 2rem;
+    color: var(--fg-dim);
+  }
+  .right {
+    text-align: right;
+  }
+  .book {
+    margin-top: 2rem;
+  }
+  .tut {
+    list-style: none;
+    display: grid;
+    gap: 1.1rem;
+    color: var(--fg-dim);
+  }
+
+  /* Impact strip */
+  .impact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 1.5rem clamp(2rem, 6vw, 5rem);
+    padding-block: 2.5rem;
+    border-block: 1px solid var(--rule);
+  }
+  .impact div {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .imp-n {
+    --opsz: 72; /* keeps thousands commas legible */
+    font-size: clamp(2.6rem, 5vw, 4.2rem);
+    line-height: 1;
+  }
+  .imp-more {
+    margin-left: auto;
+  }
+
+  /* Next up */
+  .next-list {
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+  .next-row {
+    display: grid;
+    grid-template-columns: 9rem 1fr 13rem 2rem;
+    gap: 2rem;
+    align-items: center;
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.3s;
+  }
+  .next-row:hover {
+    background: linear-gradient(90deg, transparent, rgba(238, 235, 228, 0.03), transparent);
+  }
+  .n-date {
+    display: grid;
+  }
+  .n-day {
+    font-size: 4.6rem;
+    line-height: 0.85;
+  }
+  .n-month {
+    color: var(--muted);
+    margin-top: 0.4rem;
+  }
+  .n-type {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    margin-bottom: 0.5rem;
+  }
+  .n-chapters {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    line-height: 1.15;
+  }
+  .n-code {
+    font-size: 0.7rem;
+    vertical-align: 0.4em;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .n-sep {
+    color: var(--faint);
+  }
+  .n-meta {
+    display: grid;
+    gap: 0.15rem;
+    color: var(--fg-dim);
+    font-size: 0.74rem;
+  }
+  .n-mat {
+    color: var(--muted);
+  }
+  .n-arrow {
+    font-family: var(--mono);
+    color: var(--muted);
+    transition: transform 0.3s var(--ease), color 0.3s;
+  }
+  .next-row:hover .n-arrow {
+    transform: translateX(6px);
+    color: var(--fg);
+  }
+  .prep {
+    margin-top: 1.5rem;
+    color: var(--muted);
+  }
+
+  /* Library */
+  .lib-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: clamp(2rem, 6vw, 6rem);
+    align-items: end;
+  }
+  .lib-title {
+    font-size: clamp(2.6rem, 5.6vw, 5rem);
+    text-transform: none;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+    margin-bottom: 2.5rem;
+  }
+  .fake-search {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--rule-strong);
+    color: var(--muted);
+    text-align: left;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .fake-search .mono {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 0.9rem;
+  }
+  .fake-search:hover {
+    border-color: var(--fg);
+    color: var(--fg);
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--rule);
+  }
+  .stats div {
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .stats div:nth-child(odd) {
+    border-right: 1px solid var(--rule);
+  }
+  .stats div:nth-child(even) {
+    padding-left: 1.25rem;
+  }
+  .stats dd {
+    font-size: 3rem;
+    line-height: 1;
+    margin-top: 0.3rem;
+  }
+  .sections {
+    list-style: none;
+    margin-top: 1.5rem;
+  }
+  .sections a {
+    display: grid;
+    grid-template-columns: 1rem 3.5rem 1fr auto;
+    align-items: center;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.75rem;
+    color: var(--fg-dim);
+    transition: color 0.2s, padding 0.3s var(--ease);
+  }
+  .sections a:hover {
+    color: var(--fg);
+    padding-left: 0.4rem;
+  }
+  .sec-name {
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .sec-n {
+    color: var(--muted);
+  }
+
+  /* Scholarship */
+  .scholarship {
+    border-top: 1px solid var(--rule);
+  }
+  .sch-title {
+    font-size: clamp(3.4rem, 11.5vw, 10.5rem);
+    letter-spacing: -0.035em;
+    line-height: 0.84;
+  }
+  .sch-facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    color: var(--fg-dim);
+  }
+  .sch-facts i {
+    width: 2.5rem;
+    border-top: 1px solid var(--rule-strong);
+  }
+  .sch-cover {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+    font-size: 1.6rem;
+    color: var(--fg-dim);
+  }
+  .sch-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .sch-amt {
+    font-size: 2.4rem;
+    color: var(--fg);
+  }
+
+  /* Q-bank */
+  .qbank {
+    border-top: 1px solid var(--rule);
+  }
+  .qb-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: clamp(2rem, 6vw, 6rem);
+    align-items: end;
+  }
+  .qb-title {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.2rem, 4.6vw, 4rem);
+    line-height: 1;
+    margin-top: 1rem;
+  }
+  .qb-title .italic {
+    color: var(--fg-dim);
+  }
+  .qb-body p:first-child {
+    color: var(--fg-dim);
+    font-size: 1.25rem;
+  }
+  .qb-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--neb-violet);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(160, 140, 246, 0.6); }
+    100% { box-shadow: 0 0 0 10px rgba(160, 140, 246, 0); }
+  }
+
+  /* Quote */
+  .quote {
+    border-top: 1px solid var(--rule);
+  }
+  blockquote p {
+    font-size: clamp(1.8rem, 3.6vw, 3rem);
+    line-height: 1.15;
+    max-width: 30ch;
+  }
+  blockquote footer {
+    margin-top: 2rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  @media (max-width: 860px) {
+    .hero-top {
+      flex-direction: column-reverse;
+    }
+    .wordmark {
+      font-size: 27.5vw; /* "M-CATS" spans the width of a phone */
+    }
+    .hero-aside {
+      text-align: left;
+      justify-items: start;
+    }
+    .offer-grid,
+    .lib-grid,
+    .qb-grid {
+      grid-template-columns: 1fr;
+    }
+    .offer-divider {
+      height: 1px;
+    }
+    .right {
+      text-align: left;
+    }
+    .next-row {
+      grid-template-columns: 5.5rem 1fr;
+      gap: 1.25rem;
+    }
+    .n-day {
+      font-size: 3.4rem;
+    }
+    .n-meta {
+      grid-column: 2;
+    }
+    .n-arrow {
+      display: none;
+    }
+  }
+</style>
