@@ -4,4 +4,6 @@ date: 2026-10-07
 time: "5:00 PM"
 end: "9:00 PM"
 location: White Hall 231
-covers: [bio-5, biochem-4]
+covers: [bio-5]
+recap:
+  - "We ran out of time for Biochem 4 (Carbohydrates), so it moves to Monday, October 12."
