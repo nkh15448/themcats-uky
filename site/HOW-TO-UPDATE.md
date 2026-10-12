@@ -39,6 +39,24 @@ That's it. The material now shows up in:
 
 **One chapter per file is best.** If you split a combined deck, each piece gets its own row in the library.
 
+## Move a chapter to a different meeting
+
+Didn't get to a chapter? Move its code from one meeting's `covers:` list to another's.
+
+```yaml
+# 2026-10-07-biology.yaml: take it out (and optionally say why)
+covers: [bio-5]
+recap:
+  - "We ran out of time for Biochem 4 (Carbohydrates), so it moves to Monday, October 12."
+
+# 2026-10-12-chemistry.yaml: add it in
+covers: [gc-8, gc-12, biochem-4]
+```
+
+The calendar, the "Next up" banner, the "By chapter" view, the meeting pages, and the calendar feed all update from this. A chapter can be on any meeting, chemistry or biology.
+
+To move a whole meeting instead (new date or room), edit its `date:`, `time:` or `location:`. Rename the file to match the new date too, so files stay in order.
+
 ## Add a meeting
 
 Create a file in `site/src/content/meetings/` named `YYYY-MM-DD-something.yaml`:
