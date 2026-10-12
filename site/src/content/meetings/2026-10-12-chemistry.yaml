@@ -5,3 +5,6 @@ time: "6:00 PM"
 end: "9:00 PM"
 location: White Hall 231
 covers: [gc-8, gc-12, biochem-4]
+materials:
+  - { kind: slides, chapters: [gc-8], href: "/powerpoints/MCAT_Chapter_8_Gases.pdf" }
+  - { kind: slides, chapters: [gc-12], href: "/powerpoints/Electrochemistry Finished.pdf" }
