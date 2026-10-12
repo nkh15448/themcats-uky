@@ -9,4 +9,6 @@ export default defineConfig({
   base: process.env.SITE_BASE ?? '/',
   // Fetch a page in the background as soon as its link is hovered.
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+  // Old Hugo address, kept working for links already out there.
+  redirects: { '/leadership': '/team' },
 });
