@@ -347,10 +347,11 @@ kbd {
   transform: none;
 }
 
+/* .full-motion on <html> opts a page back in (the presentation asks first). */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  html:not(.full-motion) *,
+  html:not(.full-motion) *::before,
+  html:not(.full-motion) *::after {
     animation: none !important;
     transition: none !important;
   }

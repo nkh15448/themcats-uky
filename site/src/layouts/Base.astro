@@ -15,9 +15,12 @@ import playfair from '../assets/fonts/playfair-mcats.woff2?url';
 interface Props {
   title?: string;
   description?: string;
+  /** Full-screen pages (the presentation): no nav, footer or search palette. */
+  bare?: boolean;
 }
 const {
   title,
+  bare = false,
   description = 'A free, peer-driven MCAT preparation community at the University of Kentucky.',
 } = Astro.props;
 const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · University of Kentucky';
@@ -38,14 +41,14 @@ const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · University o
     {import.meta.env.PUBLIC_PREVIEW === '1' && <meta name="robots" content="noindex, nofollow" />}
   </head>
   <body>
-    <a href="#main" class="sr-only">Skip to content</a>
-    <Nav />
+    {!bare && <a href="#main" class="sr-only">Skip to content</a>}
+    {!bare && <Nav />}
     <main id="main">
       <slot />
     </main>
-    <Footer />
-    <Palette />
-    {import.meta.env.DEV && <Tuner />}
+    {!bare && <Footer />}
+    {!bare && <Palette />}
+    {import.meta.env.DEV && !bare && <Tuner />}
     {import.meta.env.PUBLIC_PREVIEW === '1' && <p class="preview-tag mono">Preview build · not the live site</p>}
     <script>
       // Fade sections in as they scroll into view.
