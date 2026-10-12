@@ -8,3 +8,4 @@ covers: [gc-8, gc-12, biochem-4]
 materials:
   - { kind: slides, chapters: [gc-8], href: "/powerpoints/MCAT_Chapter_8_Gases.pdf" }
   - { kind: slides, chapters: [gc-12], href: "/powerpoints/Electrochemistry Finished.pdf" }
+  - { kind: slides, chapters: [biochem-12], href: "/powerpoints/Mcats BCH 4 - Carbohydrates.pdf" }
