@@ -39,6 +39,10 @@ const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · University o
     <meta property="og:description" content={description} />
     <slot name="head" />
     {import.meta.env.PUBLIC_PREVIEW === '1' && <meta name="robots" content="noindex, nofollow" />}
+    {/* Anonymous, cookie-free visit counts: themcats.goatcounter.com. Live site only. */}
+    {import.meta.env.PROD && import.meta.env.PUBLIC_PREVIEW !== '1' && (
+      <script is:inline data-goatcounter="https://themcats.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+    )}
   </head>
   <body>
     {!bare && <a href="#main" class="sr-only">Skip to content</a>}
@@ -51,6 +55,16 @@ const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · University o
     {import.meta.env.DEV && !bare && <Tuner />}
     {import.meta.env.PUBLIC_PREVIEW === '1' && <p class="preview-tag mono">Preview build · not the live site</p>}
     <script>
+      import { trackLink } from '../lib/track';
+
+      // Count downloads and links that leave the site (middle-clicks too).
+      const onLink = (e: MouseEvent) => {
+        const a = (e.target as HTMLElement).closest?.('a[href]') as HTMLAnchorElement | null;
+        if (a) trackLink(a.href, a.textContent?.trim().replace(/\s+/g, ' '));
+      };
+      document.addEventListener('click', onLink);
+      document.addEventListener('auxclick', onLink);
+
       // Fade sections in as they scroll into view.
       const io = new IntersectionObserver(
         (entries) => entries.forEach((e) => e.isIntersecting && (e.target.classList.add('in'), io.unobserve(e.target))),
