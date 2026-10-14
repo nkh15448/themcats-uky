@@ -5,3 +5,6 @@ time: "5:00 PM"
 end: "9:00 PM"
 location: White Hall 231
 covers: [bio-6, bio-7, biochem-5]
+
+materials:
+  - { kind: slides, chapters: [biochem-5], href: "/powerpoints/Lipids - M_CATS.pdf" }
