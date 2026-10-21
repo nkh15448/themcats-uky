@@ -1,0 +1,2707 @@
+---
+// ─────────────────────────────────────────────────────────────
+//  The club-visit talk, as a full-screen slideshow. Three looks share it:
+//    /present       theme="classic"  soft glows, the wildcat on the title
+//    /presentSpace  theme="space"    nebula, orbits and a planet horizon,
+//                                     after the merch mockups (unlisted)
+//    /presentOrbit  theme="orbit"    the multi-orbit back print: fringed
+//                                     rings, a flaring star, painted nebula,
+//                                     still film grain (unlisted)
+//  Content lives here once, so an update shows in all three.
+//
+//  Keys:  → / Space / PageDown = next   ← / PageUp = back
+//         F = fullscreen   B = blank screen   Home / End = first / last
+//  Mouse: click / scroll down / forward button = next
+//         right-click / scroll up / back button = back
+//
+//  Each <section class="slide"> is one slide on a fixed 1920×1080 stage,
+//  scaled to fit the screen. Inside a slide, anything with data-step="n"
+//  appears on the nth click. The wordmark, wildcat and glows live outside
+//  the slides and glide to a new spot on each slide (like PowerPoint Morph).
+//  A slide picks their spot with data-mark / data-cat (and, in space and orbit,
+//  data-neb / data-sys / data-sun / data-hz), e.g. data-cat="gone 1:hero" =
+//  hidden at first, the big hero from click 1 on. Spots are styled under
+//  "Persistent layer", "Space" and "Orbit"; the classic glows move per slide.
+// ─────────────────────────────────────────────────────────────
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import QRCode from 'qrcode';
+import Logo from './Logo.astro';
+import { leadership } from '../data/team';
+import { links } from '../data/join';
+import { scholarship } from '../data/scholarship';
+// Baked by scripts/bake-space.mjs: live blurs this size stutter in some browsers.
+import nebulaImg from '../assets/present/nebula.webp';
+import horizonImg from '../assets/present/horizon.webp';
+import starsImg from '../assets/present/stars.webp';
+// Baked by scripts/bake-orbit.mjs (the orbit look).
+import oRings from '../assets/present/orbit/rings.webp';
+import oRingsSoft from '../assets/present/orbit/rings-soft.webp';
+import oFlare from '../assets/present/orbit/flare.webp';
+import oFlareViolet from '../assets/present/orbit/flare-violet.webp';
+import oSpark from '../assets/present/orbit/spark.webp';
+import oSparkPink from '../assets/present/orbit/spark-pink.webp';
+import oNebula from '../assets/present/orbit/nebula.webp';
+import oStars from '../assets/present/orbit/stars.webp';
+import oHaze from '../assets/present/orbit/haze.webp';
+import oMini from '../assets/present/orbit/orbit-mini.webp';
+import oGeo from '../assets/present/orbit/geometry.json';
+
+interface Props {
+  theme?: 'classic' | 'space' | 'orbit';
+}
+const { theme = 'classic' } = Astro.props;
+const classic = theme === 'classic';
+const space = theme === 'space';
+const orbit = theme === 'orbit';
+
+// Coloured by MCAT section: c = Chem/Phys, b = Bio/Biochem, p = Psych/Soc, s = all of them.
+const subjects: [string, 'c' | 'b' | 'p' | 's'][] = [
+  ['Orgo 1', 'c'],
+  ['Orgo 2', 'c'],
+  ['Gen Chem 1', 'c'],
+  ['Gen Chem 2', 'c'],
+  ['Physics 1', 'c'],
+  ['Physics 2', 'c'],
+  ['Biology', 'b'],
+  ['Physiology', 'b'],
+  ['Cell Biology', 'b'],
+  ['Genetics', 'b'],
+  ['Biochemistry 1 & 2', 'b'],
+  ['Psychology', 'p'],
+  ['Sociology', 'p'],
+  ['Statistics', 's'],
+];
+
+const costs = [
+  { label: 'MCAT registration', amount: 355, note: 'we provide a scholarship', accent: 'rose' },
+  { label: 'AAMC resources', amount: 323.7 },
+  { label: 'UWorld', amount: 339, note: 'we provide a discount', accent: 'violet' },
+  { label: 'Kaplan books', amount: 200, note: 'talk to us before buying', accent: 'gold' },
+];
+const total = costs.reduce((a, c) => a + c.amount, 0);
+
+// Officer portraits, cropped for the slides: src/assets/present/<team id>.jpg
+const portraits = import.meta.glob<{ default: ImageMetadata }>('../assets/present/*.jpg', { eager: true });
+const officers = leadership.map((m) => ({ ...m, photo: portraits[`../assets/present/${m.id}.jpg`]?.default }));
+// Full-length photos: keep the face, not the shoes.
+const tall = new Set(['anmol-nayak', 'zander-houchens', 'andrew-peng']);
+
+const qr = (url: string) =>
+  QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0d0d0c', light: '#eeebe4' } });
+const [qrGroupme, qrBbn] = await Promise.all([qr(links.groupme), qr(links.bbnvolved)]);
+const awards = scholarship.awards.need + scholarship.awards.merit;
+
+// ── Space theme ──────────────────────────────────────────────
+// A tilted ellipse as an SVG path, starting at its right end. Positive rot = clockwise.
+const ellipse = (cx: number, cy: number, rx: number, ry: number, rot: number) => {
+  const r = (rot * Math.PI) / 180;
+  const at = (t: number) =>
+    [cx + rx * Math.cos(t) * Math.cos(r) - ry * Math.sin(t) * Math.sin(r), cy + rx * Math.cos(t) * Math.sin(r) + ry * Math.sin(t) * Math.cos(r)].map((v) => v.toFixed(1));
+  const [x1, y1] = at(0);
+  const [x2, y2] = at(Math.PI);
+  return `M ${x1} ${y1} A ${rx} ${ry} ${rot} 1 1 ${x2} ${y2} A ${rx} ${ry} ${rot} 1 1 ${x1} ${y1}`;
+};
+const SUN = { x: 1440, y: 470 }; // where the nebula, orbits and star sit on the title
+// Drawn around (0, 0): the orbit system moves as one piece from slide to slide.
+const orbits = [ellipse(0, 0, 400, 118, -12), ellipse(0, 0, 438, 150, -9)];
+const sparks = [
+  { x: 1130, y: 250, s: 26 },
+  { x: 1770, y: 215, s: 18 },
+  { x: 1700, y: 650, s: 30 },
+  { x: 1210, y: 705, s: 16 },
+  { x: 1010, y: 330, s: 12 },
+  { x: 1560, y: 140, s: 14 },
+];
+
+// ── Orbit theme ──────────────────────────────────────────────
+// Pin the live star and the travelling sparkles to the baked rings.
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(3)}%`;
+const oFlareAt = `left:${pct(oGeo.orbit.star[0], oGeo.orbit.w)};top:${pct(oGeo.orbit.star[1], oGeo.orbit.h)}`;
+const oRide = oGeo.orbit.rings[1]; // the one true ellipse among the rings
+const oSat = [
+  `--x:${pct(oGeo.orbit.cx + oRide.dx, oGeo.orbit.w)}`,
+  `--y:${pct(oGeo.orbit.cy + oRide.dy, oGeo.orbit.h)}`,
+  `--rx:${((oRide.a / oGeo.orbit.w) * 100).toFixed(3)}cqw`,
+  `--k:${(oRide.b / oRide.a).toFixed(4)}`,
+  `--tilt:${oRide.tilt}deg`,
+  '--dur:30s',
+].join(';');
+const oMiniSat = (dur: string) =>
+  `--x:50%;--y:50%;--rx:${((oGeo.mini.a / oGeo.mini.w) * 100).toFixed(3)}cqw;--k:${(oGeo.mini.b / oGeo.mini.a).toFixed(4)};--dur:${dur}`;
+
+const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+---
+  <div class="deck" data-theme={theme} data-slide="0" data-mark="hero" data-cat={classic ? 'hero' : 'gone'}>
+    <div class="stage" aria-live="polite">
+      <!-- ── Persistent layer ───────────────────────────────── -->
+      {classic && (
+        <div class="glow" aria-hidden="true">
+          <span class="g g1"></span>
+          <span class="g g2"></span>
+          <span class="g g3"></span>
+        </div>
+      )}
+      {space && (
+        <Fragment>
+          <img class="stars" src={starsImg.src} width="2100" height="1200" alt="" decoding="async" aria-hidden="true" />
+          <div class="neb" style={`left:${SUN.x - 1000}px;top:${SUN.y - 450}px`} aria-hidden="true">
+            <div class="nebula"><img src={nebulaImg.src} width="2000" height="900" alt="" decoding="async" /></div>
+          </div>
+        </Fragment>
+      )}
+      {orbit && (
+        <Fragment>
+          <img class="o-stars" src={oStars.src} width="2400" height="1500" alt="" decoding="async" aria-hidden="true" />
+          <img class="o-haze" src={oHaze.src} width="960" height="600" alt="" decoding="async" aria-hidden="true" />
+          <div class="o-neb" aria-hidden="true">
+            <img class="o-nebula" src={oNebula.src} width="2600" height="1500" alt="" decoding="async" />
+          </div>
+        </Fragment>
+      )}
+      <div class="cat" aria-hidden="true">
+        {/* space and orbit: red and blue copies under the white one make the lens fringe */}
+        {!classic && <Logo label="" class="cat-r" />}
+        {!classic && <Logo label="" class="cat-b" />}
+        <Logo label="" />
+      </div>
+      {space && (
+        <Fragment>
+          <div class="sys" style={`left:${SUN.x}px;top:${SUN.y}px`} aria-hidden="true">
+            <svg class="orb" width="1040" height="440" viewBox="-520 -220 1040 440">
+              {orbits.map((d, i) => (
+                <g class={`orb-${i}`}>
+                  <path d={d} pathLength="1" class="o-r" />
+                  <path d={d} pathLength="1" class="o-b" />
+                  <path d={d} pathLength="1" class="o-w" />
+                </g>
+              ))}
+            </svg>
+            <span class="traveler" style={`offset-path:path('${orbits[0]}')`}>
+              <span class="star mini">
+                <span class="st-h"></span><span class="st-v"></span><span class="st-core"></span>
+              </span>
+            </span>
+          </div>
+          <div class="sun" style={`left:${SUN.x}px;top:${SUN.y}px`} aria-hidden="true">
+            <span class="star">
+              <span class="st-halo"></span>
+              <span class="st-h r"></span><span class="st-h b"></span><span class="st-h"></span>
+              <span class="st-v r"></span><span class="st-v b"></span><span class="st-v"></span>
+              <span class="st-core"></span>
+            </span>
+          </div>
+          <div class="hz" aria-hidden="true">
+            <img class="horizon" src={horizonImg.src} width="1920" height="250" alt="" decoding="async" />
+            <span class="flare"><span class="fl-h"></span><span class="fl-h2"></span><span class="fl-v"></span><span class="fl-core"></span></span>
+          </div>
+        </Fragment>
+      )}
+      {orbit && (
+        <Fragment>
+          {/* The orbits move as one piece; the star and the sparkle ride them. */}
+          <div class="o-sys" aria-hidden="true">
+            <div class="o-spin">
+              <img class="o-rings-soft" src={oRingsSoft.src} width="1100" height="575" alt="" decoding="async" />
+              <img class="o-rings" src={oRings.src} width="2200" height="1150" alt="" decoding="async" />
+              <span class="sat" style={oSat}>
+                <span class="sat-arm"><span class="sat-body"><span class="sat-fix"><img src={oSpark.src} width="240" height="240" alt="" /></span></span></span>
+              </span>
+              <span class="o-flare" style={oFlareAt}><img src={oFlare.src} width="1400" height="1400" alt="" decoding="async" /></span>
+            </div>
+          </div>
+          <div class="o-sun" aria-hidden="true"><img src={oFlareViolet.src} width="1400" height="1400" alt="" decoding="async" /></div>
+        </Fragment>
+      )}
+      <h1 class="mark">
+        <span class="mark-the italic">the</span>
+        <span class="mark-mcat display ca">MCAT</span>
+      </h1>
+
+      <!-- ── 1 · Title ──────────────────────────────────────── -->
+      {classic && (
+      <section class="slide s-title" aria-label="Title" data-mark="hero" data-cat="hero">
+        <p class="label kicker">The M-CATS presents</p>
+        <p class="mono t-sub">A brief introduction</p>
+        <div class="t-foot">
+          <p class="mono">The M-CATS @ University of Kentucky</p>
+          <span class="t-rule"></span>
+          <p class="mono">themcats.org</p>
+        </div>
+      </section>
+      )}
+
+      <!-- ── 1 · Title, space: nebula, orbits and horizon are the persistent layer ── -->
+      {space && (
+      <section class="slide s-title s-orbit" aria-label="Title" data-mark="hero" data-cat="gone" data-neb="hero" data-sys="hero" data-sun="hero" data-hz="up">
+        {sparks.map((p, i) => (
+          <span class="spark" style={`left:${p.x}px;top:${p.y}px;--s:${p.s}px;--k:${i}`} aria-hidden="true"></span>
+        ))}
+
+        <p class="label kicker fx-in">01 · The M-CATS presents</p>
+        <p class="mono t-sub fx-in" style="--i:6">A brief introduction</p>
+        <p class="o-dots fx-in" style="--i:8" aria-hidden="true"><i></i><i></i><i></i><i></i></p>
+        <span class="o-rule fx-in" style="--i:9"></span>
+
+        <p class="o-tag label fx-in" style="--i:22">Different minds.<br />Same orbit.</p>
+        <p class="o-coords mono fx-in" style="--i:16">38.0406° N &nbsp;·&nbsp; 84.5037° W</p>
+
+        <p class="o-foot mono fx-in" style="--i:18">The M-CATS <span>✦</span> University of Kentucky</p>
+      </section>
+      )}
+
+      <!-- ── 1 · Title, orbit: the back print. Orbits, star, wordmark, lockup ── -->
+      {orbit && (
+      <section class="slide s-title s-halo" aria-label="Title" data-mark="hero" data-cat="gone" data-neb="gone" data-sys="hero" data-sun="gone" data-hz="down">
+        <p class="h-plate h-tl mono fx-in" style="--i:34">The M-CATS presents</p>
+        <p class="h-plate h-tr mono fx-in" style="--i:35">38.0406° N &nbsp;·&nbsp; 84.5037° W</p>
+        <p class="h-sub mono fx-in" style="--i:24">A brief introduction</p>
+        <p class="h-twins fx-in" style="--i:28" aria-hidden="true">
+          <img src={oSpark.src} width="240" height="240" alt="" />
+          <img src={oSparkPink.src} width="240" height="240" alt="" />
+        </p>
+        <p class="h-motto mono fx-in" style="--i:31">Different minds.<br />Same orbit.</p>
+        <p class="h-foot mono fx-in" style="--i:36"><span class="h-rule"></span>The M-CATS <span class="h-x">×</span> University of Kentucky<span class="h-rule"></span></p>
+      </section>
+      )}
+
+      <!-- ── 2 · What it is ─────────────────────────────────── -->
+      <section class="slide s-what" aria-label="What the MCAT is" data-mark="header" data-cat="mark" data-neb="corner" data-sys="gone 1:clock" data-sun="gone 1:clock" data-hz="down">
+        <p class="label what-full" data-n="02">Medical College Admission Test</p>
+
+        <div class="what-time fx fx-rise" data-step="1">
+          <p class="mono what-cap">One sitting</p>
+          <p class="display what-clock ca"><span data-count="450" data-format="hm">7h 30m</span></p>
+          <p class="italic what-note">of testing. The longest standardized exam most of us will ever take.</p>
+        </div>
+
+        <div class="what-load" data-step="2">
+          <p class="what-n fx fx-ca"><span class="display ca">14</span> <span class="italic">classes’ worth of content</span></p>
+          <ul class="pills">
+            {subjects.map(([name, s], i) => (
+              <li class={`pill fx fx-pop`} data-s={s} style={`--i:${i}`}>{name}</li>
+            ))}
+          </ul>
+          <p class="legend mono fx fx-fade" style="--i:15">
+            <span><i data-s="c"></i>Chem / Phys</span>
+            <span><i data-s="b"></i>Bio / Biochem</span>
+            <span><i data-s="p"></i>Psych / Soc</span>
+            <span><i data-s="s"></i>Everywhere</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ── 3 · What it costs ──────────────────────────────── -->
+      <section class="slide s-cost" aria-label="What the MCAT costs" data-mark="header" data-cat="mark" data-neb="study" data-sys="gone" data-sun={`gone ${costs.length + 3}:study`} data-hz="down">
+        <p class="label what-full" data-n="03">What it costs</p>
+
+        <ol class="ledger">
+          {costs.map((c, i) => (
+            <li class="row fx fx-slide" data-step={i + 1}>
+              <span class="r-label">{c.label}</span>
+              {c.note && <span class={`r-note mono`} data-accent={c.accent}>{c.note}</span>}
+              <span class="r-dots" aria-hidden="true"></span>
+              <span class="r-amt mono">{money(c.amount)}</span>
+            </li>
+          ))}
+          <li class="row row-total fx fx-fade" data-step={costs.length + 1}>
+            <span class="r-label label">Total</span>
+            <span class="r-dots" aria-hidden="true"></span>
+            <span class="r-amt display ca">~<span data-count={total} data-format="money">{money(total)}</span></span>
+          </li>
+          <li class="row row-inf fx fx-slide" data-step={costs.length + 2}>
+            <span class="r-label">Tutoring <span class="italic dim">(optional)</span></span>
+            <span class="r-dots" aria-hidden="true"></span>
+            <span class="r-amt inf">∞</span>
+          </li>
+        </ol>
+
+        <aside class="study fx fx-blur" data-step={costs.length + 3}>
+          <p class="display study-n ca nebula-fringe">$6,357</p>
+          <p class="italic study-txt">spent on average on MCAT preparation and related costs by Canadian applicants in 2015.</p>
+          <p class="mono cite">Fortin et al. (2018), <i>MedEdPublish</i> 7:243 · doi.org/10.15694/mep.2018.0000243.1</p>
+        </aside>
+
+        <p class="punch italic fx fx-ca" data-step={costs.length + 4}>
+          …and you can still pay all of this and still fail. <span class="mono">;-;</span>
+        </p>
+      </section>
+
+      <!-- ── 4 · The turn ───────────────────────────────────── -->
+      <section class="slide s-turn" aria-label="What do you do?" data-mark="gone" data-cat="gone 1:hero" data-neb="center 1:cat" data-sys="gone 1:cat" data-sun="gone 1:cat" data-hz="down">
+        <h2 class="turn-q italic">What do you <span class="turn-do">do?</span></h2>
+        <div class="turn-us" data-step="1">
+          <p class="turn-word display">
+            <span class="ca fx fx-ca">The</span>
+            <span class="ca fx fx-ca" style="--i:3">M-CATS</span>
+          </p>
+          <p class="mono turn-at fx fx-fade" style="--i:8">@ University of Kentucky</p>
+          <p class="italic turn-tag fx fx-rise" style="--i:10">A free, peer-driven MCAT prep community.</p>
+        </div>
+      </section>
+
+      <!-- ── 5 · Officers ───────────────────────────────────── -->
+      <section class="slide s-team" aria-label="The team" data-mark="gone" data-cat="mark" data-neb="top" data-sys="gone" data-sun="gone" data-hz="down">
+        <p class="label what-full team-label" data-n="05">Leadership</p>
+        <h2 class="team-h display ca">Run by students</h2>
+        <ul class="team" data-step="1">
+          {officers.map((m, i) => (
+            <li class="person fx fx-person" style={`--i:${i * 2}`}>
+              <div class="frame">
+                {m.photo && <Image src={m.photo} alt="" widths={[300, 520]} sizes="320px" loading="eager" class={tall.has(m.id) ? 'tall' : ''} />}
+              </div>
+              <p class="p-name">{m.name}</p>
+              <p class="p-role mono">{m.role}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- ── 6 · What we do ─────────────────────────────────── -->
+      <section class="slide s-offer" aria-label="What we offer" data-mark="gone" data-cat="mark" data-neb="bottom" data-sys="gone" data-sun="gone" data-hz="down">
+        <p class="label what-full team-label" data-n="06">What we do</p>
+        <h2 class="team-h display ca">All of it, free</h2>
+        <ol class="offers">
+          <li class="offer fx fx-rise" data-step="1" data-accent="rose">
+            {orbit && (
+              <span class="o-mini" aria-hidden="true">
+                <img src={oMini.src} width="800" height="400" alt="" />
+                <span class="sat" style={oMiniSat('19s')}><span class="sat-arm"><span class="sat-body"><span class="sat-fix"><img src={oSpark.src} width="240" height="240" alt="" /></span></span></span></span>
+              </span>
+            )}
+            <p class="o-free italic">free</p>
+            <h3 class="o-title display">MCAT classes</h3>
+            <dl class="o-sched mono">
+              <div><dt>Mon · 6–9 PM</dt><dd>Chemistry</dd></div>
+              <div><dt>Wed · 5–9 PM</dt><dd>Bio / Biochem</dd></div>
+            </dl>
+            <p class="o-body">Seminars that walk the Kaplan books chapter by chapter, slides posted after.</p>
+            <p class="o-where mono">→ White Hall 231</p>
+          </li>
+          <li class="offer fx fx-rise" data-step="2" data-accent="violet">
+            {orbit && (
+              <span class="o-mini" aria-hidden="true">
+                <img src={oMini.src} width="800" height="400" alt="" />
+                <span class="sat" style={oMiniSat('24s')}><span class="sat-arm"><span class="sat-body"><span class="sat-fix"><img src={oSpark.src} width="240" height="240" alt="" /></span></span></span></span>
+              </span>
+            )}
+            <p class="o-free italic">free</p>
+            <h3 class="o-title display">Peer tutoring</h3>
+            <p class="o-body">A one-on-one appointment with one of our officers, booked online whenever you need it.</p>
+          </li>
+          <li class="offer fx fx-rise" data-step="3" data-accent="gold">
+            {orbit && (
+              <span class="o-mini" aria-hidden="true">
+                <img src={oMini.src} width="800" height="400" alt="" />
+                <span class="sat" style={oMiniSat('29s')}><span class="sat-arm"><span class="sat-body"><span class="sat-fix"><img src={oSpark.src} width="240" height="240" alt="" /></span></span></span></span>
+              </span>
+            )}
+            <p class="o-free italic">free</p>
+            <h3 class="o-title display">MCAT funding</h3>
+            <p class="o-body">
+              A scholarship that covers the <b>${scholarship.amount}</b> registration fee, {awards} awards a year,
+              plus member discounts on UWorld.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ── 7 · Join ───────────────────────────────────────── -->
+      <section class="slide s-join" aria-label="Join us" data-mark="gone" data-cat="corner" data-neb="join" data-sys="join" data-sun="gone" data-hz="up">
+        <p class="label what-full team-label" data-n="07">Come find us</p>
+        <h2 class="join-h display ca fx-in">Join us.</h2>
+        <p class="join-site display ca fx-in" style="--i:3">themcats<span class="italic">.org</span></p>
+        <p class="join-sub italic fx-in" style="--i:5">Every seminar, slide deck, Anki deck and handout, searchable.</p>
+        <div class="qrs">
+          <figure class="qr fx-in" style="--i:7">
+            <div class="qr-code" set:html={qrGroupme} />
+            <figcaption><span class="mono">01</span> The GroupMe<small class="italic">announcements &amp; questions</small></figcaption>
+          </figure>
+          <figure class="qr fx-in" style="--i:9">
+            <div class="qr-code" set:html={qrBbn} />
+            <figcaption><span class="mono">02</span> BBNvolved<small class="italic">join to access all our resources</small></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── Chrome ─────────────────────────────────────────── -->
+      <div class="chrome mono" aria-hidden="true">
+        <span>The M-CATS</span>
+        <span class="count"><span data-now>01</span> / <span data-total>07</span></span>
+      </div>
+      <div class="progress" aria-hidden="true"><span></span></div>
+    </div>
+
+    {orbit && (
+      <div class="o-grain" aria-hidden="true"></div>
+    )}
+
+    <p class="hint mono" aria-hidden="true">
+      <kbd>click</kbd> next <kbd>right-click</kbd> back <kbd>scroll</kbd> either way <kbd>F</kbd> fullscreen <kbd>B</kbd> blank
+    </p>
+    <div class="blank" aria-hidden="true"></div>
+  </div>
+
+  <!-- Shown only when the computer has Reduce Motion on. -->
+  <div class="motion-ask" role="dialog" aria-modal="true" aria-labelledby="motion-q" hidden>
+    <div class="ask-card">
+      <p class="label">Before we start</p>
+      <h2 id="motion-q" class="italic ask-q">This computer has <em>Reduce Motion</em> turned on.</h2>
+      <p class="ask-body">
+        That setting switches off this presentation’s animations. Play them anyway? This only affects this page;
+        the computer’s setting stays as it is.
+      </p>
+      <div class="ask-btns">
+        <button class="btn btn-solid" data-motion="full" autofocus>Play the animations</button>
+        <button class="btn" data-motion="reduced">Keep it still</button>
+      </div>
+    </div>
+  </div>
+
+<style>
+  /* ── Frame ─────────────────────────────────────────────────── */
+  :global(html),
+  :global(body) {
+    height: 100%;
+    overflow: hidden;
+  }
+  :global(body) {
+    cursor: default;
+  }
+  .deck {
+    --rose: var(--neb-rose);
+    --violet: var(--neb-violet);
+    --indigo: var(--neb-indigo);
+    --gold: var(--neb-gold);
+    --dur: 1.3s;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bg);
+    user-select: none;
+  }
+  .deck.idle {
+    cursor: none;
+  }
+  /* A fixed 1920×1080 canvas, scaled to the screen by the script. */
+  .stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1920px;
+    height: 1080px;
+    transform: translate(-50%, -50%) scale(var(--scale, 0.5));
+    overflow: hidden;
+  }
+
+  /* ── Persistent layer ──────────────────────────────────────── */
+  /* Everything here moves with transform/opacity only, so it glides. */
+  .glow,
+  .cat,
+  .mark {
+    position: absolute;
+    transition:
+      transform var(--dur) var(--ease),
+      opacity var(--dur) var(--ease);
+  }
+
+  .glow {
+    inset: 0;
+    pointer-events: none;
+  }
+  .g {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(110px);
+    opacity: 0.8;
+    transition:
+      transform 1.8s var(--ease),
+      opacity 1.8s var(--ease);
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .g1 {
+    width: 760px;
+    height: 760px;
+    left: 1060px;
+    top: 120px;
+    background: radial-gradient(circle, var(--rose), transparent 68%);
+  }
+  .g2 {
+    width: 620px;
+    height: 620px;
+    left: 1240px;
+    top: 260px;
+    background: radial-gradient(circle, var(--violet), transparent 68%);
+    animation-duration: 23s;
+    animation-delay: -6s;
+  }
+  .g3 {
+    width: 520px;
+    height: 520px;
+    left: 1120px;
+    top: 420px;
+    background: radial-gradient(circle, var(--gold), transparent 70%);
+    opacity: 0.3;
+    animation-duration: 27s;
+    animation-delay: -11s;
+  }
+  @keyframes drift {
+    to {
+      translate: 60px -40px;
+      scale: 1.12;
+    }
+  }
+
+  .cat {
+    left: 1200px;
+    top: 210px;
+    width: 520px;
+    color: #fff;
+    transform-origin: 0 0;
+  }
+  .cat :global(svg) {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.45));
+  }
+  .cat :global(path) {
+    stroke-width: 0.38px !important;
+  }
+
+  .mark {
+    left: 150px;
+    top: 250px;
+    margin: 0;
+    transform-origin: 0 0;
+    white-space: nowrap;
+    font-weight: 400;
+  }
+  .mark-the {
+    display: block;
+    font-size: 190px;
+    line-height: 0.8;
+    margin-left: 0.04em;
+  }
+  .mark-mcat {
+    display: block;
+    font-size: 330px;
+    --ca-rest: 0.03em;
+  }
+
+  /* Slide 1: the title card. */
+  .deck[data-slide='0'] .mark-mcat {
+    animation: ca-in 2.2s var(--ease) both;
+  }
+  .deck[data-slide='0'] .mark-the {
+    animation: ca-in 2.2s 0.15s var(--ease) both;
+  }
+
+  /* The wordmark as a header, or gone; the cat as a watermark, a corner mark, or gone. */
+  .deck[data-mark='header'] .mark {
+    transform: translate(0, -150px) scale(0.3);
+  }
+  .deck[data-mark='gone'] .mark {
+    transform: translate(0, -260px) scale(0.3);
+    opacity: 0;
+  }
+  .deck[data-cat='mark'] .cat {
+    transform: translate(540px, 680px) scale(0.16);
+    opacity: 0.5;
+  }
+  .deck[data-cat='gone'] .cat {
+    transform: translate(60px, 60px) scale(0.85);
+    opacity: 0;
+  }
+  .deck[data-cat='corner'] .cat {
+    transform: translate(96px, -160px) scale(0.42);
+    opacity: 0.9;
+  }
+
+  /* The glows keep moving from slide to slide. */
+  .deck[data-slide='3'] .g1 {
+    transform: translate(-400px, 40px) scale(1.2);
+    opacity: 0.5;
+  }
+  .deck[data-slide='3'] .g2 {
+    transform: translate(-900px, 100px);
+    opacity: 0.4;
+  }
+  .deck[data-slide='3'] .g3 {
+    transform: translate(-200px, -100px) scale(1.2);
+    opacity: 0.25;
+  }
+  .deck[data-slide='3'][data-build='1'] .g1 {
+    transform: translate(60px, -40px) scale(1.1);
+    opacity: 0.75;
+  }
+  .deck[data-slide='3'][data-build='1'] .g2 {
+    transform: translate(0, 0);
+    opacity: 0.6;
+  }
+  .deck[data-slide='3'][data-build='1'] .g3 {
+    transform: none;
+    opacity: 0.3;
+  }
+  .deck[data-slide='4'] .g1 {
+    transform: translate(-1300px, -500px) scale(1.1);
+    opacity: 0.25;
+  }
+  .deck[data-slide='4'] .g2 {
+    transform: translate(200px, 420px) scale(1.2);
+    opacity: 0.3;
+  }
+  .deck[data-slide='4'] .g3 {
+    transform: translate(-600px, 500px) scale(1.3);
+    opacity: 0.2;
+  }
+  .deck[data-slide='5'] .g1 {
+    transform: translate(-1150px, 380px) scale(0.9);
+    opacity: 0.3;
+  }
+  .deck[data-slide='5'] .g2 {
+    transform: translate(-500px, 420px) scale(0.9);
+    opacity: 0.3;
+  }
+  .deck[data-slide='5'] .g3 {
+    transform: translate(150px, 380px) scale(1.1);
+    opacity: 0.28;
+  }
+  .deck[data-slide='6'] .g1 {
+    transform: translate(-200px, 120px) scale(1.3);
+    opacity: 0.55;
+  }
+  .deck[data-slide='6'] .g2 {
+    transform: translate(60px, 120px) scale(1.2);
+    opacity: 0.5;
+  }
+  .deck[data-slide='6'] .g3 {
+    transform: translate(-1000px, 300px) scale(1.2);
+    opacity: 0.25;
+  }
+  .deck[data-slide='1'] .g1 {
+    transform: translate(-1100px, 380px) scale(0.8);
+    opacity: 0.3;
+  }
+  .deck[data-slide='1'] .g2 {
+    transform: translate(260px, -360px);
+    opacity: 0.35;
+  }
+  .deck[data-slide='1'] .g3 {
+    transform: translate(-700px, -500px);
+    opacity: 0.18;
+  }
+  .deck[data-slide='2'] .g1 {
+    transform: translate(100px, 300px) scale(1.15);
+    opacity: 0.32;
+  }
+  .deck[data-slide='2'] .g2 {
+    transform: translate(-1300px, -380px) scale(0.9);
+    opacity: 0.22;
+  }
+  .deck[data-slide='2'] .g3 {
+    transform: translate(200px, -500px);
+    opacity: 0.2;
+  }
+
+  /* ── Slides ────────────────────────────────────────────────── */
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 110px 150px;
+    opacity: 0;
+    filter: blur(18px);
+    transform: scale(1.025);
+    pointer-events: none;
+    transition:
+      opacity 0.9s var(--ease),
+      filter 0.9s var(--ease),
+      transform 1.1s var(--ease);
+  }
+  .slide.past {
+    transform: scale(0.975);
+  }
+  .slide.on {
+    opacity: 1;
+    /* none, not blur(0): any filter makes the browser redraw the whole slide
+       whenever something inside it moves */
+    filter: none;
+    transform: none;
+    pointer-events: auto;
+    transition-delay: 0.25s;
+  }
+
+  /* Build steps. Hidden until the slide reaches their step. */
+  .fx {
+    transition:
+      opacity 0.9s var(--ease),
+      filter 0.9s var(--ease),
+      transform 0.9s var(--ease);
+    transition-delay: calc(var(--i, 0) * 55ms);
+  }
+  [data-step]:not(.shown) .fx,
+  .fx[data-step]:not(.shown) {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+  [data-step]:not(.shown) .fx-rise,
+  .fx-rise[data-step]:not(.shown) {
+    transform: translateY(40px);
+    filter: blur(10px);
+  }
+  [data-step]:not(.shown) .fx-pop {
+    transform: translateY(24px) scale(0.92);
+    filter: blur(8px);
+  }
+  .fx-slide[data-step]:not(.shown) {
+    transform: translateX(-50px);
+    filter: blur(8px);
+  }
+  .fx-blur[data-step]:not(.shown) {
+    filter: blur(24px);
+    transform: scale(1.04);
+  }
+  [data-step]:not(.shown) .fx-person {
+    transform: translateY(50px);
+    filter: blur(12px) grayscale(1);
+  }
+  /* Animates in as soon as its slide arrives, no click needed. */
+  .fx-in {
+    transition:
+      opacity 1s var(--ease),
+      filter 1s var(--ease),
+      transform 1s var(--ease);
+    transition-delay: calc(0.35s + var(--i, 0) * 70ms);
+  }
+  .slide:not(.on) .fx-in {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(30px);
+    transition-delay: 0s;
+  }
+  [data-step].shown .fx-ca,
+  .fx-ca[data-step].shown {
+    animation: ca-in 1.6s var(--ease) both;
+  }
+  [data-step]:not(.shown) .fx-ca,
+  .fx-ca[data-step]:not(.shown) {
+    filter: blur(14px);
+  }
+
+  /* ── 1 · Title ─────────────────────────────────────────────── */
+  .kicker {
+    position: absolute;
+    left: 154px;
+    top: 150px;
+    font-size: 20px;
+    letter-spacing: 0.4em;
+  }
+  .t-sub {
+    position: absolute;
+    left: 158px;
+    top: 830px;
+    font-size: 26px;
+    letter-spacing: 0.55em;
+    color: var(--fg-dim);
+  }
+  .t-foot {
+    position: absolute;
+    left: 158px;
+    right: 150px;
+    bottom: 90px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .t-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--rule-strong), var(--violet) 60%, var(--rose));
+    opacity: 0.6;
+  }
+
+  /* ── 1 · Title, orbit draft ─────────────────────────────────── */
+  /* The wordmark sits above the slides so the nebula never covers it. */
+  .mark {
+    z-index: 3;
+  }
+  .s-orbit .t-sub {
+    top: 770px;
+  }
+  .o-dots {
+    position: absolute;
+    left: 158px;
+    top: 840px;
+    display: flex;
+    gap: 16px;
+  }
+  .o-dots i {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0, var(--c) 45%, color-mix(in srgb, var(--c) 40%, #000) 100%);
+  }
+  .o-dots i:nth-child(1) { --c: var(--violet); }
+  .o-dots i:nth-child(2) { --c: var(--indigo); }
+  .o-dots i:nth-child(3) { --c: var(--rose); }
+  .o-dots i:nth-child(4) { --c: #8d93a8; }
+  .o-rule {
+    position: absolute;
+    left: 158px;
+    top: 905px;
+    width: 280px;
+    height: 1px;
+    background: var(--rule-strong);
+  }
+  .o-tag {
+    position: absolute;
+    right: 130px;
+    top: 720px;
+    text-align: right;
+    font-size: 17px;
+    line-height: 1.9;
+    letter-spacing: 0.35em;
+    color: var(--fg-dim);
+  }
+  .o-coords {
+    position: absolute;
+    left: 70px;
+    top: 540px;
+    translate: -50% -50%;
+    rotate: -90deg;
+    white-space: nowrap;
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: var(--faint);
+  }
+  .o-foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1022px;
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 0.55em;
+    color: var(--muted);
+  }
+  .o-foot span {
+    margin: 0 0.8em;
+    color: var(--fg);
+  }
+
+  /* ── Space: the persistent layer ──────────────────────────────
+     Baked images (scripts/bake-space.mjs) and thin lines that glide between
+     slides. Only transform and opacity animate, which every browser does smoothly. */
+  .stars {
+    position: absolute;
+    left: -90px;
+    top: -60px;
+    width: 2100px;
+    height: 1200px;
+    transform: translate(calc(var(--px, 0) * -24px), calc(var(--px, 0) * 5px));
+    transition: transform 1.8s var(--ease);
+    will-change: transform;
+  }
+  .neb,
+  .sys,
+  .sun,
+  .hz {
+    position: absolute;
+    transition:
+      transform 1.8s var(--ease),
+      opacity 1.4s var(--ease);
+    will-change: transform, opacity;
+  }
+  .neb {
+    width: 2000px;
+    height: 900px;
+  }
+  .sys,
+  .sun {
+    width: 0;
+    height: 0;
+  }
+  .hz {
+    inset: 0;
+  }
+  .orb {
+    position: absolute;
+    left: -520px;
+    top: -220px;
+    overflow: visible;
+  }
+
+  /* Where each piece sits, per slide (data-neb / data-sys / data-sun / data-hz). */
+  .deck[data-neb='corner'] .neb { transform: translate(330px, -380px) rotate(14deg) scale(0.8); opacity: 0.55; }
+  .deck[data-neb='study'] .neb { transform: translate(60px, 90px) rotate(10deg) scale(0.75); opacity: 0.5; }
+  .deck[data-neb='center'] .neb { transform: translate(-480px, 80px) rotate(34deg) scale(1.15); opacity: 0.7; }
+  .deck[data-neb='cat'] .neb { transform: translate(80px, 70px); opacity: 0.85; }
+  /* the club intro: the wildcat sits a little right, centred in its orbits */
+  .deck[data-theme='space'][data-cat='hero'] .cat { transform: translateX(60px); }
+  .deck[data-neb='top'] .neb { transform: translate(-500px, -400px) rotate(30deg) scale(1.1); opacity: 0.5; }
+  .deck[data-neb='bottom'] .neb { transform: translate(-500px, 470px) rotate(34deg) scale(1.2); opacity: 0.45; }
+  .deck[data-neb='join'] .neb { transform: translate(60px, -40px) scale(0.95); opacity: 0.85; }
+
+  .deck[data-sys='clock'] .sys { transform: translate(-970px, 16px) scale(0.9); }
+  .deck[data-sys='cat'] .sys { transform: translate(80px, 60px) scale(0.95); }
+  .deck[data-sys='gone'] .sys,
+  .deck[data-sys='join'] .sys { transform: scale(0.6); opacity: 0; }
+
+  .deck[data-sun='clock'] .sun { transform: translate(-618px, -59px) scale(0.45); }
+  .deck[data-sun='study'] .sun { transform: translate(280px, -95px) scale(0.4); }
+  .deck[data-sun='cat'] .sun { transform: translate(301px, -75px) scale(0.6); }
+  .deck[data-sun='gone'] .sun { transform: scale(0.1); opacity: 0; }
+
+  .deck[data-hz='down'] .hz { transform: translateY(320px); opacity: 0; }
+
+  /* The nebula image: tilted, and drifting slowly the whole time. */
+  .nebula {
+    position: absolute;
+    inset: 0;
+    width: 2000px;
+    height: 900px;
+    rotate: -34deg;
+    will-change: transform, opacity;
+    animation: nb-drift 40s ease-in-out infinite alternate;
+  }
+  .nebula img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  @keyframes nb-drift {
+    to {
+      rotate: -31deg;
+      translate: -30px 20px;
+    }
+  }
+
+  /* Orbits: hairlines with a red/blue fringe, drawn in on arrival. */
+  .orb path {
+    fill: none;
+    stroke-width: 1.4;
+    stroke-dasharray: 1;
+    stroke-linecap: round;
+  }
+  .o-w {
+    stroke: rgba(255, 255, 255, 0.85);
+  }
+  .o-r {
+    stroke: var(--ca-r);
+    opacity: 0.45;
+    translate: -2px 0;
+  }
+  .o-b {
+    stroke: var(--ca-b);
+    opacity: 0.55;
+    translate: 2px 0;
+  }
+  .orb-1 {
+    opacity: 0.4;
+  }
+  .orb-1 path {
+    stroke-width: 1;
+  }
+
+  /* Four-point stars: long thin rays with a chromatic fringe, and a hot core. */
+  .star {
+    position: absolute;
+    width: 0;
+    height: 0;
+    --len: 560px;
+  }
+  .star > span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    translate: -50% -50%;
+    border-radius: 2px;
+  }
+  .st-halo {
+    width: 300px;
+    height: 300px;
+    border-radius: 50% !important;
+    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.5), rgba(229, 143, 196, 0.25) 45%, transparent);
+  }
+  .st-h {
+    width: var(--len);
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #fff 50%, transparent);
+    animation: twinkle 3.4s ease-in-out infinite alternate;
+  }
+  .st-v {
+    width: 3px;
+    height: calc(var(--len) * 0.72);
+    background: linear-gradient(180deg, transparent, #fff 50%, transparent);
+    animation: twinkle 4.1s ease-in-out infinite alternate-reverse;
+  }
+  .st-h.r,
+  .st-h.b {
+    height: 4px;
+  }
+  .st-h.r {
+    background: linear-gradient(90deg, transparent, var(--ca-r) 50%, transparent);
+    translate: calc(-50% - 5px) calc(-50% + 1px);
+  }
+  .st-h.b {
+    background: linear-gradient(90deg, transparent, var(--ca-b) 50%, transparent);
+    translate: calc(-50% + 5px) calc(-50% - 1px);
+  }
+  .st-v.r {
+    background: linear-gradient(180deg, transparent, var(--ca-r) 50%, transparent);
+    translate: calc(-50% - 3px) -50%;
+  }
+  .st-v.b {
+    background: linear-gradient(180deg, transparent, var(--ca-b) 50%, transparent);
+    translate: calc(-50% + 3px) -50%;
+  }
+  .st-core {
+    width: 18px;
+    height: 18px;
+    border-radius: 50% !important;
+    background: #fff;
+    box-shadow:
+      0 0 18px 6px #fff,
+      0 0 60px 22px rgba(229, 143, 196, 0.55);
+  }
+  @keyframes twinkle {
+    to {
+      scale: 0.82;
+      opacity: 0.8;
+    }
+  }
+  .star.mini {
+    --len: 90px;
+  }
+  .star.mini .st-core {
+    width: 6px;
+    height: 6px;
+    box-shadow:
+      0 0 8px 3px #fff,
+      0 0 22px 8px rgba(156, 193, 234, 0.6);
+  }
+  .traveler {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    offset-rotate: 0deg;
+    animation: travel 34s linear infinite;
+  }
+  @keyframes travel {
+    from {
+      offset-distance: 0%;
+    }
+    to {
+      offset-distance: 100%;
+    }
+  }
+
+  /* Small sparkle crosses. */
+  .spark {
+    position: absolute;
+    width: var(--s);
+    height: var(--s);
+    translate: -50% -50%;
+    background:
+      linear-gradient(90deg, transparent, #fff 50%, transparent) center / 100% 1.5px no-repeat,
+      linear-gradient(180deg, transparent, #fff 50%, transparent) center / 1.5px 100% no-repeat,
+      radial-gradient(circle, #fff 0 1.5px, transparent 3px);
+    animation: spark 3.6s ease-in-out infinite;
+    animation-delay: calc(var(--k) * -0.7s);
+  }
+  @keyframes spark {
+    50% {
+      opacity: 0.35;
+      scale: 0.75;
+    }
+  }
+
+  /* The planet's horizon along the bottom, and its lens flare. */
+  .horizon {
+    position: absolute;
+    left: 0;
+    top: 830px;
+    width: 1920px;
+    height: 250px;
+    will-change: transform, opacity;
+  }
+  .flare {
+    position: absolute;
+    left: 960px;
+    top: 972px;
+    width: 0;
+    height: 0;
+  }
+  .flare > span {
+    position: absolute;
+    left: 0;
+    top: 0;
+    translate: -50% -50%;
+  }
+  .fl-h {
+    width: 1500px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(190, 210, 255, 0.95) 50%, transparent);
+  }
+  .fl-h2 {
+    width: 900px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(140, 170, 255, 0.6), transparent);
+  }
+  .fl-v {
+    width: 2px;
+    height: 150px;
+    background: linear-gradient(180deg, transparent, #fff 50%, transparent);
+  }
+  .fl-core {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow:
+      0 0 16px 6px #fff,
+      0 0 70px 24px rgba(140, 170, 255, 0.6);
+  }
+
+  /* Arrival on the title: horizon rises, nebula condenses, orbits draw, the star ignites. */
+  .deck[data-slide='0'] .horizon {
+    animation: o-rise 2.4s var(--ease) both;
+  }
+  .deck[data-slide='0'] .flare {
+    animation: o-flare 1.6s 1s var(--ease) both;
+  }
+  .deck[data-slide='0'] .nebula {
+    animation:
+      o-nebula 3s 0.3s var(--ease) both,
+      nb-drift 40s ease-in-out infinite alternate;
+  }
+  /* Orbits draw whenever they appear: slowly on the title, briskly elsewhere. */
+  .deck:not([data-sys='gone'], [data-sys='join']) .orb path {
+    animation: o-draw 2.2s 0.4s var(--ease) both;
+  }
+  .deck[data-slide='0'] .orb path {
+    animation-duration: 2.6s;
+    animation-delay: 1.1s;
+  }
+  .deck[data-slide='0'] .orb-1 path {
+    animation-delay: 1.5s;
+  }
+  .deck[data-slide='0'] .sun .star {
+    animation: o-star 1.4s 2.1s var(--ease) both;
+  }
+  .deck[data-slide='0'] .traveler {
+    animation:
+      o-fade 1s 3s both,
+      travel 34s 3s linear infinite;
+  }
+  .s-orbit.on .spark {
+    animation:
+      o-fade 1.2s calc(1.6s + var(--k) * 0.18s) both,
+      spark 3.6s calc(var(--k) * -0.7s) ease-in-out infinite;
+  }
+  @keyframes o-rise {
+    from {
+      translate: 0 140px;
+      opacity: 0;
+    }
+  }
+  @keyframes o-flare {
+    from {
+      scale: 0 1;
+      opacity: 0;
+    }
+  }
+  @keyframes o-nebula {
+    from {
+      opacity: 0;
+      scale: 1.12;
+    }
+  }
+  @keyframes o-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+  @keyframes o-star {
+    0% {
+      opacity: 0;
+      scale: 0.1;
+    }
+    55% {
+      opacity: 1;
+      scale: 1.3;
+    }
+  }
+  @keyframes o-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* ── 2 · What ──────────────────────────────────────────────── */
+  .what-full {
+    position: absolute;
+    left: 154px;
+    top: 232px;
+    font-size: 18px;
+    letter-spacing: 0.4em;
+  }
+  .what-time {
+    position: absolute;
+    left: 150px;
+    top: 360px;
+    width: 640px;
+  }
+  .what-cap {
+    font-size: 18px;
+    color: var(--gold);
+    margin-bottom: 18px;
+  }
+  .what-clock {
+    font-size: 210px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    text-transform: none;
+  }
+  .what-note {
+    margin-top: 36px;
+    font-size: 38px;
+    line-height: 1.25;
+    color: var(--fg-dim);
+    max-width: 560px;
+  }
+  .what-load {
+    position: absolute;
+    left: 900px;
+    right: 150px;
+    top: 330px;
+  }
+  .what-n {
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+    margin-bottom: 44px;
+  }
+  .what-n .display {
+    font-size: 150px;
+  }
+  .what-n .italic {
+    font-size: 48px;
+    color: var(--fg-dim);
+  }
+  .pills {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 14px;
+  }
+  .pill {
+    --c: var(--fg);
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 23px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 13px 26px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+    background: color-mix(in srgb, var(--c) 12%, transparent);
+    color: color-mix(in srgb, var(--c) 70%, var(--fg));
+    box-shadow: 0 0 34px -8px color-mix(in srgb, var(--c) 60%, transparent);
+  }
+  [data-s='c'] { --c: var(--cp); }
+  [data-s='b'] { --c: var(--bb); }
+  [data-s='p'] { --c: var(--ps); }
+  [data-s='s'] { --c: var(--cars); }
+  .legend {
+    display: flex;
+    gap: 36px;
+    margin-top: 48px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--c);
+  }
+
+  /* ── 3 · Cost ──────────────────────────────────────────────── */
+  .ledger {
+    position: absolute;
+    left: 150px;
+    top: 290px;
+    width: 1000px;
+    list-style: none;
+  }
+  .row {
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+    padding: 14px 0;
+    font-size: 38px;
+  }
+  .r-label {
+    white-space: nowrap;
+  }
+  .r-note {
+    font-size: 15px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    align-self: center;
+    white-space: nowrap;
+    color: var(--c);
+    border: 1px solid color-mix(in srgb, var(--c) 50%, transparent);
+    background: color-mix(in srgb, var(--c) 10%, transparent);
+  }
+  [data-accent='rose'] { --c: var(--rose); }
+  [data-accent='violet'] { --c: var(--violet); }
+  [data-accent='gold'] { --c: var(--gold); }
+  .r-dots {
+    flex: 1;
+    border-bottom: 2px dotted var(--faint);
+    transform: translateY(-8px);
+  }
+  .r-amt {
+    font-size: 40px;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+  }
+  .row-total {
+    margin-top: 14px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule-strong);
+    align-items: center;
+  }
+  .row-total .r-label {
+    font-size: 20px;
+  }
+  .row-total .r-dots {
+    border: 0;
+  }
+  .row-total .r-amt {
+    font-size: 96px;
+    font-weight: 700;
+    text-transform: none;
+    font-family: var(--display);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .row-inf .r-amt {
+    font-family: var(--serif);
+    font-size: 96px;
+    line-height: 0.6;
+    color: var(--rose);
+    text-shadow: 0 0 40px color-mix(in srgb, var(--rose) 60%, transparent);
+  }
+  .dim {
+    color: var(--muted);
+  }
+  .study {
+    position: absolute;
+    left: 1290px;
+    right: 150px;
+    top: 360px;
+  }
+  .study-n {
+    font-size: 140px;
+    text-transform: none;
+    font-variant-numeric: lining-nums;
+    color: var(--gold);
+  }
+  .study-txt {
+    margin-top: 30px;
+    font-size: 36px;
+    line-height: 1.25;
+    color: var(--fg-dim);
+  }
+  .cite {
+    margin-top: 28px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--faint);
+    text-transform: none;
+    letter-spacing: 0.04em;
+  }
+  .punch {
+    position: absolute;
+    left: 150px;
+    bottom: 96px;
+    font-size: 56px;
+    color: var(--fg);
+  }
+  .punch .mono {
+    font-size: 40px;
+    color: var(--rose);
+    margin-left: 12px;
+  }
+
+  /* ── 4 · The turn ──────────────────────────────────────────── */
+  .turn-q {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 380px;
+    text-align: center;
+    font-size: 190px;
+    font-weight: 400;
+    line-height: 1;
+    transform-origin: 50% 0;
+    transition:
+      transform 1.3s var(--ease),
+      opacity 1.3s var(--ease),
+      filter 1.3s var(--ease);
+  }
+  .turn-do {
+    color: var(--rose);
+    text-shadow: 0 0 60px color-mix(in srgb, var(--rose) 55%, transparent);
+  }
+  .deck[data-slide='3'][data-build='1'] .turn-q {
+    transform: translate(-520px, -240px) scale(0.32);
+    opacity: 0.55;
+  }
+  .turn-us {
+    position: absolute;
+    left: 150px;
+    top: 330px;
+  }
+  .turn-word {
+    display: flex;
+    flex-direction: column;
+    margin: 26px 0 30px;
+  }
+  .turn-word span:first-child {
+    font-size: 150px;
+  }
+  .turn-word span:last-child {
+    font-size: 260px;
+  }
+  .turn-at {
+    font-size: 22px;
+    color: var(--fg-dim);
+    letter-spacing: 0.3em;
+  }
+  .turn-tag {
+    margin-top: 30px;
+    font-size: 46px;
+    color: var(--fg-dim);
+  }
+
+  /* ── 5 · Team ──────────────────────────────────────────────── */
+  .team-label {
+    top: 150px;
+  }
+  .team-h {
+    position: absolute;
+    left: 150px;
+    top: 200px;
+    font-size: 110px;
+    --ca-rest: 0.025em;
+  }
+  .team {
+    position: absolute;
+    left: 150px;
+    right: 150px;
+    top: 400px;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 28px;
+  }
+  .frame {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    border: 1px solid var(--rule-strong);
+    background: var(--bg-raise);
+  }
+  .frame :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+  .frame :global(img.tall) {
+    object-position: 50% 12%;
+  }
+  .p-name {
+    margin-top: 22px;
+    font-size: 34px;
+    line-height: 1.1;
+  }
+  .p-role {
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  /* ── 6 · Offer ─────────────────────────────────────────────── */
+  .offers {
+    position: absolute;
+    left: 150px;
+    right: 150px;
+    top: 400px;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 60px;
+  }
+  .offer {
+    --c: var(--fg);
+    padding-top: 30px;
+    border-top: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  }
+  .o-free {
+    font-size: 84px;
+    line-height: 0.9;
+    color: var(--c);
+    text-shadow: 0 0 50px color-mix(in srgb, var(--c) 50%, transparent);
+  }
+  .o-title {
+    margin: 14px 0 28px;
+    font-size: 64px;
+    /* the hairline 1200 cut breaks letter spacing at this size */
+    --opsz: 144;
+  }
+  .o-body {
+    font-size: 32px;
+    line-height: 1.3;
+    color: var(--fg-dim);
+  }
+  .o-body b {
+    font-weight: 600;
+    color: var(--c);
+  }
+  .o-sched {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 24px;
+    font-size: 20px;
+  }
+  .o-sched div {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted var(--faint);
+  }
+  .o-sched dd {
+    color: var(--c);
+  }
+  .o-where {
+    margin-top: 24px;
+    font-size: 20px;
+    color: var(--c);
+  }
+
+  /* ── 7 · Join ──────────────────────────────────────────────── */
+  .join-h {
+    position: absolute;
+    left: 150px;
+    top: 220px;
+    font-size: 200px;
+  }
+  .join-site {
+    position: absolute;
+    left: 150px;
+    top: 480px;
+    font-size: 104px;
+    text-transform: none;
+    --ca-rest: 0.02em;
+  }
+  .join-site .italic {
+    font-size: 0.9em;
+    text-transform: none;
+    color: var(--rose);
+    text-shadow: none;
+  }
+  .join-sub {
+    position: absolute;
+    left: 150px;
+    top: 640px;
+    width: 760px;
+    font-size: 38px;
+    line-height: 1.25;
+    color: var(--fg-dim);
+  }
+  .qrs {
+    position: absolute;
+    right: 150px;
+    top: 400px;
+    display: flex;
+    gap: 50px;
+  }
+  .qr {
+    width: 340px;
+  }
+  .qr-code {
+    padding: 14px;
+    background: #eeebe4;
+    box-shadow: 0 0 80px -10px color-mix(in srgb, var(--violet) 55%, transparent);
+  }
+  .qr-code :global(svg) {
+    width: 100%;
+    height: auto;
+  }
+  .qr figcaption {
+    margin-top: 22px;
+    font-size: 34px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+  }
+  .qr figcaption .mono {
+    font-size: 16px;
+    color: var(--muted);
+  }
+  .qr small {
+    flex-basis: 100%;
+    font-size: 24px;
+    color: var(--fg-dim);
+  }
+
+  /* ── Chrome ────────────────────────────────────────────────── */
+  .chrome {
+    position: absolute;
+    left: 150px;
+    right: 150px;
+    bottom: 42px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--faint);
+    transition: opacity 0.6s;
+  }
+  .deck[data-slide='0'] .chrome {
+    opacity: 0;
+  }
+  .count {
+    font-variant-numeric: tabular-nums;
+  }
+  .progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+  }
+  .progress span {
+    display: block;
+    height: 100%;
+    width: calc(var(--p, 0) * 100%);
+    background: var(--nebula);
+    opacity: 0.7;
+    transition: width 0.8s var(--ease);
+  }
+  .hint {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    translate: -50% 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .hint kbd {
+    margin-left: 8px;
+  }
+  .deck.show-hint .hint {
+    opacity: 1;
+  }
+  .blank {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+    z-index: 200;
+  }
+  .deck.blanked .blank {
+    opacity: 1;
+  }
+
+  .motion-ask {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    padding: var(--gutter);
+    background: rgba(13, 13, 12, 0.72);
+    backdrop-filter: blur(14px);
+  }
+  .motion-ask[hidden] {
+    display: none;
+  }
+  .ask-card {
+    max-width: 34rem;
+    padding: 2.5rem;
+    border: 1px solid var(--rule-strong);
+    background: var(--bg-raise);
+  }
+  .ask-q {
+    margin: 0.8rem 0 1rem;
+    font-size: 2rem;
+    line-height: 1.15;
+    font-weight: 400;
+  }
+  .ask-q em {
+    color: var(--neb-rose);
+  }
+  .ask-body {
+    color: var(--fg-dim);
+    font-size: 1.1rem;
+  }
+  .ask-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1.8rem;
+  }
+
+  /* Space: the wildcat gets the same red/blue lens fringe as the orbits,
+     from offset copies rather than a filter (filters redraw every frame while it draws). */
+  .deck:not([data-theme='classic']) .cat {
+    --draw: 3.4s;
+  }
+  .deck:not([data-theme='classic']) .cat :global(svg) {
+    filter: none;
+  }
+  .cat :global(.cat-r),
+  .cat :global(.cat-b) {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .cat :global(.cat-r) {
+    color: var(--ca-r);
+    translate: -3px 0;
+    opacity: 0.55;
+  }
+  .cat :global(.cat-b) {
+    color: var(--ca-b);
+    translate: 3px 0;
+    opacity: 0.6;
+  }
+
+  /* Space: small touches on the slide content. */
+  .deck[data-theme='space'] [data-n]::before {
+    content: attr(data-n) '  ·  ';
+    white-space: pre;
+    color: var(--fg-dim);
+  }
+  .deck:not([data-theme='classic']) .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: color-mix(in srgb, var(--c) 7%, rgba(8, 8, 14, 0.55));
+  }
+  .deck:not([data-theme='classic']) .pill::before {
+    content: '';
+    width: 13px;
+    height: 13px;
+    flex: none;
+    background:
+      linear-gradient(90deg, transparent, var(--c) 50%, transparent) center / 100% 1.5px no-repeat,
+      linear-gradient(180deg, transparent, var(--c) 50%, transparent) center / 1.5px 100% no-repeat;
+  }
+  .deck[data-theme='space'] .frame {
+    border-color: color-mix(in srgb, var(--violet) 45%, transparent);
+    box-shadow: 0 0 50px -14px color-mix(in srgb, var(--violet) 70%, transparent);
+  }
+  .deck[data-theme='space'] .offer {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .deck[data-theme='space'] .offer::before {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-bottom: 30px;
+    background: linear-gradient(90deg, var(--c), transparent 85%);
+    box-shadow: 0 0 14px 1px color-mix(in srgb, var(--c) 55%, transparent);
+  }
+
+  /* Wildcat line-art draws itself in (dash values set by the script). */
+  .cat.drawing :global(path) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: draw var(--draw, 2.6s) var(--ease) forwards;
+    animation-delay: calc(var(--d, 0) * 1ms + 400ms);
+  }
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  /* ═════════════════════════════════════════════════════════════
+     Orbit (/presentOrbit): the multi-orbit back print.
+     The art is baked (scripts/bake-orbit.mjs) and only moved and faded
+     here. Nothing in this look runs a live filter: the site's .ca blur and
+     the blur-in builds are switched off, and the colour split comes from
+     text-shadow, so it stays smooth in Firefox.
+     ═════════════════════════════════════════════════════════════ */
+  .deck[data-theme='orbit'] {
+    --bg: #0a0c0e;
+    --bg-raise: #111318;
+    --fg: #efeae2;
+    --fg-dim: #c9c4bd;
+    --muted: #918f96;
+    --faint: #5d5f68;
+    --rule-strong: rgba(239, 234, 226, 0.22);
+    --lav: #c9b6ee;
+    --blush: #f1d9ee;
+    --ca-rest: 0.012em;
+    --o-r: rgba(255, 77, 106, 0.62);
+    --o-b: rgba(58, 120, 255, 0.68);
+    --o-display: 'Playfair Variable', var(--display);
+    font-family: var(--o-display);
+    font-variation-settings: 'opsz' 24, 'wdth' 100;
+  }
+  /* the site's moving grain is swapped for a still, baked one (.o-grain) */
+  :global(body:has(.deck[data-theme='orbit'])::after) {
+    display: none;
+  }
+  .deck[data-theme='orbit'] .slide,
+  .deck[data-theme='orbit'] .slide :global(*),
+  .deck[data-theme='orbit'] .mark,
+  .deck[data-theme='orbit'] .mark :global(*) {
+    filter: none !important;
+  }
+  /* Slides change with a fade and a breath of scale, never a blur. */
+  .deck[data-theme='orbit'] .slide {
+    transform: scale(1.012);
+  }
+  .deck[data-theme='orbit'] .slide.past {
+    transform: scale(0.988);
+  }
+  .deck[data-theme='orbit'] .slide.on {
+    transform: none;
+  }
+
+  /* Type: wide caps for display, Playfair italic for the voice, mono labels. */
+  .deck[data-theme='orbit'] .display {
+    font-family: var(--o-display);
+    font-weight: 420;
+    font-variation-settings: 'opsz' 30, 'wdth' 112.5;
+    letter-spacing: 0.1em;
+    line-height: 1;
+  }
+  .deck[data-theme='orbit'] .italic {
+    font-family: var(--o-display);
+    font-style: italic;
+    font-weight: 360;
+    font-variation-settings: 'opsz' 40, 'wdth' 100;
+  }
+  .deck[data-theme='orbit'] .mono,
+  .deck[data-theme='orbit'] .label {
+    font-weight: 400;
+  }
+  .deck[data-theme='orbit'] .ca {
+    text-shadow:
+      calc(var(--ca) * -1) calc(var(--ca) * -0.25) 0 var(--o-r),
+      var(--ca) calc(var(--ca) * 0.25) 0 var(--o-b),
+      0 0 0.14em rgba(255, 232, 226, 0.2),
+      0 0 0.45em rgba(255, 96, 110, 0.1);
+  }
+  /* Numbers: Playfair's text cut, normal width, a little lighter. */
+  .deck[data-theme='orbit'] :is(.what-clock, .what-n .display, .row-total .r-amt, .study-n) {
+    font-weight: 340;
+    font-variation-settings: 'opsz' 144, 'wdth' 100;
+    letter-spacing: -0.02em;
+    text-transform: none;
+  }
+  /* "02 ——— Medical College Admission Test" */
+  .deck[data-theme='orbit'] [data-n] {
+    color: var(--muted);
+    letter-spacing: 0.42em;
+  }
+  .deck[data-theme='orbit'] [data-n]::before {
+    content: attr(data-n);
+    display: inline-block;
+    margin-right: 26px;
+    padding-right: 76px;
+    color: var(--fg);
+    letter-spacing: 0.2em;
+    background: linear-gradient(90deg, rgba(239, 234, 226, 0.4), transparent) right center / 52px 1px no-repeat;
+  }
+
+  /* ── Orbit: the persistent layer ─────────────────────────────── */
+  .o-stars {
+    position: absolute;
+    left: -120px;
+    top: -110px;
+    width: 2160px;
+    height: 1350px;
+    opacity: 0.85;
+    transform: translate(calc(var(--px, 0) * -26px), calc(var(--px, 0) * 6px));
+    transition: transform 1.8s var(--ease);
+    will-change: transform;
+  }
+  .o-haze {
+    position: absolute;
+    left: 960px;
+    top: 360px;
+    width: 2300px;
+    height: auto;
+    translate: -50% -50%;
+    opacity: 0.12;
+    transition: opacity 1.8s var(--ease);
+  }
+  .deck[data-sys='hero'] .o-haze {
+    opacity: 0.38;
+  }
+  .o-neb,
+  .o-sys,
+  .o-sun {
+    position: absolute;
+    transition:
+      transform 1.9s var(--ease),
+      opacity 1.5s var(--ease);
+    will-change: transform, opacity;
+  }
+
+  /* The painted nebula, drifting. Where it sits, per slide (data-neb). */
+  .o-neb {
+    left: -40px;
+    top: -37px;
+    width: 2000px;
+    height: 1154px;
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  .o-nebula {
+    width: 100%;
+    height: 100%;
+    animation: o-neb-drift 60s ease-in-out infinite alternate;
+  }
+  .deck[data-neb='corner'] .o-neb { transform: translate(760px, -400px) rotate(8deg) scale(0.6); opacity: 0.5; }
+  .deck[data-neb='study'] .o-neb { transform: translate(560px, 80px) scale(0.75); opacity: 0.42; }
+  .deck[data-neb='center'] .o-neb { transform: translate(0, 40px) scale(1.08); opacity: 0.85; }
+  .deck[data-neb='cat'] .o-neb { transform: translate(480px, 30px) rotate(-6deg) scale(0.8); opacity: 0.55; }
+  .deck[data-neb='top'] .o-neb { transform: translate(-180px, -560px) scale(0.95); opacity: 0.4; }
+  .deck[data-neb='bottom'] .o-neb { transform: translate(260px, 560px); opacity: 0.4; }
+  .deck[data-neb='join'] .o-neb { transform: translate(-300px, -120px) rotate(-4deg) scale(0.85); opacity: 0.5; }
+
+  /* The orbits: centred on the rings' middle (art 1100, 520), so each spot
+     below is "move the centre here, at this size". Per slide: data-sys. */
+  .o-sys {
+    left: 340px;
+    top: 67px;
+    width: 1240px;
+    height: 648px;
+    container-type: inline-size;
+    transform-origin: 50% 45.22%;
+  }
+  .deck[data-sys='gone'] .o-sys { transform: scale(0.7); opacity: 0; }
+  .deck[data-sys='clock'] .o-sys { transform: translate(-480px, 145px) scale(0.8); }
+  .deck[data-sys='cat'] .o-sys { transform: translate(480px, 185px) scale(0.86); }
+  /* round the corner wildcat, as a sign-off emblem */
+  .deck[data-sys='join'] .o-sys { transform: translate(445px, -176px) scale(0.5); }
+  .o-spin {
+    position: absolute;
+    inset: 0;
+    animation: o-precess 44s ease-in-out infinite alternate;
+  }
+  .o-rings,
+  .o-rings-soft {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .o-rings-soft {
+    opacity: 0;
+  }
+  .o-flare {
+    position: absolute;
+    width: 70%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+  }
+  .o-flare img {
+    width: 100%;
+    height: 100%;
+    animation: o-twinkle 6.5s ease-in-out infinite alternate;
+  }
+  /* Arrival on the title: a soft, wide-fringed orbit blooms, the sharp one
+     pulls into focus over it, the star ignites, the wordmark converges. */
+  .deck[data-slide='0'] .o-rings-soft {
+    animation: o-defocus 3.6s 0.15s var(--ease) both;
+  }
+  .deck[data-slide='0'] .o-rings {
+    animation: o-focus 3.2s 0.5s var(--ease) both;
+  }
+  .deck[data-slide='0'] .o-flare {
+    animation: o-bloom 1.9s 1.05s cubic-bezier(0.2, 0.9, 0.25, 1.12) both;
+  }
+  .deck[data-slide='0'] .o-sys .sat {
+    animation: o-fade 2s 3s both;
+  }
+
+  /* A small violet star, for the one slide the orbits sit out (data-sun). */
+  .o-sun {
+    left: 1716px;
+    top: 318px;
+    width: 960px;
+    translate: -50% -50%;
+    opacity: 0;
+    transform: scale(0.1);
+  }
+  .o-sun img {
+    width: 100%;
+    height: auto;
+    animation: o-twinkle 7.5s ease-in-out infinite alternate-reverse;
+  }
+  .deck[data-sun='study'] .o-sun {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+
+  /* Sparkles that travel an orbit. Nested rotations trace the ellipse; the
+     inner ones cancel out so the star stays upright. Composited only. */
+  .sat {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 0;
+    height: 0;
+    transform: rotate(var(--tilt, 0deg)) scaleY(var(--k));
+  }
+  .sat-arm {
+    position: absolute;
+    animation: o-orbit var(--dur, 24s) linear infinite;
+  }
+  .sat-body {
+    position: absolute;
+    transform: translateX(var(--rx));
+  }
+  .sat-fix {
+    position: absolute;
+    animation: o-orbit var(--dur, 24s) linear infinite reverse;
+  }
+  .sat-fix img {
+    position: absolute;
+    width: 2.6cqw;
+    height: auto;
+    aspect-ratio: 1;
+    /* undo the track's squash and tilt, then centre (rightmost applies first) */
+    transform: scaleY(calc(1 / var(--k))) rotate(calc(var(--tilt, 0deg) * -1)) translate(-50%, -50%);
+    animation: o-nearfar var(--dur, 24s) linear infinite;
+  }
+
+  /* The wordmark: THE MCAT in the print's wide caps, under the orbits. */
+  .deck[data-theme='orbit'] .mark {
+    left: 0;
+    top: 566px;
+    width: 1920px;
+    padding-left: 15px;
+    text-align: center;
+    transform-origin: 960px 0;
+  }
+  .deck[data-theme='orbit'] .mark-the,
+  .deck[data-theme='orbit'] .mark-mcat {
+    display: inline;
+    margin: 0;
+    font-family: var(--o-display);
+    font-size: 100px;
+    font-style: normal;
+    font-weight: 420;
+    font-variation-settings: 'opsz' 30, 'wdth' 112.5;
+    letter-spacing: 0.15em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: #f4efe7;
+  }
+  .deck[data-theme='orbit'] .mark-the {
+    /* the two words sit on one line here, and the markup has no space between them */
+    margin-right: 0.36em;
+    --ca: calc(var(--ca-rest) + var(--boost) * 0.14em);
+    text-shadow:
+      calc(var(--ca) * -1) calc(var(--ca) * -0.25) 0 var(--o-r),
+      var(--ca) calc(var(--ca) * 0.25) 0 var(--o-b),
+      0 0 0.14em rgba(255, 232, 226, 0.2),
+      0 0 0.45em rgba(255, 96, 110, 0.1);
+  }
+  .deck[data-theme='orbit'][data-slide='0'] .mark-the,
+  .deck[data-theme='orbit'][data-slide='0'] .mark-mcat {
+    animation: ca-in 2.6s 1.35s var(--ease) both;
+  }
+  .deck[data-theme='orbit'][data-mark='header'] .mark {
+    transform: translate(-735px, -486px) scale(0.24);
+  }
+  .deck[data-theme='orbit'][data-mark='gone'] .mark {
+    transform: translate(0, -40px) scale(0.92);
+    opacity: 0;
+  }
+
+  /* ── Orbit · 1 · Title ───────────────────────────────────────── */
+  .h-plate {
+    position: absolute;
+    top: 64px;
+    font-size: 14px;
+    letter-spacing: 0.42em;
+    color: var(--muted);
+  }
+  .h-tl {
+    left: 150px;
+  }
+  .h-tr {
+    right: 150px;
+  }
+  .h-sub,
+  .h-motto {
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.18);
+  }
+  .h-sub {
+    top: 712px;
+    font-size: 19px;
+    letter-spacing: 0.52em;
+    padding-left: 0.52em;
+    color: #bdb8b0;
+  }
+  .h-twins {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 758px;
+    display: flex;
+    justify-content: center;
+    gap: 26px;
+  }
+  .h-twins img {
+    width: 92px;
+    height: auto;
+  }
+  .h-twins img:last-child {
+    width: 70px;
+    margin-top: 11px;
+  }
+  .h-motto {
+    top: 866px;
+    font-size: 17px;
+    line-height: 2.2;
+    letter-spacing: 0.3em;
+    padding-left: 0.3em;
+    color: var(--fg-dim);
+  }
+  .h-foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1010px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 26px;
+    font-size: 13px;
+    letter-spacing: 0.44em;
+    color: var(--muted);
+  }
+  .h-rule {
+    width: 150px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rule-strong));
+  }
+  .h-rule:last-child {
+    background: linear-gradient(90deg, var(--rule-strong), transparent);
+  }
+  .h-x {
+    margin: 0 0.5em;
+  }
+
+  /* ── Orbit · 2 · What ────────────────────────────────────────── */
+  .deck[data-theme='orbit'] .what-cap {
+    color: var(--lav);
+    letter-spacing: 0.4em;
+  }
+  .deck[data-theme='orbit'] .what-clock {
+    font-size: 200px;
+  }
+  .deck[data-theme='orbit'] .what-note {
+    /* clear of the orbit's lowest arc */
+    margin-top: 92px;
+    font-size: 34px;
+  }
+  .deck[data-theme='orbit'] .what-n .italic {
+    font-size: 44px;
+    color: var(--lav);
+  }
+  .deck[data-theme='orbit'] .pill {
+    font-weight: 400;
+    font-size: 21px;
+    background: color-mix(in srgb, var(--c) 6%, rgba(10, 12, 14, 0.6));
+    border-color: color-mix(in srgb, var(--c) 42%, transparent);
+    box-shadow: 0 0 26px -10px color-mix(in srgb, var(--c) 70%, transparent);
+  }
+
+  /* ── Orbit · 3 · Cost ────────────────────────────────────────── */
+  .deck[data-theme='orbit'] .row {
+    font-size: 36px;
+  }
+  .deck[data-theme='orbit'] .r-amt {
+    font-size: 34px;
+  }
+  .deck[data-theme='orbit'] .row-total .r-amt {
+    font-size: 96px;
+  }
+  .deck[data-theme='orbit'] .row-inf .r-amt {
+    font-family: var(--o-display);
+    font-weight: 300;
+    color: var(--blush);
+  }
+  .deck[data-theme='orbit'] .study-n {
+    font-size: 136px;
+    color: var(--blush);
+  }
+  .deck[data-theme='orbit'] .study-txt {
+    font-size: 32px;
+  }
+  .deck[data-theme='orbit'] .punch {
+    font-size: 50px;
+  }
+
+  /* ── Orbit · 4 · The turn ────────────────────────────────────── */
+  .deck[data-theme='orbit'] .turn-q {
+    font-size: 180px;
+    font-weight: 340;
+    font-variation-settings: 'opsz' 144, 'wdth' 100;
+    letter-spacing: -0.015em;
+  }
+  .deck[data-theme='orbit'] .turn-do {
+    color: var(--blush);
+    text-shadow:
+      -2px -0.5px 0 var(--o-r),
+      2px 0.5px 0 var(--o-b),
+      0 0 60px rgba(225, 143, 196, 0.45);
+  }
+  .deck[data-theme='orbit'] .turn-word span:first-child {
+    font-size: 88px;
+  }
+  .deck[data-theme='orbit'] .turn-word span:last-child {
+    font-size: 150px;
+    letter-spacing: 0.08em;
+  }
+  .deck[data-theme='orbit'] .turn-word {
+    gap: 18px;
+  }
+  .deck[data-theme='orbit'] .turn-tag {
+    font-size: 40px;
+    color: var(--lav);
+  }
+  /* the wildcat, inside the orbits */
+  .deck[data-theme='orbit'][data-cat='hero'] .cat {
+    transform: translate(27px, 74px) scale(0.82);
+  }
+
+  /* ── Orbit · 5 · Team ────────────────────────────────────────── */
+  .deck[data-theme='orbit'] .team-h {
+    font-size: 88px;
+  }
+  .deck[data-theme='orbit'] .frame {
+    border: 1px solid rgba(239, 234, 226, 0.22);
+    box-shadow:
+      0 0 0 6px var(--bg),
+      0 0 0 7px rgba(239, 234, 226, 0.07),
+      0 40px 80px -50px rgba(0, 0, 0, 0.9);
+  }
+  .deck[data-theme='orbit'] .p-name {
+    font-size: 30px;
+    font-weight: 400;
+  }
+  .deck[data-theme='orbit'] .p-role {
+    font-size: 13px;
+    letter-spacing: 0.3em;
+  }
+
+  /* ── Orbit · 6 · Offer: a small orbit round each "free" ─────────── */
+  .deck[data-theme='orbit'] .offers {
+    top: 360px;
+    gap: 70px;
+  }
+  .deck[data-theme='orbit'] .offer {
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .deck[data-theme='orbit'] .offer:nth-child(1) { --tilt: -10deg; }
+  .deck[data-theme='orbit'] .offer:nth-child(2) { --tilt: 7deg; }
+  .deck[data-theme='orbit'] .offer:nth-child(3) { --tilt: -17deg; }
+  .o-mini {
+    grid-area: 1 / 1;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    container-type: inline-size;
+  }
+  .o-mini > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(var(--tilt));
+  }
+  .o-mini .sat-fix img {
+    width: 14cqw;
+  }
+  .deck[data-theme='orbit'] .o-free {
+    grid-area: 1 / 1;
+    place-self: center;
+    font-size: 72px;
+    color: var(--blush);
+    text-shadow:
+      -1.5px -0.4px 0 var(--o-r),
+      1.5px 0.4px 0 var(--o-b),
+      0 0 40px color-mix(in srgb, var(--c) 45%, transparent);
+  }
+  .deck[data-theme='orbit'] .o-title {
+    margin: 26px 0 24px;
+    font-size: 50px;
+    font-variation-settings: 'opsz' 60, 'wdth' 100;
+    letter-spacing: 0.06em;
+  }
+  .deck[data-theme='orbit'] .o-body {
+    font-size: 30px;
+  }
+  .deck[data-theme='orbit'] .o-sched {
+    width: 100%;
+    font-size: 17px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Orbit · 7 · Join ────────────────────────────────────────── */
+  .deck[data-theme='orbit'] .join-h {
+    top: 214px;
+    font-size: 104px;
+    letter-spacing: 0.12em;
+  }
+  .deck[data-theme='orbit'] .join-site {
+    top: 456px;
+    font-size: 92px;
+    font-weight: 360;
+    font-variation-settings: 'opsz' 144, 'wdth' 100;
+    letter-spacing: -0.01em;
+  }
+  .deck[data-theme='orbit'] .join-site .italic {
+    color: var(--blush);
+  }
+  .deck[data-theme='orbit'] .join-sub {
+    top: 616px;
+    font-size: 34px;
+  }
+  .deck[data-theme='orbit'] .qr-code {
+    box-shadow:
+      0 0 0 8px var(--bg),
+      0 0 0 9px rgba(239, 234, 226, 0.18),
+      0 0 80px -10px rgba(160, 140, 246, 0.45);
+  }
+
+  /* ── Orbit · chrome and print surface ────────────────────────── */
+  .deck[data-theme='orbit'] .chrome {
+    font-size: 13px;
+    letter-spacing: 0.34em;
+  }
+  .deck[data-theme='orbit'] .progress {
+    height: 2px;
+  }
+  .deck[data-theme='orbit'] .progress span {
+    background: linear-gradient(90deg, var(--o-b), #f4efe7 50%, var(--o-r));
+    opacity: 0.55;
+  }
+  /* Still on purpose: moving grain flickers on a projector and tires the eyes.
+     The same tile twice, at sizes that don't divide, so the grain never repeats. */
+  .o-grain {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background-image: url('../assets/present/orbit/grain.webp'), url('../assets/present/orbit/grain.webp');
+    background-size: 192px, 263px;
+    background-position: 0 0, 97px 41px;
+    opacity: 0.4;
+  }
+
+  @keyframes o-defocus {
+    0% { opacity: 0; scale: 1.12; }
+    22% { opacity: 1; }
+    100% { opacity: 0; scale: 1; }
+  }
+  @keyframes o-focus {
+    from { opacity: 0; scale: 1.05; }
+  }
+  @keyframes o-bloom {
+    from { opacity: 0; scale: 0.15; }
+  }
+  @keyframes o-precess {
+    from { rotate: -1.1deg; }
+    to { rotate: 1.4deg; }
+  }
+  @keyframes o-twinkle {
+    0% { scale: 0.97; rotate: -0.6deg; opacity: 0.94; }
+    45% { scale: 1.03; rotate: 0.4deg; opacity: 1; }
+    100% { scale: 0.95; rotate: 1.1deg; opacity: 0.9; }
+  }
+  @keyframes o-neb-drift {
+    from { rotate: -1.2deg; }
+    to { rotate: 1.2deg; scale: 1.03; }
+  }
+  @keyframes o-orbit {
+    to { rotate: 360deg; }
+  }
+  /* brighter on the near (lower) half of the orbit, faint behind */
+  @keyframes o-nearfar {
+    0% { opacity: 0.9; }
+    25% { opacity: 1; }
+    50% { opacity: 0.85; }
+    75% { opacity: 0.22; }
+    100% { opacity: 0.9; }
+  }
+</style>
+
+<script>
+  const deck = document.querySelector<HTMLElement>('.deck')!;
+  const stage = deck.querySelector<HTMLElement>('.stage')!;
+  // Space and orbit save the wildcat for the club introduction; classic draws it on the title.
+  const classic = deck.dataset.theme === 'classic';
+  const slides = [...deck.querySelectorAll<HTMLElement>('.slide')];
+  const steps = slides.map((s) => Math.max(0, ...[...s.querySelectorAll<HTMLElement>('[data-step]')].map((e) => +e.dataset.step!)));
+  const totalSteps = steps.reduce((a, n) => a + n + 1, 0) - 1;
+  const root = document.documentElement;
+  const asksReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Reduced motion applies unless the presenter chose to play animations anyway.
+  const reduced = () => asksReduced && !root.classList.contains('full-motion');
+  const store = {
+    get: () => {
+      try {
+        return sessionStorage.getItem('present-motion');
+      } catch {
+        return null;
+      }
+    },
+    set: (v: string) => {
+      try {
+        sessionStorage.setItem('present-motion', v);
+      } catch {}
+    },
+  };
+  if (store.get() === 'full') root.classList.add('full-motion');
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  deck.querySelector('[data-total]')!.textContent = pad(slides.length);
+
+  // Fit the 1920×1080 stage to the window.
+  const fit = () => stage.style.setProperty('--scale', String(Math.min(innerWidth / 1920, innerHeight / 1080)));
+  fit();
+  addEventListener('resize', fit);
+
+  // Draw the wildcat stroke by stroke, outward from the top. Restarts if already drawn.
+  const cat = deck.querySelector<HTMLElement>('.cat')!;
+  const drawCat = () => {
+    if (reduced()) return;
+    cat.classList.remove('drawing');
+    // number paths per copy, so the fringe copies draw in step with the white one
+    cat.querySelectorAll('svg').forEach((svg) =>
+      svg.querySelectorAll('path').forEach((p, i) => {
+        p.setAttribute('pathLength', '1');
+        p.style.setProperty('--d', String(i * (classic ? 14 : 40)));
+      }),
+    );
+    void cat.offsetWidth;
+    cat.classList.add('drawing');
+  };
+  if (classic) drawCat();
+
+  // Count a number up from zero.
+  const count = (el: HTMLElement) => {
+    const to = +el.dataset.count!;
+    const fmt = (v: number) =>
+      el.dataset.format === 'hm'
+        ? `${Math.floor(v / 60)}h ${pad(Math.round(v % 60))}m`
+        : '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (reduced()) return void (el.textContent = fmt(to));
+    const t0 = performance.now();
+    const dur = 1600;
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / dur);
+      el.textContent = fmt(to * (1 - Math.pow(1 - k, 4)));
+      if (k < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  let cur = -1;
+  let step = 0;
+
+  // "gone 1:hero" → 'gone' before click 1, 'hero' from click 1 on.
+  const placed = (spec = '', st: number) =>
+    spec.split(' ').reduce((v, tok) => {
+      const [n, val] = tok.includes(':') ? tok.split(':') : ['0', tok];
+      return +n <= st ? val : v;
+    }, '');
+
+  const render = (fresh: boolean) => {
+    const catWas = deck.dataset.cat;
+    deck.dataset.slide = String(cur);
+    deck.dataset.build = String(step);
+    for (const k of ['mark', 'cat', 'neb', 'sys', 'sun', 'hz']) deck.dataset[k] = placed(slides[cur].dataset[k], step);
+    // Space and orbit: the wildcat draws itself in each time it arrives as the hero.
+    if (!classic && deck.dataset.cat === 'hero' && catWas !== 'hero') drawCat();
+    stage.style.setProperty('--px', String(cur));
+    slides.forEach((s, i) => {
+      s.classList.toggle('on', i === cur);
+      s.classList.toggle('past', i < cur);
+    });
+    slides[cur].querySelectorAll<HTMLElement>('[data-step]').forEach((el) => {
+      const show = +el.dataset.step! <= step;
+      const was = el.classList.contains('shown');
+      el.classList.toggle('shown', show);
+      // Count up only when a step is newly revealed going forward.
+      if (show && !was && fresh) el.querySelectorAll<HTMLElement>('[data-count]').forEach(count);
+    });
+    deck.querySelector('[data-now]')!.textContent = pad(cur + 1);
+    const done = steps.slice(0, cur).reduce((a, n) => a + n + 1, 0) + step;
+    stage.style.setProperty('--p', String(totalSteps ? done / totalSteps : 1));
+    history.replaceState(null, '', `#${cur + 1}${step ? '.' + step : ''}`);
+  };
+
+  const go = (slide: number, st = 0, fresh = true) => {
+    slide = Math.max(0, Math.min(slides.length - 1, slide));
+    if (slide !== cur) {
+      // Leaving a slide resets its builds, so revisiting it plays them again.
+      slides[cur]?.querySelectorAll('.shown').forEach((e) => e.classList.remove('shown'));
+      cur = slide;
+    }
+    step = Math.max(0, Math.min(steps[cur], st));
+    render(fresh);
+  };
+  const next = () => (step < steps[cur] ? go(cur, step + 1) : cur < slides.length - 1 && go(cur + 1, 0));
+  // Going back lands on the previous slide fully built, like PowerPoint.
+  const prev = () => (step > 0 ? go(cur, step - 1, false) : cur > 0 && go(cur - 1, steps[cur - 1], false));
+
+  // Start where the URL says (#3 or #3.2), so a refresh mid-talk stays put.
+  const fromHash = () => {
+    const [s0, st0] = location.hash.slice(1).split('.').map(Number);
+    go((s0 || 1) - 1, 0);
+    for (let i = 0; i < (st0 || 0); i++) next();
+  };
+  fromHash();
+  addEventListener('hashchange', fromHash);
+
+  // Reduce Motion is on and nobody has answered yet: ask before starting.
+  const ask = document.querySelector<HTMLElement>('.motion-ask')!;
+  if (asksReduced && !store.get()) {
+    ask.hidden = false;
+    ask.querySelector<HTMLElement>('[autofocus]')?.focus();
+  }
+  ask.addEventListener('click', (e) => {
+    const choice = (e.target as HTMLElement).closest<HTMLElement>('[data-motion]')?.dataset.motion;
+    if (!choice) return;
+    store.set(choice);
+    ask.hidden = true;
+    if (choice === 'full') {
+      root.classList.add('full-motion');
+      // Replay the title card's entrance now that animations are allowed.
+      if (classic) drawCat();
+      deck.dataset.slide = '-1';
+      void deck.offsetWidth;
+      render(false);
+    }
+  });
+
+  addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey || !ask.hidden) return;
+    const k = e.key;
+    if (deck.classList.contains('blanked') && !['b', 'B', '.'].includes(k)) {
+      deck.classList.remove('blanked');
+      return;
+    }
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter', 'n'].includes(k)) next();
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace', 'p'].includes(k)) prev();
+    else if (k === 'Home') go(0);
+    else if (k === 'End') go(slides.length - 1, steps[slides.length - 1], false);
+    else if (k === 'f' || k === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+    else if (k === 'b' || k === 'B' || k === '.') deck.classList.toggle('blanked');
+    else return;
+    e.preventDefault();
+  });
+
+  // Mouse as a clicker: click = next, right-click = back,
+  // side buttons = back / forward, wheel = either way.
+  deck.addEventListener('click', (e) => e.button === 0 && next());
+  deck.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    prev();
+  });
+  // The side buttons would otherwise navigate the browser away from the talk.
+  deck.addEventListener('mouseup', (e) => {
+    if (e.button !== 3 && e.button !== 4) return;
+    e.preventDefault();
+    e.button === 3 ? prev() : next();
+  });
+  deck.addEventListener('auxclick', (e) => (e.button === 3 || e.button === 4) && e.preventDefault());
+  // One wheel gesture = one step. While the wheel keeps sending events
+  // (a trackpad's momentum), the lock keeps extending, so it never double-steps.
+  let wheelLock = 0;
+  let wheelSum = 0;
+  deck.addEventListener(
+    'wheel',
+    (e) => {
+      e.preventDefault();
+      const now = performance.now();
+      if (now < wheelLock) {
+        wheelLock = now + 200;
+        return;
+      }
+      wheelSum += e.deltaY || e.deltaX;
+      if (Math.abs(wheelSum) < 30) return;
+      wheelSum > 0 ? next() : prev();
+      wheelSum = 0;
+      wheelLock = now + 500;
+    },
+    { passive: false },
+  );
+  let x0 = 0;
+  deck.addEventListener('touchstart', (e) => (x0 = e.touches[0].clientX), { passive: true });
+  deck.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) {
+      e.preventDefault();
+      dx < 0 ? next() : prev();
+    }
+  });
+
+  // Show the key hints while the mouse moves; hide the cursor when it rests.
+  let idle = 0;
+  addEventListener('mousemove', () => {
+    deck.classList.add('show-hint');
+    deck.classList.remove('idle');
+    clearTimeout(idle);
+    idle = window.setTimeout(() => {
+      deck.classList.remove('show-hint');
+      deck.classList.add('idle');
+    }, 2200);
+  });
+</script>
