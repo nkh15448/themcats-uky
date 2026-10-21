@@ -5,3 +5,6 @@ time: "5:00 PM"
 end: "9:00 PM"
 location: White Hall 231
 covers: [biochem-9, biochem-10]
+materials:
+
+  - { kind: slides, chapters: [biochem-9], href: "/powerpoints/Mcats BCH 9-10.pdf" }
