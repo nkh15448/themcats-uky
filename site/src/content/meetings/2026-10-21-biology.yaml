@@ -8,3 +8,4 @@ covers: [biochem-9, biochem-10]
 materials:
 
   - { kind: slides, chapters: [biochem-9], href: "/powerpoints/Mcats BCH 9-10.pdf" }
+  - { kind: slides, chapters: [biochem-10], href: "/powerpoints/ETC and Oxidative phosphorylation.pdf" }
