@@ -186,7 +186,7 @@ const oMiniSat = (dur: string) =>
 
 const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 ---
-  <div class="deck" data-theme={theme} data-slide="0" data-mark="hero" data-cat={classic ? 'hero' : 'gone'}>
+  <div class="deck" data-theme={theme} data-palette="aurora" data-slide="0" data-mark="hero" data-cat={classic ? 'hero' : 'gone'}>
     <div class="stage" aria-live="polite">
       <!-- ── Persistent layer ───────────────────────────────── -->
       {classic && (
@@ -471,7 +471,7 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
       </section>
 
       <!-- ── 8 · Classes ───────────────────────────────────── -->
-      <section class="slide s-cls" aria-label="Our classes" data-mark="gone" data-cat="mark" data-neb="bottom" data-sys="gone" data-sun="gone" data-hz="down">
+      <section class="slide s-cls" aria-label="Our classes" data-mark="gone" data-cat="gone" data-neb="bottom" data-sys="gone" data-sun="gone" data-hz="down">
         <p class="label what-full team-label" data-n="08">The classes</p>
         <h2 class="team-h display ca">Every week</h2>
         <dl class="cls-sched fx-in" style="--i:2">
@@ -571,7 +571,7 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
       </section>
 
       <!-- ── 13 · Chapter checks ─────────────────────────────── -->
-      <section class="slide s-mc" aria-label="Inside a check" data-mark="gone" data-cat="mark" data-neb="corner" data-sys="gone" data-sun="gone" data-hz="down">
+      <section class="slide s-mc" aria-label="Inside a check" data-mark="gone" data-cat="gone" data-neb="corner" data-sys="gone" data-sun="gone" data-hz="down">
         <p class="label what-full team-label" data-n="13">MCatalyst</p>
         <h2 class="team-h display ca">Inside a check</h2>
         <p class="mc-sub italic fx-in" style="--i:2">Every answer comes with the why, and the reference chart it draws on.</p>
@@ -680,7 +680,7 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
     )}
 
     <p class="hint mono" aria-hidden="true">
-      <kbd>click</kbd> next <kbd>right-click</kbd> back <kbd>scroll</kbd> either way <kbd>F</kbd> fullscreen <kbd>B</kbd> blank
+      <kbd>click</kbd> next <kbd>right-click</kbd> back <kbd>scroll</kbd> either way <kbd>F</kbd> fullscreen <kbd>B</kbd> blank <kbd>C</kbd> colours
     </p>
     <div class="blank" aria-hidden="true"></div>
   </div>
@@ -716,6 +716,7 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
     --violet: var(--neb-violet);
     --indigo: var(--neb-indigo);
     --gold: var(--neb-gold);
+    --grad: linear-gradient(90deg, #9f93ff, #f09ac0 55%, #f6d39c);
     --dur: 1.3s;
     position: fixed;
     inset: 0;
@@ -2077,7 +2078,7 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
   .mci-tag { position: absolute; left: 366px; top: 320px; font-size: 40px; color: var(--fg-dim); }
   .mci-big { position: absolute; left: 150px; top: 560px; width: 1500px; font-size: 76px; line-height: 1.15; }
   .mci-free, .qb-us .qb-n {
-    background: linear-gradient(90deg, #9f93ff, #f09ac0 55%, #f6d39c);
+    background: var(--grad);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 
@@ -2261,10 +2262,10 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
   @keyframes mc-pan { to { transform: translateY(calc(-100% + 732px)); } }
 
   /* Test screen: taller, with a passage that scrolls down to its figure. */
-  .s-tm .tm { top: 290px; height: 730px; }
+  .s-tm .tm { top: 280px; height: 690px; grid-template-rows: 50px 42px 1fr 50px; }
   .tm-pass { position: relative; font-size: 17px; line-height: 1.5; }
   .tm-pass-in { transition: transform 1.6s var(--ease); }
-  .tm-pass:has(.tm-scroll.shown) .tm-pass-in { transform: translateY(-395px); }
+  .tm-pass:has(.tm-scroll.shown) .tm-pass-in { transform: translateY(-415px); }
   .tm-pass figure { margin-top: 18px; }
   .tm-pass figure img { display: block; width: 100%; height: auto; }
   .tm-pass figcaption { margin-top: 8px; font-size: 15px; text-align: center; }
@@ -3302,6 +3303,37 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
     75% { opacity: 0.22; }
     100% { opacity: 0.9; }
   }
+
+  /* ── Palettes ───────────────────────────────────────────────
+     High-contrast options on true black. C cycles them in the deck;
+     "original" (no rules) keeps the site's own colours. */
+  .deck[data-palette='aurora'],
+  .deck[data-palette='ice'],
+  .deck[data-palette='ember'] {
+    --bg: #000;
+    --bg-raise: #0b0b10;
+  }
+  .deck[data-palette='aurora'] {
+    --indigo: #4f6bff;
+    --violet: #8f6bff;
+    --rose: #ff4d9d;
+    --gold: #3fd0ff;
+    --grad: linear-gradient(90deg, #3fd0ff, #8f6bff 50%, #ff4d9d);
+  }
+  .deck[data-palette='ice'] {
+    --indigo: #3d5cff;
+    --violet: #b48cff;
+    --rose: #6f8bff;
+    --gold: #5ff0ff;
+    --grad: linear-gradient(90deg, #5ff0ff, #6f8bff 50%, #b48cff);
+  }
+  .deck[data-palette='ember'] {
+    --indigo: #7a3dff;
+    --violet: #c03dff;
+    --rose: #ff3d6e;
+    --gold: #ff7a45;
+    --grad: linear-gradient(90deg, #ff7a45, #ff3d6e 45%, #c03dff);
+  }
 </style>
 
 <script>
@@ -3454,6 +3486,30 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
       void deck.offsetWidth;
       render(false);
     }
+  });
+
+  // C cycles the colour palettes; the choice is remembered on this computer.
+  const palettes = ['aurora', 'ice', 'ember', 'original'];
+  const tag = Object.assign(document.createElement('p'), { ariaHidden: 'true' });
+  tag.style.cssText = 'position:fixed;left:50%;bottom:28px;translate:-50% 0;padding:8px 16px;border-radius:999px;background:rgb(255 255 255 / .1);color:#fff;font:13px ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase;opacity:0;transition:opacity .4s;pointer-events:none;z-index:99';
+  document.body.append(tag);
+  let tagTimer = 0;
+  const setPalette = (name: string, announce = false) => {
+    deck.dataset.palette = name;
+    try { localStorage.setItem('deck-palette', name); } catch {}
+    if (!announce) return;
+    tag.textContent = `Palette · ${name}`;
+    tag.style.opacity = '1';
+    clearTimeout(tagTimer);
+    tagTimer = window.setTimeout(() => (tag.style.opacity = '0'), 1400);
+  };
+  try {
+    const saved = localStorage.getItem('deck-palette');
+    if (saved && palettes.includes(saved)) setPalette(saved);
+  } catch {}
+  addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() !== 'c' || e.metaKey || e.ctrlKey) return;
+    setPalette(palettes[(palettes.indexOf(deck.dataset.palette ?? 'aurora') + 1) % palettes.length], true);
   });
 
   addEventListener('keydown', (e) => {
