@@ -205,12 +205,12 @@ const oMiniSat = (dur: string) =>
 
 const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 // The same ledger near the end, crossed off line by line.
-const rcLeft = total - costs[0].amount - costs[2].amount;
+const rcLeft = total - costs[0].amount - costs[2].amount - costs[3].amount;
 const recap = [
   { label: costs[0].label, was: money(costs[0].amount), now: 'covered by our scholarship', accent: 'rose', step: 1, zero: true },
-  { label: costs[1].label, was: money(costs[1].amount) },
+  { label: costs[1].label, was: money(costs[1].amount), now: 'most people buy less', accent: 'violet', step: 5, keep: true },
   { label: costs[2].label, was: money(costs[2].amount), now: 'MCatalyst instead', accent: 'violet', step: 2, zero: true },
-  { label: costs[3].label, was: money(costs[3].amount), now: 'talk to us first', accent: 'gold', step: 4, keep: true },
+  { label: costs[3].label, was: money(costs[3].amount), now: 'we teach all of it', accent: 'gold', step: 4, zero: true },
   { label: 'Tutoring', was: '∞', now: 'free with our officers', accent: 'gold', step: 3, zero: true },
 ];
 ---
@@ -597,7 +597,7 @@ const recap = [
             ))}
           </ol>
           <i class="cm-all" data-step="2" aria-hidden="true"></i>
-          <p class="cm-count" data-step="2"><span class="display" data-count={cmWeb.length} data-format="n">{cmWeb.length}</span><span class="mono">connections across four subjects</span></p>
+          <p class="cm-count" data-step="2"><span class="display" data-count={cmWeb.length} data-format="n">{cmWeb.length}</span><span class="mono">connections so far, across four subjects</span></p>
         </div>
       </section>
 
