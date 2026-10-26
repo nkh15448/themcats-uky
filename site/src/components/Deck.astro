@@ -106,6 +106,9 @@ import figure from '../assets/present/mcatalyst/figure.svg';
 import figure2 from '../assets/present/mcatalyst/figure2.svg';
 // Passage bb-0007 and its first question, from the MCatalyst bank.
 import passageFig from '../assets/present/mcatalyst/passage.svg';
+// Every chapter-check connection in the bank, as [column, chapter, column, chapter]
+// (from catalyst/content/checks/connections; physics has no column here).
+import cmPairs from '../assets/present/mcatalyst/connections.json';
 // The concept web on the chapter-check slide, around PFK-1 at (380, 200).
 const nodes4 = [
   { x: 110, y: 60, t: 'Enzyme kinetics', ch: 'Biochem 2' },
@@ -123,18 +126,34 @@ const cmCols = [
   { name: 'Organic Chemistry', color: '#eba4bd', x: 1480, ch: ['Nomenclature', 'Isomers', 'Bonding', 'Analyzing Organic Reactions', 'Alcohols', 'Aldehydes and Ketones I', 'Aldehydes and Ketones II', 'Carboxylic Acids', 'Carboxylic Acid Derivatives', 'Nitrogen- and Phosphorus-Containing Compounds', 'Spectroscopy', 'Separations and Purifications'] },
 ];
 const cmY = (r: number) => 410 + r * 48;
-// [column, chapter index], in the order the links draw out from Carbohydrate Metabolism I.
-const cmHits: [number, number][] = [[1, 1], [1, 3], [0, 0], [0, 4], [2, 6], [2, 10], [1, 9], [0, 8], [2, 4], [3, 1], [0, 9], [1, 11], [3, 5], [0, 10]];
+// What Carbohydrate Metabolism I connects to, as [column, chapter index].
+const cmHits = (cmPairs as number[][]).flatMap(([c1, r1, c2, r2]) =>
+  c1 === 1 && r1 === 8 ? [[c2, r2]] : c2 === 1 && r2 === 8 ? [[c1, r1]] : [],
+) as [number, number][];
 const [hx, hy] = [cmCols[1].x + 40, cmY(8)];
 const cmLinks = cmHits.map(([c, r]) => {
   const [tx, ty] = [cmCols[c].x + 40, cmY(r)];
   const k = c === 1 ? -150 : (tx - hx) / 2;
   return `M ${hx} ${hy} C ${hx + k} ${hy}, ${tx - (c === 1 ? -k : k)} ${ty}, ${tx} ${ty}`;
 });
+// Step 2: every connection at once, rippling out from the hub.
+const cmDist = (c: number, r: number) => Math.abs(c - 1) * 3 + Math.abs(r - 8);
+const cmCurve = (c1: number, r1: number, c2: number, r2: number) => {
+  const [x1, y1, x2, y2] = [cmCols[c1].x + 40, cmY(r1), cmCols[c2].x + 40, cmY(r2)];
+  const k = c1 === c2 ? -60 - Math.abs(r2 - r1) * 12 : (x2 - x1) / 2;
+  return c1 === c2
+    ? `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x2 + k} ${y2}, ${x2} ${y2}`
+    : `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x2 - k} ${y2}, ${x2} ${y2}`;
+};
+const cmWeb = (cmPairs as number[][]).map(([c1, r1, c2, r2], i) => ({
+  d: cmCurve(c1, r1, c2, r2),
+  color: cmCols[c1].color,
+  delay: Math.min(cmDist(c1, r1), cmDist(c2, r2)) * 70 + (i % 9) * 30,
+}));
 const cmRows = cmCols.flatMap((c, ci) =>
   c.ch.map((name, r) => {
     const hit = cmHits.findIndex(([hc, hr]) => hc === ci && hr === r);
-    return { name, n: r + 1, x: c.x, y: cmY(r), color: c.color, hub: ci === 1 && r === 8, hit };
+    return { name, n: r + 1, x: c.x, y: cmY(r), color: c.color, hub: ci === 1 && r === 8, hit, j: cmDist(ci, r) };
   }),
 );
 
@@ -185,6 +204,15 @@ const oMiniSat = (dur: string) =>
   `--x:50%;--y:50%;--rx:${((oGeo.mini.a / oGeo.mini.w) * 100).toFixed(3)}cqw;--k:${(oGeo.mini.b / oGeo.mini.a).toFixed(4)};--dur:${dur}`;
 
 const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+// The same ledger near the end, crossed off line by line.
+const rcLeft = total - costs[0].amount - costs[2].amount;
+const recap = [
+  { label: costs[0].label, was: money(costs[0].amount), now: 'covered by our scholarship', accent: 'rose', step: 1, zero: true },
+  { label: costs[1].label, was: money(costs[1].amount) },
+  { label: costs[2].label, was: money(costs[2].amount), now: 'MCatalyst instead', accent: 'violet', step: 2, zero: true },
+  { label: costs[3].label, was: money(costs[3].amount), now: 'talk to us first', accent: 'gold', step: 4, keep: true },
+  { label: 'Tutoring', was: '∞', now: 'free with our officers', accent: 'gold', step: 3, zero: true },
+];
 ---
   <div class="deck" data-theme={theme} data-palette="aurora" data-slide="0" data-mark="hero" data-cat={classic ? 'hero' : 'gone'}>
     <div class="stage" aria-live="polite">
@@ -552,6 +580,7 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
         <div class="cm" data-step="1">
           <svg viewBox="0 0 1920 1080" aria-hidden="true">
             {cmCols.map((c) => <line class="cm-rail" x1={c.x + 40} x2={c.x + 40} y1={cmY(0)} y2={cmY(11)} style={`--c:${c.color}`} />)}
+            <g class="cm-web">{cmWeb.map((w) => <path d={w.d} pathLength="1" style={`--c:${w.color};--d:${w.delay}ms`} />)}</g>
             {cmLinks.map((d, i) => (
               <Fragment>
                 <mask id={`cm-m${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080"><path class="cm-draw" d={d} pathLength="1" style={`--i:${i}`} /></mask>
@@ -562,11 +591,13 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
           {cmCols.map((c) => <p class="cm-head mono" style={`left:${c.x + 67}px;--c:${c.color}`}>{c.name}</p>)}
           <ol>
             {cmRows.map((r) => (
-              <li class={`cm-row${r.hub ? ' hub' : ''}${r.hit >= 0 ? ' hit' : ''}`} style={`left:${r.x}px;top:${r.y}px;--c:${r.color};--i:${Math.max(r.hit, 0)}`}>
+              <li class={`cm-row${r.hub ? ' hub' : ''}${r.hit >= 0 ? ' hit' : ''}`} style={`left:${r.x}px;top:${r.y}px;--c:${r.color};--i:${Math.max(r.hit, 0)};--j:${r.j}`}>
                 <span class="mono">{r.n}</span><i></i><b>{r.name}</b>
               </li>
             ))}
           </ol>
+          <i class="cm-all" data-step="2" aria-hidden="true"></i>
+          <p class="cm-count" data-step="2"><span class="display" data-count={cmWeb.length} data-format="n">{cmWeb.length}</span><span class="mono">connections across four subjects</span></p>
         </div>
       </section>
 
@@ -649,9 +680,30 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
         </div>
       </section>
 
-      <!-- ── 16 · Join ──────────────────────────────────────── -->
+      <!-- ── 16 · Cost recap ───────────────────────────────── -->
+      <section class="slide s-cost s-rc" aria-label="What it costs with us" data-mark="header" data-cat="mark" data-neb="study" data-sys="gone" data-sun="gone" data-hz="down">
+        <p class="label what-full" data-n="16">What it costs, with us</p>
+        <ol class="ledger">
+          {recap.map((r, i) => (
+            <li class={`row rc-row fx-in${r.keep ? ' rc-keep' : ''}`} style={`--i:${i * 2}`}>
+              <span class="r-label">{r.label}</span>
+              {r.now && <span class="r-note mono rc-new" data-step={r.step} data-accent={r.accent}>{r.now}</span>}
+              <span class="r-dots" aria-hidden="true"></span>
+              <span class={`r-amt mono${r.was === '∞' ? ' inf' : ''}`}><span class="rc-old">{r.was}</span>{r.zero && <span class="rc-zero" data-step={r.step}>$0</span>}</span>
+            </li>
+          ))}
+          <li class="row row-total rc-total fx-in" style="--i:10">
+            <span class="r-label label">Total</span>
+            <span class="r-dots" aria-hidden="true"></span>
+            <span class="r-amt display ca"><span class="rc-old">~{money(total)}</span><span class="rc-left" data-step="5">~<span data-count={rcLeft}>{money(rcLeft)}</span></span></span>
+          </li>
+        </ol>
+        <p class="punch italic fx fx-ca" data-step="6">Same exam. A lot less money.</p>
+      </section>
+
+      <!-- ── 17 · Join ──────────────────────────────────────── -->
       <section class="slide s-join" aria-label="Join us" data-mark="gone" data-cat="corner" data-neb="join" data-sys="join" data-sun="gone" data-hz="up">
-        <p class="label what-full team-label" data-n="16">Come find us</p>
+        <p class="label what-full team-label" data-n="17">Come find us</p>
         <h2 class="join-h display ca fx-in">Join us.</h2>
         <p class="join-site display ca fx-in" style="--i:3">themcats<span class="italic">.org</span></p>
         <p class="join-sub italic fx-in" style="--i:5">Every seminar, slide deck, Anki deck and handout, searchable.</p>
@@ -670,7 +722,7 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
       <!-- ── Chrome ─────────────────────────────────────────── -->
       <div class="chrome mono" aria-hidden="true">
         <span>The M-CATS</span>
-        <span class="count"><span data-now>01</span> / <span data-total>16</span></span>
+        <span class="count"><span data-now>01</span> / <span data-total>17</span></span>
       </div>
       <div class="progress" aria-hidden="true"><span></span></div>
     </div>
@@ -956,15 +1008,15 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
     transform: translate(-500px, -520px) scale(1.1);
     opacity: 0.2;
   }
-  .deck[data-slide='15'] .g1 {
+  .deck[data-slide='16'] .g1 {
     transform: translate(-200px, 120px) scale(1.3);
     opacity: 0.55;
   }
-  .deck[data-slide='15'] .g2 {
+  .deck[data-slide='16'] .g2 {
     transform: translate(60px, 120px) scale(1.2);
     opacity: 0.5;
   }
-  .deck[data-slide='15'] .g3 {
+  .deck[data-slide='16'] .g3 {
     transform: translate(-1000px, 300px) scale(1.2);
     opacity: 0.25;
   }
@@ -984,18 +1036,21 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
     opacity: 0.18;
   }
   .deck[data-slide='2'] .g1,
+  .deck[data-slide='15'] .g1,
   .deck[data-slide='14'] .g1,
   .deck[data-slide='7'] .g1 {
     transform: translate(100px, 300px) scale(1.15);
     opacity: 0.32;
   }
   .deck[data-slide='2'] .g2,
+  .deck[data-slide='15'] .g2,
   .deck[data-slide='14'] .g2,
   .deck[data-slide='7'] .g2 {
     transform: translate(-1300px, -380px) scale(0.9);
     opacity: 0.22;
   }
   .deck[data-slide='2'] .g3,
+  .deck[data-slide='15'] .g3,
   .deck[data-slide='14'] .g3,
   .deck[data-slide='7'] .g3 {
     transform: translate(200px, -500px);
@@ -2270,6 +2325,37 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
   .tm-pass figure img { display: block; width: 100%; height: auto; }
   .tm-pass figcaption { margin-top: 8px; font-size: 15px; text-align: center; }
 
+  /* Chapter map, step 2: the whole web, rippling out from the hub. */
+  .cm-web path {
+    fill: none; stroke: var(--c); stroke-width: 1.3; stroke-opacity: 0.32;
+    stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s var(--ease);
+  }
+  .cm:has(.cm-all.shown) .cm-web path { stroke-dashoffset: 0; transition-delay: var(--d); }
+  .cm-link { transition: opacity 1s var(--ease); }
+  .cm:has(.cm-all.shown) .cm-link { opacity: 0.35; }
+  .cm:has(.cm-all.shown) .cm-row i { transform: none; transition-delay: calc(0.2s + var(--j) * 70ms); }
+  .cm:has(.cm-all.shown) .cm-row b { opacity: 1; color: var(--fg-dim); transition-delay: calc(0.2s + var(--j) * 70ms); }
+  .cm:has(.cm-all.shown) .cm-row.hit b, .cm:has(.cm-all.shown) .cm-row.hub b { color: var(--fg); }
+  .cm-row b { text-shadow: 0 0 6px #000, 0 0 14px #000, 0 0 2px #000; }
+  .cm-count { position: absolute; right: 150px; top: 150px; text-align: right; transition: opacity 1s var(--ease) 0.4s, filter 1s var(--ease) 0.4s; }
+  .cm-count .display { display: block; font-size: 120px; line-height: 1; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .cm-count .mono { font-size: 16px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
+  .cm-count:not(.shown) { opacity: 0; filter: blur(12px); transition-delay: 0s; }
+
+  /* Cost recap: the ledger from slide 3, crossed off line by line. */
+  .rc-old { position: relative; display: inline-block; transition: opacity 0.6s var(--ease) 0.3s; }
+  .rc-old::after {
+    content: ''; position: absolute; left: -6%; right: -6%; top: 52%; height: 3px;
+    background: var(--rose); box-shadow: 0 0 12px var(--rose);
+    transform: scaleX(0); transform-origin: left; transition: transform 0.7s var(--ease);
+  }
+  .rc-row:not(.rc-keep):has(.rc-new.shown) .rc-old::after, .rc-total:has(.rc-left.shown) .rc-old::after { transform: none; }
+  .rc-row:not(.rc-keep):has(.rc-new.shown) .rc-old, .rc-total:has(.rc-left.shown) .rc-old { opacity: 0.4; }
+  .rc-new, .rc-zero, .rc-left { transition: opacity 0.7s var(--ease), filter 0.7s var(--ease), transform 0.7s var(--ease); }
+  .rc-zero, .rc-left { display: inline-block; margin-left: 22px; transition-delay: 0.45s; }
+  .rc-zero { color: var(--violet); }
+  .rc-new:not(.shown), .rc-zero:not(.shown), .rc-left:not(.shown) { opacity: 0; filter: blur(8px); transform: translateY(10px); transition-delay: 0s; }
+
   /* ── 10 · Scholarship ─────────────────────────────────────── */
   .sch-amt {
     position: absolute;
@@ -3395,6 +3481,8 @@ const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDi
     const fmt = (v: number) =>
       el.dataset.format === 'hm'
         ? `${Math.floor(v / 60)}h ${pad(Math.round(v % 60))}m`
+        : el.dataset.format === 'n'
+        ? String(Math.round(v))
         : el.dataset.format === 'usd'
         ? '$' + Math.round(v)
         : '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
