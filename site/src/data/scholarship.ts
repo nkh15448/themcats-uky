@@ -12,7 +12,7 @@ export const scholarship = {
   name: 'The M-CATS Registration Scholarship',
   term: 'Fall 2026',
   cycle: 'Awarded annually',
-  amount: 355, // the MCAT registration fee, in dollars
+  amount: 360, // the MCAT registration fee, in dollars
   awards: { need: 3, merit: 2 },
 
   // UK Qualtrics application link. Leave empty to show "link coming soon".
