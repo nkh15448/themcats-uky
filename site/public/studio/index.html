@@ -1,0 +1,30 @@
+<!doctype html>
+<!--
+  themcats.org/studio: a door to MCatalyst Studio. Studio's emails link here
+  (themcats.org/studio/#/pset?id=…) so their links match the domain they're sent from,
+  which keeps spam filters happy; this page forwards to the same path on Studio.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>MCatalyst Studio</title>
+  <script>
+    (function () {
+      var studio = 'https://mcatalyst-studio.nikhildkumar7.workers.dev';
+      var path = location.hash.slice(1);
+      // Only a path on Studio itself ("/pset?id=…"); anything else goes to Studio's home.
+      if (!/^\/(?!\/)/.test(path)) path = '/';
+      location.replace(studio + path);
+    })();
+  </script>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f5f1e8; color: #1d1d22; font: 16px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+    a { color: #9a7b3c; }
+  </style>
+</head>
+<body>
+  <p>Opening <a href="https://mcatalyst-studio.nikhildkumar7.workers.dev">MCatalyst Studio</a>…</p>
+</body>
+</html>
