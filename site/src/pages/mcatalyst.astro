@@ -69,7 +69,7 @@ const faq = [
     q: 'Does it replace UWorld?',
     a: 'No. Use MCatalyst while you learn the content, and a passage bank like UWorld once it’s solid. Checking each chapter first means that when you get to practice passages, you already know whether the content is there.',
   },
-  { q: 'Which chapters have checks?', a: 'The Kaplan biology, biochemistry, general chemistry and organic chemistry chapters the club teaches, once officers have approved their questions. The list under “What’s live” is always current.' },
+  { q: 'Which chapters have checks?', a: 'The Kaplan biology, biochemistry, general chemistry and organic chemistry chapters the club teaches, once officers have approved their questions. Physics and Math and Psych/Soc will come later. The list under “What’s live” is always current.' },
   { q: 'Do I have to come to seminars?', a: 'No, but the checks follow the seminars, so it works best alongside them: come to the seminar, then take that chapter’s check.' },
   { q: 'Does it work on my phone?', a: 'It’s a desktop app, for Mac and Windows.' },
   { q: 'I found a mistake. What do I do?', a: 'Use “Report a problem” under the question. It goes straight to the officers, and we fix it.' },
@@ -381,6 +381,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
           </div>
           <p class="fail" data-fail hidden>Couldn’t load the list just now. Everything that’s live is in the app.</p>
         </div>
+        <p class="later"><span>Later</span>Checks for Physics and Math and for Psych/Soc will come after these four.</p>
       </div>
     </section>
 
@@ -2103,6 +2104,26 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
   .fail {
     padding: 1.2rem 0;
     color: var(--on-dim);
+  }
+  .later {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.9rem;
+    margin-top: 2rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line);
+    color: var(--on-dim);
+  }
+  .later span {
+    padding: 0.15em 0.7em;
+    border: 1.5px solid var(--on);
+    border-radius: 99px;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--on);
   }
 
   /* ── Install ───────────────────────────────────────────────── */
