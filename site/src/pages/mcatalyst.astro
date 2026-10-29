@@ -75,6 +75,12 @@ const faq = [
   { q: 'I found a mistake. What do I do?', a: 'Use “Report a problem” under the question. It goes straight to the officers, and we fix it.' },
 ];
 
+// When you find out a chapter didn't stick: 12 chapters across content review (the first half of
+// the line), one of them weak. Positions are percentages of the line.
+const ticks = Array.from({ length: 12 }, (_, i) => 3 + i * 4);
+const WEAK = 1;     // a chapter from the first month
+const LATE = 62;    // a practice passage, about three months on
+
 const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
 ---
 <Base title="MCatalyst" description="MCatalyst: free chapter checks for the MCAT, from The M-CATS at the University of Kentucky.">
@@ -167,7 +173,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
           </p>
           <p>
             The trouble is the space between them. Reading a chapter feels like learning it, but nothing checks whether
-            it stuck. The first real test comes weeks later, in a passage built to see whether you can <em>apply</em> the
+            it stuck. The first real test comes months later, in a passage built to see whether you can <em>apply</em> the
             content. Miss that question and it’s hard to tell what went wrong: the fact, or the reasoning.
           </p>
           <p>
@@ -191,10 +197,51 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
       </div>
     </section>
 
+    <!-- ── When you find out ───────────────────────────────────── -->
+    <section class="slab when">
+      <div class="wrap">
+        <p class="kick"><span>02</span>When you find out</p>
+        <h2 class="shout" data-reveal>Most people find out <span class="it">months</span> later</h2>
+        <p class="when-lede" data-reveal>
+          A chapter you read early in content review feels fine at the time. Months later, a practice passage on it
+          goes badly, and that’s the first sign it never stuck. Now you’re going back to it in the middle of exam prep,
+          with every other subject still waiting. A check moves that moment to the week you read the chapter.
+        </p>
+
+        <figure class="wf" data-reveal aria-label="When you find out a chapter didn’t stick: about three months later without a check, the same week with one">
+          <div class="wf-phase" aria-hidden="true"><span>Content review</span><span>Practice<span class="wf-x"> · UWorld, Jack Westin, full-lengths</span></span></div>
+
+          <div class="wf-track wf-usual" style="--t0:0.2s">
+            <p class="wf-name">Usually</p>
+            <div class="wf-line" aria-hidden="true">
+              <i class="wf-draw"></i>
+              {ticks.map((x, i) => <i class:list={['wf-tick', { weak: i === WEAK }]} style={`--x:${x}`}></i>)}
+              <i class="wf-back" style={`--from:${ticks[WEAK]};--to:${LATE}`}></i>
+              <i class="wf-arrow" style={`--x:${ticks[WEAK]}`}></i>
+              <i class="wf-miss" style={`--x:${LATE}`}><b>Found out</b></i>
+            </div>
+            <p class="wf-say"><b>About three months later.</b> A practice passage goes badly, and you go back to a chapter from your first month.</p>
+          </div>
+
+          <div class="wf-track wf-check" style="--t0:0.9s">
+            <p class="wf-name">With MCatalyst</p>
+            <div class="wf-line" aria-hidden="true">
+              <i class="wf-draw"></i>
+              {ticks.map((x, i) => <i class:list={['wf-tick', { weak: i === WEAK }]} style={`--x:${x}`}></i>)}
+              {ticks.map((x, i) => <i class:list={['wf-ok', { shaky: i === WEAK }]} style={`--x:${x + 1.8}`}>{i === WEAK && <b>Found out</b>}</i>)}
+            </div>
+            <p class="wf-say"><b>The same week.</b> The chapter’s check comes back shaky, and you re‑read one section while it’s still fresh.</p>
+          </div>
+
+          <div class="wf-axis" aria-hidden="true">{[1, 2, 3, 4, 5, 6].map((m) => <span><span class="wf-mo">Month </span>{m}</span>)}</div>
+        </figure>
+      </div>
+    </section>
+
     <!-- ── How it works ─────────────────────────────────────────── -->
     <section class="slab how" data-how>
       <div class="wrap">
-        <p class="kick"><span>02</span>How it works</p>
+        <p class="kick"><span>03</span>How it works</p>
         <h2 class="shout" data-reveal>A check for<br />every chapter</h2>
         <div class="how-grid">
           <ol class="steps">
@@ -257,7 +304,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
     <!-- ── Features ─────────────────────────────────────────────── -->
     <section class="slab inside">
       <div class="wrap">
-        <p class="kick"><span>03</span>Features</p>
+        <p class="kick"><span>04</span>Features</p>
         <h2 class="shout" data-reveal>What’s inside</h2>
         <ul class="bento" data-bento>
           <li class="card c-map" data-reveal>
@@ -331,7 +378,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
     <!-- ── How the questions are made ───────────────────────────── -->
     <section class="slab made">
       <div class="wrap">
-        <p class="kick"><span>04</span>How the questions are made</p>
+        <p class="kick"><span>05</span>How the questions are made</p>
         <h2 class="made-h" data-reveal>
           <span class="made-ai">Drafted with AI.</span>
           <span class="made-people">Checked by people.</span>
@@ -354,7 +401,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
     <!-- ── What's live ──────────────────────────────────────────── -->
     <section class="slab paper live" id="live">
       <div class="wrap">
-        <p class="kick"><span>05</span>What’s live<span class="kick-r" data-updated></span></p>
+        <p class="kick"><span>06</span>What’s live<span class="kick-r" data-updated></span></p>
         <div class="live-top">
           <h2 class="shout" data-reveal>Always<br />growing</h2>
           <p class="live-lede" data-reveal>
@@ -388,7 +435,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
     <!-- ── Install ──────────────────────────────────────────────── -->
     <section class="slab install" id="install">
       <div class="wrap">
-        <p class="kick"><span>06</span>Install<span class="kick-r">About two minutes</span></p>
+        <p class="kick"><span>07</span>Install<span class="kick-r">About two minutes</span></p>
         <div class="os-grid" data-os-grid>
           <article class="os" data-os-card="mac" data-reveal>
             <p class="os-tag">Your computer</p>
@@ -431,7 +478,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
     <section class="slab small">
       <div class="wrap small-grid">
         <div>
-          <p class="kick"><span>07</span>Your data</p>
+          <p class="kick"><span>08</span>Your data</p>
           <ul class="data">
             <li><b>No account</b><span>Your progress stays on your computer.</span></li>
             <li><b>Anonymous usage data</b><span>When you open MCatalyst, which checks you start and finish, and whether each answer was right. It never sends what you type, your name or your email. It helps us a lot, and you can turn it off anytime in About.</span></li>
@@ -439,7 +486,7 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
           </ul>
         </div>
         <div>
-          <p class="kick"><span>08</span>Questions</p>
+          <p class="kick"><span>09</span>Questions</p>
           <div class="faq">
             {faq.map((f) => (
               <details>
@@ -1206,6 +1253,213 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
   }
   .rail.drop li.ours .r-card {
     transition: transform 0.9s cubic-bezier(0.3, 1.5, 0.5, 1), opacity 0.4s;
+  }
+
+  /* ── When you find out ─────────────────────────────────────── */
+  /* Two tracks over the same six months. Each line draws itself left to right, and what sits on
+     it shows up as the line reaches it: the late miss and the arrow back on the first, a check
+     after every chapter on the second. */
+  .when {
+    background:
+      radial-gradient(45% 60% at 85% 20%, rgba(224, 122, 168, 0.1), transparent 70%),
+      var(--ink-2);
+  }
+  .when .shout {
+    max-width: 16ch;
+  }
+  .when-lede {
+    max-width: 58ch;
+    margin-top: clamp(1.5rem, 3vw, 2.2rem);
+    color: var(--on-dim);
+    font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+  }
+  .wf {
+    --dur: 1.8s;
+    position: relative;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  /* where content review ends and practice starts */
+  .wf::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 1.9rem;
+    bottom: 1.8rem;
+    border-left: 1px dashed var(--on-faint);
+  }
+  .wf-phase,
+  .wf-axis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--on-faint);
+  }
+  .wf-phase > span:last-child {
+    padding-left: 1rem;
+  }
+  .wf-axis {
+    grid-template-columns: repeat(6, 1fr);
+    margin-top: 0.8rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--line);
+  }
+  .wf-track {
+    margin-top: 1.8rem;
+  }
+  .wf-name {
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-stretch: 115%;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+  }
+  .wf-check .wf-name {
+    background: var(--arc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    justify-self: start;
+    width: fit-content;
+  }
+  .wf-line {
+    position: relative;
+    height: 74px;
+  }
+  .wf-line::before,
+  .wf-draw {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 48px;
+    height: 2px;
+    background: var(--line);
+  }
+  .wf-draw {
+    background: var(--on-dim);
+    transform-origin: left;
+    transition: transform var(--dur) cubic-bezier(0.45, 0, 0.55, 1) var(--t0);
+  }
+  .wf-check .wf-draw {
+    background: var(--arc);
+  }
+  .wf-tick,
+  .wf-ok,
+  .wf-miss,
+  .wf-arrow {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    /* each mark appears as the line reaches it */
+    transition: opacity 0.4s, transform 0.6s cubic-bezier(0.3, 1.6, 0.5, 1);
+    transition-delay: calc(var(--t0) + var(--x) * var(--dur) / 100);
+  }
+  .wf-tick {
+    top: 38px;
+    width: 2px;
+    height: 22px;
+    margin-left: -1px;
+    background: var(--on-dim);
+  }
+  .wf-tick.weak {
+    background: var(--bad);
+  }
+  .wf-check .wf-tick.weak {
+    background: var(--on-dim);
+  }
+  .wf-ok {
+    top: 42px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border-radius: 50%;
+    background: var(--good);
+  }
+  .wf-ok.shaky {
+    background: var(--gold);
+    box-shadow: 0 0 0 5px rgba(230, 201, 143, 0.22);
+  }
+  .wf-miss {
+    top: 37px;
+    width: 24px;
+    height: 24px;
+    margin-left: -12px;
+    border-radius: 50%;
+    background: var(--bad);
+    box-shadow: 0 0 0 6px rgba(255, 154, 148, 0.2);
+  }
+  .wf-miss b,
+  .wf-ok b {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    translate: -50% 0;
+    font-family: var(--mono);
+    font-weight: 400;
+    font-style: normal;
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--bad);
+  }
+  .wf-ok b {
+    color: var(--gold);
+  }
+  .wf-miss b {
+    left: calc(100% + 4px);
+    bottom: calc(100% - 2px);
+    translate: 0 0;
+  }
+  /* the long way back: an arch from the miss to the chapter it came from, revealed right to left */
+  .wf-back {
+    position: absolute;
+    left: calc(var(--from) * 1%);
+    width: calc((var(--to) - var(--from)) * 1%);
+    top: 4px;
+    height: 26px;
+    border: 2px solid var(--bad);
+    border-bottom: 0;
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 1.1s var(--ease) calc(var(--t0) + var(--to) * var(--dur) / 100 + 0.35s);
+  }
+  .wf-arrow {
+    top: 29px;
+    margin-left: -6px;
+    border: 6px solid transparent;
+    border-top: 8px solid var(--bad);
+    border-bottom: 0;
+    transition-delay: calc(var(--t0) + 62 * var(--dur) / 100 + 1.35s);
+  }
+  .wf-say {
+    max-width: calc(50% - 2rem);  /* stays in the content-review half, clear of the divider */
+    margin-top: 0.2rem;
+    color: var(--on-dim);
+    font-size: 1.02rem;
+  }
+  .wf-say b {
+    color: var(--on);
+    font-weight: 650;
+  }
+  .wf:not(.in) .wf-draw {
+    transform: scaleX(0);
+    transition-delay: 0s;
+  }
+  .wf:not(.in) :is(.wf-tick, .wf-arrow) {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+  .wf:not(.in) :is(.wf-ok, .wf-miss) {
+    opacity: 0;
+    transform: scale(0.2);
+    transition-delay: 0s;
+  }
+  .wf:not(.in) .wf-back {
+    clip-path: inset(0 0 0 100%);
+    transition-delay: 0s;
   }
 
   /* ── How it works ──────────────────────────────────────────── */
@@ -2438,6 +2692,26 @@ const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
     }
   }
   @media (max-width: 680px) {
+    .wf-x,
+    .wf-axis span:not(:first-child) .wf-mo {
+      display: none;
+    }
+    .wf-ok {
+      width: 10px;
+      height: 10px;
+      margin-left: -5px;
+      top: 44px;
+    }
+    .wf-axis {
+      font-size: 0.56rem;
+      letter-spacing: 0.06em;
+    }
+    .wf-say {
+      position: relative;
+      z-index: 1;
+      max-width: none;
+      background: var(--ink-2);
+    }
     .hero-foot {
       grid-template-columns: 1fr;
     }
