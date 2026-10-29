@@ -30,6 +30,9 @@ import Logo from './Logo.astro';
 import { leadership } from '../data/team';
 import { links } from '../data/join';
 import { scholarship } from '../data/scholarship';
+// The MCatalyst slide wears the app's own look, like themcats.org/mcatalyst.
+import '@fontsource-variable/anybody/wdth.css';
+import '@fontsource-variable/mona-sans/wght.css';
 // Baked by scripts/bake-space.mjs: live blurs this size stutter in some browsers.
 import nebulaImg from '../assets/present/nebula.webp';
 import horizonImg from '../assets/present/horizon.webp';
@@ -102,69 +105,6 @@ const span = (t: { date: string; end?: string }) => {
 // Cover slides from this semester's classes: src/assets/present/classes/*.jpg
 const covers = Object.values(import.meta.glob<{ default: ImageMetadata }>('../assets/present/classes/*.jpg', { eager: true })).map((m) => m.default);
 
-import figure from '../assets/present/mcatalyst/figure.svg';
-import figure2 from '../assets/present/mcatalyst/figure2.svg';
-// Passage bb-0007 and its first question, from the MCatalyst bank.
-import passageFig from '../assets/present/mcatalyst/passage.svg';
-// Every chapter-check connection in the bank, as [column, chapter, column, chapter]
-// (from catalyst/content/checks/connections; physics has no column here).
-import cmPairs from '../assets/present/mcatalyst/connections.json';
-// The concept web on the chapter-check slide, around PFK-1 at (380, 200).
-const nodes4 = [
-  { x: 110, y: 60, t: 'Enzyme kinetics', ch: 'Biochem 2' },
-  { x: 650, y: 50, t: 'Glycolysis', ch: 'Biochem 9' },
-  { x: 100, y: 340, t: 'Allosteric control', ch: 'Biochem 2' },
-  { x: 640, y: 350, t: 'Insulin & glucagon', ch: 'Biochem 12' },
-];
-const links4 = nodes4.map((n) => [n.x, n.y]);
-
-// The chapter map on the checks slide, drawn like the app: one chapter and what it connects to.
-const cmCols = [
-  { name: 'Biology', color: '#9cc3f0', x: 130, ch: ['The Cell', 'Reproduction', 'Embryogenesis and Development', 'The Nervous System', 'The Endocrine System', 'The Respiratory System', 'The Cardiovascular System', 'The Immune System', 'The Digestive System', 'Homeostasis', 'The Musculoskeletal System', 'Genetics and Evolution'] },
-  { name: 'Biochemistry', color: '#9cc3f0', x: 580, ch: ['Amino Acids, Peptides, and Proteins', 'Enzymes', 'Nonenzymatic Protein Function', 'Carbohydrate Structure and Function', 'Lipid Structure and Function', 'DNA and Biotechnology', 'RNA and the Genetic Code', 'Biological Membranes', 'Carbohydrate Metabolism I', 'Carbohydrate Metabolism II', 'Lipid and Amino Acid Metabolism', 'Bioenergetics and Regulation of Metabolism'] },
-  { name: 'General Chemistry', color: '#eba4bd', x: 1030, ch: ['Atomic Structure', 'The Periodic Table', 'Bonding and Chemical Interactions', 'Compounds and Stoichiometry', 'Chemical Kinetics', 'Equilibrium', 'Thermochemistry', 'The Gas Phase', 'Solutions', 'Acids and Bases', 'Oxidation–Reduction Reactions', 'Electrochemistry'] },
-  { name: 'Organic Chemistry', color: '#eba4bd', x: 1480, ch: ['Nomenclature', 'Isomers', 'Bonding', 'Analyzing Organic Reactions', 'Alcohols', 'Aldehydes and Ketones I', 'Aldehydes and Ketones II', 'Carboxylic Acids', 'Carboxylic Acid Derivatives', 'Nitrogen- and Phosphorus-Containing Compounds', 'Spectroscopy', 'Separations and Purifications'] },
-];
-const cmY = (r: number) => 410 + r * 48;
-// What Carbohydrate Metabolism I connects to, as [column, chapter index].
-const cmHits = (cmPairs as number[][]).flatMap(([c1, r1, c2, r2]) =>
-  c1 === 1 && r1 === 8 ? [[c2, r2]] : c2 === 1 && r2 === 8 ? [[c1, r1]] : [],
-) as [number, number][];
-const [hx, hy] = [cmCols[1].x + 40, cmY(8)];
-const cmLinks = cmHits.map(([c, r]) => {
-  const [tx, ty] = [cmCols[c].x + 40, cmY(r)];
-  const k = c === 1 ? -150 : (tx - hx) / 2;
-  return `M ${hx} ${hy} C ${hx + k} ${hy}, ${tx - (c === 1 ? -k : k)} ${ty}, ${tx} ${ty}`;
-});
-// Step 2: every connection at once, rippling out from the hub.
-const cmDist = (c: number, r: number) => Math.abs(c - 1) * 3 + Math.abs(r - 8);
-const cmCurve = (c1: number, r1: number, c2: number, r2: number) => {
-  const [x1, y1, x2, y2] = [cmCols[c1].x + 40, cmY(r1), cmCols[c2].x + 40, cmY(r2)];
-  const k = c1 === c2 ? -60 - Math.abs(r2 - r1) * 12 : (x2 - x1) / 2;
-  return c1 === c2
-    ? `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x2 + k} ${y2}, ${x2} ${y2}`
-    : `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x2 - k} ${y2}, ${x2} ${y2}`;
-};
-const cmWeb = (cmPairs as number[][]).map(([c1, r1, c2, r2], i) => ({
-  d: cmCurve(c1, r1, c2, r2),
-  color: cmCols[c1].color,
-  delay: Math.min(cmDist(c1, r1), cmDist(c2, r2)) * 70 + (i % 9) * 30,
-}));
-const cmRows = cmCols.flatMap((c, ci) =>
-  c.ch.map((name, r) => {
-    const hit = cmHits.findIndex(([hc, hr]) => hc === ci && hr === r);
-    return { name, n: r + 1, x: c.x, y: cmY(r), color: c.color, hub: ci === 1 && r === 8, hit, j: cmDist(ci, r) };
-  }),
-);
-
-// The sample question on the chapter-check slide.
-const sample = {
-  stem: 'Which enzyme catalyzes the committed step of glycolysis?',
-  choices: ['Hexokinase', 'Phosphofructokinase-1', 'Pyruvate kinase', 'Aldolase'],
-  answer: 1,
-  why: 'Once PFK-1 makes fructose-1,6-bisphosphate, the glucose has nowhere to go but down glycolysis. That is also why it is the pathway’s main control point.',
-};
-
 // ── Space theme ──────────────────────────────────────────────
 // A tilted ellipse as an SVG path, starting at its right end. Positive rot = clockwise.
 const ellipse = (cx: number, cy: number, rx: number, ry: number, rot: number) => {
@@ -203,13 +143,18 @@ const oSat = [
 const oMiniSat = (dur: string) =>
   `--x:50%;--y:50%;--rx:${((oGeo.mini.a / oGeo.mini.w) * 100).toFixed(3)}cqw;--k:${(oGeo.mini.b / oGeo.mini.a).toFixed(4)};--dur:${dur}`;
 
+// The MCatalyst slide: the app icon's energy diagram, opened out, and the ticker band.
+const mcxSpark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
+const mcxTicker = ['Check every chapter', 'Free', 'No account', 'Every question approved by an officer', 'Made by The M-CATS'];
+
 const money = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
 // The same ledger near the end, crossed off line by line.
-const rcLeft = total - costs[0].amount - costs[2].amount - costs[3].amount;
+// What's left for a scholarship winner. UWorld keeps its price: members get a discount, not a replacement.
+const rcLeft = total - costs[0].amount - costs[3].amount;
 const recap = [
-  { label: costs[0].label, was: money(costs[0].amount), now: 'covered by our scholarship', accent: 'rose', step: 1, zero: true },
+  { label: costs[0].label, was: money(costs[0].amount), now: `our scholarship · ${awards} a year`, accent: 'rose', step: 1, zero: true },
   { label: costs[1].label, was: money(costs[1].amount), now: 'most people buy less', accent: 'violet', step: 5, keep: true },
-  { label: costs[2].label, was: money(costs[2].amount), now: 'MCatalyst instead', accent: 'violet', step: 2, zero: true },
+  { label: costs[2].label, was: money(costs[2].amount), now: 'member discount', accent: 'violet', step: 2, keep: true },
   { label: costs[3].label, was: money(costs[3].amount), now: 'we teach all of it', accent: 'gold', step: 4, zero: true },
   { label: 'Tutoring', was: '∞', now: 'free with our officers', accent: 'gold', step: 3, zero: true },
 ];
@@ -556,133 +501,43 @@ const recap = [
         <p class="sch-apply mono fx fx-fade" data-step="2" style="--i:14">→ themcats.org/scholarship</p>
       </section>
 
-      <!-- ── 11 · MCatalyst ──────────────────────────────────── -->
-      <section class="slide s-mci" aria-label="MCatalyst" data-mark="gone" data-cat="gone" data-neb="center" data-sys="gone" data-sun="gone" data-hz="down">
-        <div class="mci-logo" aria-hidden="true">
-          <svg viewBox="0 0 100 100">
-            <defs><linearGradient id="mci-arc" x1="0" x2="1"><stop offset="0" stop-color="#9f93ff" /><stop offset=".55" stop-color="#f09ac0" /><stop offset="1" stop-color="#f6d39c" /></linearGradient></defs>
-            <path class="mci-dots" d="M12,64 H22 C33,64 39,16 50,16 C61,16 67,76 78,76 H88" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 6.2" />
-            <path class="mci-arc" pathLength="1" d="M12,64 H22 C33,64 40,42 50,42 C60,42 67,76 78,76 H88" fill="none" stroke="url(#mci-arc)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" />
-            <path class="mci-spark" d="M50,32.5 Q50,42 59.5,42 Q50,42 50,51.5 Q50,42 40.5,42 Q50,42 50,32.5Z" fill="#fff" />
+      <!-- ── 11 · MCatalyst, in the app's own look (as on themcats.org/mcatalyst) ── -->
+      <section class="slide s-mcx" aria-label="MCatalyst" data-mark="gone" data-cat="gone" data-neb="gone" data-sys="gone" data-sun="gone" data-hz="down">
+        <div class="mcx-bg" aria-hidden="true"></div>
+        <p class="mcx-tag fx-in">A free app from The M-CATS</p>
+        <h2 class="mcx-name">MCatalyst</h2>
+        <div class="mcx-barrier" aria-hidden="true">
+          <svg viewBox="0 0 1200 280">
+            <defs>
+              <linearGradient id="mcx-arc" x1="0" x2="1"><stop offset="0" stop-color="#9f93ff" /><stop offset=".55" stop-color="#f09ac0" /><stop offset="1" stop-color="#f6d39c" /></linearGradient>
+            </defs>
+            <path class="mcx-high" d="M0,190 H250 C420,190 470,24 600,24 C730,24 790,236 950,236 H1200" />
+            <path class="mcx-low" id="mcx-low" pathLength="1" d="M0,190 H250 C420,190 485,122 600,122 C715,122 790,236 950,236 H1200" />
+            <g class="mcx-dot">
+              <circle r="16" class="mcx-glow" /><circle r="6.5" />
+              <animateMotion dur="5.5s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".45 0 .55 1"><mpath href="#mcx-low" /></animateMotion>
+              <animate attributeName="opacity" dur="5.5s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;.1;.88;1" />
+            </g>
+            <g transform="translate(600 122)"><g class="mcx-pop"><path class="mcx-spark" d={mcxSpark} /></g></g>
           </svg>
+          <span class="mcx-lab mcx-learn fx-in" style="--i:16"><i>01</i> Learn</span>
+          <span class="mcx-lab mcx-check fx-in" style="--i:18"><i>02</i> Check</span>
+          <span class="mcx-lab mcx-apply fx-in" style="--i:20"><i>03</i> Apply</span>
+          <span class="mcx-lab mcx-without fx-in" style="--i:14">Without a check</span>
         </div>
-        <i class="mci-go" data-step="1" aria-hidden="true"></i>
-        <h2 class="mci-name display" data-step="2">{[...'MCatalyst'].map((c, i) => <span style={`--i:${i}`}>{c}</span>)}</h2>
-        <p class="mci-tag italic fx fx-rise" data-step="2" style="--i:16">The M-CATS question bank.</p>
-        <p class="mci-big italic fx fx-rise" data-step="2" style="--i:22">Practice questions, chapter checks and reference figures, in one app. <span class="mci-free">Free.</span></p>
-      </section>
-
-      <!-- ── 12 · Chapter map ──────────────────────────────── -->
-      <section class="slide s-cm" aria-label="The chapter map" data-mark="gone" data-cat="gone" data-neb="corner" data-sys="gone" data-sun="gone" data-hz="down">
-        <p class="label what-full team-label" data-n="12">MCatalyst</p>
-        <h2 class="team-h display ca">Chapter checks</h2>
-        <p class="cm-sub italic fx-in" style="--i:2">A check for every chapter, and every check knows what it connects to.</p>
-        <div class="cm" data-step="1">
-          <svg viewBox="0 0 1920 1080" aria-hidden="true">
-            {cmCols.map((c) => <line class="cm-rail" x1={c.x + 40} x2={c.x + 40} y1={cmY(0)} y2={cmY(11)} style={`--c:${c.color}`} />)}
-            <g class="cm-web">{cmWeb.map((w) => <path d={w.d} pathLength="1" style={`--c:${w.color};--d:${w.delay}ms`} />)}</g>
-            {cmLinks.map((d, i) => (
-              <Fragment>
-                <mask id={`cm-m${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080"><path class="cm-draw" d={d} pathLength="1" style={`--i:${i}`} /></mask>
-                <path class="cm-link" d={d} mask={`url(#cm-m${i})`} />
-              </Fragment>
+        <p class="mcx-line fx-in" style="--i:24">Our free app. After each chapter we teach, a short check shows you what <em>actually</em> stuck.</p>
+        <div class="mcx-ticker" aria-hidden="true">
+          <div class="mcx-run">
+            {[0, 1].map(() => (
+              <span class="mcx-set">{mcxTicker.map((t) => <span class="mcx-item">{t}<svg viewBox="-10 -10 20 20"><path d={mcxSpark} /></svg></span>)}</span>
             ))}
-          </svg>
-          {cmCols.map((c) => <p class="cm-head mono" style={`left:${c.x + 67}px;--c:${c.color}`}>{c.name}</p>)}
-          <ol>
-            {cmRows.map((r) => (
-              <li class={`cm-row${r.hub ? ' hub' : ''}${r.hit >= 0 ? ' hit' : ''}`} style={`left:${r.x}px;top:${r.y}px;--c:${r.color};--i:${Math.max(r.hit, 0)};--j:${r.j}`}>
-                <span class="mono">{r.n}</span><i></i><b>{r.name}</b>
-              </li>
-            ))}
-          </ol>
-          <i class="cm-all" data-step="2" aria-hidden="true"></i>
-          <p class="cm-count" data-step="2"><span class="display" data-count={cmWeb.length} data-format="n">{cmWeb.length}</span><span class="mono">connections so far, across four subjects</span></p>
-        </div>
-      </section>
-
-      <!-- ── 13 · Chapter checks ─────────────────────────────── -->
-      <section class="slide s-mc" aria-label="Inside a check" data-mark="gone" data-cat="gone" data-neb="corner" data-sys="gone" data-sun="gone" data-hz="down">
-        <p class="label what-full team-label" data-n="13">MCatalyst</p>
-        <h2 class="team-h display ca">Inside a check</h2>
-        <p class="mc-sub italic fx-in" style="--i:2">Every answer comes with the why, and the reference chart it draws on.</p>
-        <div class="mc-card fx fx-blur" data-step="1">
-          <p class="mc-meta mono"><span>Biochem · Ch. 9</span><span>Check · 3 / 10</span></p>
-          <p class="mc-stem">{sample.stem}</p>
-          <ol class="mc-choices">
-            {sample.choices.map((c, i) => (
-              <li class={i === sample.answer ? 'right' : ''}><span class="mono">{'ABCD'[i]}</span>{c}</li>
-            ))}
-          </ol>
-          <p class="mc-why" data-step="2"><span class="mono">Why</span>{sample.why}</p>
-        </div>
-        <figure class="mc-fig fx fx-rise" data-step="2" style="--i:6">
-          <img src={figure.src} width="1188" height="1004" alt="Reference chart of how glycolysis is regulated" />
-          <figcaption class="mono">Reference · Glycolysis regulation</figcaption>
-        </figure>
-        <figure class="mc-fig mc-fig2 fx fx-rise" data-step="3" style="--i:2">
-          <div class="mc-pan"><img src={figure2.src} width="1188" height="1829" alt="Reference chart of the glycolysis pathway" /></div>
-          <figcaption class="mono">Reference · Glycolysis</figcaption>
-        </figure>
-      </section>
-
-      <!-- ── 14 · The Q-bank ─────────────────────────────────── -->
-      <section class="slide s-qb" aria-label="The Q-bank" data-mark="gone" data-cat="mark" data-neb="bottom" data-sys="gone" data-sun="gone" data-hz="down">
-        <p class="label what-full team-label" data-n="14">MCatalyst</p>
-        <h2 class="team-h display ca">A full Q-bank</h2>
-        <div class="qb-side qb-them fx fx-fade" data-step="1">
-          <p class="mono">UWorld · 90 days</p>
-          <p class="display qb-n">$339</p>
-        </div>
-        <div class="qb-side qb-us" data-step="2">
-          <p class="mono fx fx-fade">MCatalyst</p>
-          <p class="display ca qb-n fx fx-ca">$0</p>
-        </div>
-        <ol class="qb-feats" data-step="3">
-          <li class="fx fx-rise" style="--i:0" data-accent="rose"><b class="display">Every chapter</b>Questions for each Kaplan chapter we teach.</li>
-          <li class="fx fx-rise" style="--i:3" data-accent="violet"><b class="display">Every choice</b>Explained, right and wrong, in plain words.</li>
-          <li class="fx fx-rise" style="--i:6" data-accent="gold"><b class="display">Every figure</b>Drawn by us, linked from the questions.</li>
-        </ol>
-      </section>
-
-      <!-- ── 15 · Test mode ───────────────────────────────── -->
-      <section class="slide s-tm" aria-label="The Q-bank test screen" data-mark="gone" data-cat="gone" data-neb="bottom" data-sys="gone" data-sun="gone" data-hz="down">
-        <p class="label what-full team-label" data-n="15">MCatalyst</p>
-        <h2 class="team-h display ca">Practice like test day</h2>
-        <div class="tm intro-in" style="--i:0">
-          <div class="tm-top"><b>MCatalyst · Bio/Biochem Practice</b><span class="r"><span>Time Remaining: <span class="tm-time">41:2<b></b></span></span><span>1 of 59</span></span></div>
-          <div class="tm-bar"><span><u>H</u>ighlight</span><span><u>S</u>trikethrough</span><span class="flag"><u>F</u>lag for Review</span></div>
-          <div class="tm-body">
-            <div class="tm-pass">
-              <div class="tm-pass-in">
-                <h4>Passage 1 (Questions 1–4)</h4>
-                <p>CTx belongs to the AB₅ family of toxins: a single enzymatically active A subunit sits on a ring of five identical B subunits, each a small protein of about 11 kDa. Each B subunit can bind the sugar head group of <span class="tm-hl" data-step="1">the ganglioside GM1, a lipid built on ceramide</span> that is concentrated in cholesterol-rich, ordered regions (lipid rafts) of the plasma membrane, so one toxin can gather up to five GM1 molecules together. After binding, the toxin enters the cell by endocytosis and travels backward through the secretory pathway, from endosomes to the endoplasmic reticulum (ER). In the ER, the A subunit separates from the B ring, is unfolded by protein disulfide isomerase, and crosses the ER membrane into the cytosol, where it refolds.</p>
-                <p>In the cytosol, the A subunit ADP-ribosylates Gαs, the α subunit of the stimulatory G protein (Figure 1). Because the A subunit is an enzyme, each molecule that reaches the cytosol can modify many Gαs proteins. Modified Gαs keeps adenylyl cyclase active, and the resulting rise in cAMP opens CFTR, a chloride channel in the apical membrane, while inhibiting NHE3, an exchanger that normally absorbs Na⁺ from the lumen.</p>
-                <figure>
-                  <img src={passageFig.src} width="640" height="330" alt="Pathway diagram of cholera toxin entering an intestinal epithelial cell and raising cAMP" />
-                  <figcaption><b>Figure 1</b> Entry and action of cholera toxin in an intestinal epithelial cell</figcaption>
-                </figure>
-              </div>
-              <i class="tm-scroll" data-step="2"></i>
-            </div>
-            <div class="tm-q">
-              <h4>Question 1</h4>
-              <p>Based on the passage’s description of GM1, it is best classified as a:</p>
-              <ol class="tm-ch">
-                <li class="x" data-step="3"><span class="t">A. glycerophospholipid.</span></li>
-                <li class="ans" data-step="4"><span class="t">B. sphingolipid.</span></li>
-                <li class="x" data-step="3"><span class="t">C. steroid.</span></li>
-                <li class="x" data-step="3"><span class="t">D. triacylglycerol.</span></li>
-              </ol>
-            </div>
           </div>
-          <div class="tm-foot"><span class="l">MCatalyst</span><span>◂ <u>P</u>revious</span><span><u>N</u>avigation</span><span><u>N</u>ext ▸</span></div>
         </div>
       </section>
 
-      <!-- ── 16 · Cost recap ───────────────────────────────── -->
+      <!-- ── 12 · Cost recap ───────────────────────────────── -->
       <section class="slide s-cost s-rc" aria-label="What it costs with us" data-mark="header" data-cat="mark" data-neb="study" data-sys="gone" data-sun="gone" data-hz="down">
-        <p class="label what-full" data-n="16">What it costs, with us</p>
+        <p class="label what-full" data-n="12">What it costs, with us</p>
         <ol class="ledger">
           {recap.map((r, i) => (
             <li class={`row rc-row fx-in${r.keep ? ' rc-keep' : ''}`} style={`--i:${i * 2}`}>
@@ -693,7 +548,7 @@ const recap = [
             </li>
           ))}
           <li class="row row-total rc-total fx-in" style="--i:10">
-            <span class="r-label label">Total</span>
+            <span class="r-label label">Total<small class="rc-if">with the scholarship</small></span>
             <span class="r-dots" aria-hidden="true"></span>
             <span class="r-amt display ca"><span class="rc-old">~{money(total)}</span><span class="rc-left" data-step="5">~<span data-count={rcLeft}>{money(rcLeft)}</span></span></span>
           </li>
@@ -701,9 +556,9 @@ const recap = [
         <p class="punch italic fx fx-ca" data-step="6">Same exam. A lot less money.</p>
       </section>
 
-      <!-- ── 17 · Join ──────────────────────────────────────── -->
+      <!-- ── 13 · Join ──────────────────────────────────────── -->
       <section class="slide s-join" aria-label="Join us" data-mark="gone" data-cat="corner" data-neb="join" data-sys="join" data-sun="gone" data-hz="up">
-        <p class="label what-full team-label" data-n="17">Come find us</p>
+        <p class="label what-full team-label" data-n="13">Come find us</p>
         <h2 class="join-h display ca fx-in">Join us.</h2>
         <p class="join-site display ca fx-in" style="--i:3">themcats<span class="italic">.org</span></p>
         <p class="join-sub italic fx-in" style="--i:5">Every seminar, slide deck, Anki deck and handout, searchable.</p>
@@ -722,7 +577,7 @@ const recap = [
       <!-- ── Chrome ─────────────────────────────────────────── -->
       <div class="chrome mono" aria-hidden="true">
         <span>The M-CATS</span>
-        <span class="count"><span data-now>01</span> / <span data-total>17</span></span>
+        <span class="count"><span data-now>01</span> / <span data-total>13</span></span>
       </div>
       <div class="progress" aria-hidden="true"><span></span></div>
     </div>
@@ -915,18 +770,15 @@ const recap = [
   }
 
   /* The glows keep moving from slide to slide. */
-  .deck[data-slide='3'] .g1,
-  .deck[data-slide='13'] .g1 {
+  .deck[data-slide='3'] .g1 {
     transform: translate(-400px, 40px) scale(1.2);
     opacity: 0.5;
   }
-  .deck[data-slide='3'] .g2,
-  .deck[data-slide='13'] .g2 {
+  .deck[data-slide='3'] .g2 {
     transform: translate(-900px, 100px);
     opacity: 0.4;
   }
-  .deck[data-slide='3'] .g3,
-  .deck[data-slide='13'] .g3 {
+  .deck[data-slide='3'] .g3 {
     transform: translate(-200px, -100px) scale(1.2);
     opacity: 0.25;
   }
@@ -957,18 +809,15 @@ const recap = [
     transform: translate(-600px, 500px) scale(1.3);
     opacity: 0.2;
   }
-  .deck[data-slide='5'] .g1,
-  .deck[data-slide='11'] .g1 {
+  .deck[data-slide='5'] .g1 {
     transform: translate(-1150px, 380px) scale(0.9);
     opacity: 0.3;
   }
-  .deck[data-slide='5'] .g2,
-  .deck[data-slide='11'] .g2 {
+  .deck[data-slide='5'] .g2 {
     transform: translate(-500px, 420px) scale(0.9);
     opacity: 0.3;
   }
-  .deck[data-slide='5'] .g3,
-  .deck[data-slide='11'] .g3 {
+  .deck[data-slide='5'] .g3 {
     transform: translate(150px, 380px) scale(1.1);
     opacity: 0.28;
   }
@@ -1008,50 +857,44 @@ const recap = [
     transform: translate(-500px, -520px) scale(1.1);
     opacity: 0.2;
   }
-  .deck[data-slide='16'] .g1 {
+  .deck[data-slide='12'] .g1 {
     transform: translate(-200px, 120px) scale(1.3);
     opacity: 0.55;
   }
-  .deck[data-slide='16'] .g2 {
+  .deck[data-slide='12'] .g2 {
     transform: translate(60px, 120px) scale(1.2);
     opacity: 0.5;
   }
-  .deck[data-slide='16'] .g3 {
+  .deck[data-slide='12'] .g3 {
     transform: translate(-1000px, 300px) scale(1.2);
     opacity: 0.25;
   }
-  .deck[data-slide='1'] .g1,
-  .deck[data-slide='12'] .g1 {
+  .deck[data-slide='1'] .g1 {
     transform: translate(-1100px, 380px) scale(0.8);
     opacity: 0.3;
   }
-  .deck[data-slide='1'] .g2,
-  .deck[data-slide='12'] .g2 {
+  .deck[data-slide='1'] .g2 {
     transform: translate(260px, -360px);
     opacity: 0.35;
   }
-  .deck[data-slide='1'] .g3,
-  .deck[data-slide='12'] .g3 {
+  .deck[data-slide='1'] .g3 {
     transform: translate(-700px, -500px);
     opacity: 0.18;
   }
   .deck[data-slide='2'] .g1,
-  .deck[data-slide='15'] .g1,
-  .deck[data-slide='14'] .g1,
+  .deck[data-slide='11'] .g1,
   .deck[data-slide='7'] .g1 {
     transform: translate(100px, 300px) scale(1.15);
     opacity: 0.32;
   }
   .deck[data-slide='2'] .g2,
-  .deck[data-slide='15'] .g2,
-  .deck[data-slide='14'] .g2,
+  .deck[data-slide='11'] .g2,
   .deck[data-slide='7'] .g2 {
     transform: translate(-1300px, -380px) scale(0.9);
     opacity: 0.22;
   }
   .deck[data-slide='2'] .g3,
-  .deck[data-slide='15'] .g3,
-  .deck[data-slide='14'] .g3,
+  .deck[data-slide='11'] .g3,
   .deck[data-slide='7'] .g3 {
     transform: translate(200px, -500px);
     opacity: 0.2;
@@ -1956,173 +1799,7 @@ const recap = [
     color: var(--c);
   }
 
-  /* ── 7 · MCatalyst ───────────────────────────────────────── */
-  .mc-sub {
-    position: absolute;
-    left: 154px;
-    top: 340px;
-    font-size: 34px;
-    color: var(--fg-dim);
-  }
-  .mc-feats {
-    position: absolute;
-    left: 150px;
-    top: 460px;
-    width: 720px;
-    list-style: none;
-    display: grid;
-    gap: 40px;
-  }
-  .mc-feats li {
-    --c: var(--fg);
-    display: grid;
-    grid-template-columns: 64px 1fr;
-    font-size: 26px;
-    line-height: 1.35;
-    color: var(--fg-dim);
-  }
-  .mc-feats li > .mono {
-    grid-row: span 2;
-    padding-top: 14px;
-    font-size: 18px;
-    color: var(--c);
-  }
-  .mc-feats b {
-    font-size: 44px;
-    font-weight: 400;
-    line-height: 1.1;
-    color: var(--fg);
-  }
-  .mc-card {
-    position: absolute;
-    left: 1000px;
-    right: 150px;
-    top: 160px;
-    padding: 40px 44px;
-    border: 1px solid var(--rule-strong);
-    background: color-mix(in srgb, var(--bg-raise) 82%, transparent);
-    box-shadow: 0 40px 120px -40px color-mix(in srgb, var(--violet) 45%, transparent);
-  }
-  .mc-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 15px;
-    letter-spacing: 0.2em;
-    color: var(--muted);
-  }
-  .mc-stem {
-    margin: 22px 0 26px;
-    font-size: 30px;
-    line-height: 1.3;
-  }
-  .mc-choices {
-    list-style: none;
-    display: grid;
-    gap: 10px;
-  }
-  .mc-choices li {
-    padding: 12px 18px;
-    font-size: 24px;
-    border: 1px solid var(--faint);
-    transition: opacity 0.8s var(--ease), border-color 0.8s var(--ease), background 0.8s var(--ease), box-shadow 0.8s var(--ease);
-  }
-  .mc-choices li .mono {
-    margin-right: 18px;
-    font-size: 17px;
-    color: var(--muted);
-  }
-  .mc-card:has(.mc-why.shown) .mc-choices li:not(.right) {
-    opacity: 0.4;
-  }
-  .mc-card:has(.mc-why.shown) .right {
-    border-color: var(--violet);
-    background: color-mix(in srgb, var(--violet) 16%, transparent);
-    box-shadow: 0 0 40px -6px color-mix(in srgb, var(--violet) 55%, transparent);
-  }
-  .mc-why {
-    margin-top: 22px;
-    font-size: 21px;
-    line-height: 1.4;
-    color: var(--fg-dim);
-    transition: opacity 0.9s var(--ease) 0.25s, filter 0.9s var(--ease) 0.25s, transform 0.9s var(--ease) 0.25s;
-  }
-  .mc-why .mono {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 15px;
-    letter-spacing: 0.2em;
-    color: var(--violet);
-  }
-  .mc-why:not(.shown) {
-    opacity: 0;
-    filter: blur(8px);
-    transform: translateY(14px);
-    transition-delay: 0s;
-  }
-  .mc-check {
-    position: absolute;
-    left: 1000px;
-    right: 150px;
-    top: 830px;
-    font-size: 15px;
-    letter-spacing: 0.2em;
-    color: var(--muted);
-  }
-  .mc-dots {
-    list-style: none;
-    display: flex;
-    gap: 12px;
-    margin-top: 18px;
-  }
-  .mc-dots li {
-    flex: 1;
-    height: 12px;
-    border-radius: 6px;
-    background: var(--violet);
-    box-shadow: 0 0 18px -2px color-mix(in srgb, var(--violet) 70%, transparent);
-    transform-origin: left;
-    transition: transform 0.7s var(--ease), opacity 0.7s var(--ease);
-    transition-delay: calc(var(--i) * 70ms);
-  }
-  .mc-dots li[data-v='0'] {
-    background: transparent;
-    box-shadow: inset 0 0 0 1px var(--rose);
-  }
-  .mc-dots li[data-v='2'] {
-    background: var(--gold);
-    box-shadow: 0 0 18px -2px color-mix(in srgb, var(--gold) 70%, transparent);
-  }
-  .mc-check:not(.shown) .mc-dots li {
-    transform: scaleX(0);
-    opacity: 0;
-    transition-delay: 0s;
-  }
-
-  /* Intro: the mark draws itself, then tucks into the corner beside the name. */
-  .mci-logo { position: absolute; left: 710px; top: 190px; width: 500px; height: 500px; transition: transform 1.4s var(--ease); }
-  .mci-logo::before {
-    content: ''; position: absolute; inset: -30%;
-    background: radial-gradient(circle, color-mix(in srgb, #f09ac0 30%, transparent), color-mix(in srgb, #9f93ff 14%, transparent) 40%, transparent 68%);
-    transition: opacity 1.6s var(--ease) 0.8s;
-  }
-  .mci-logo svg { position: relative; width: 100%; height: 100%; overflow: visible; }
-  .mci-dots { stroke-opacity: 0.55; transition: stroke-opacity 1s var(--ease) 0.3s; }
-  .mci-arc { stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 1.8s var(--ease) 0.15s; }
-  .mci-spark {
-    transform-box: fill-box; transform-origin: center;
-    transition: transform 1s var(--ease) 1.4s, opacity 0.6s var(--ease) 1.4s;
-    animation: twinkle 3.2s ease-in-out 3.2s infinite;
-  }
-  .slide:not(.on) .mci-dots { stroke-opacity: 0; transition-delay: 0s; }
-  .s-mci:not(:has(.mci-go.shown)) .mci-arc { stroke-dashoffset: 1; transition-delay: 0s; }
-  .s-mci:not(:has(.mci-go.shown)) .mci-spark { transform: scale(0) rotate(-120deg); opacity: 0; transition-delay: 0s; }
-  .s-mci:not(:has(.mci-go.shown)) .mci-logo::before { opacity: 0; transition-delay: 0s; }
-  @keyframes twinkle {
-    0%, 100% { filter: drop-shadow(0 0 1px #fff); }
-    50% { filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #f09ac0); }
-  }
-  .s-mci:has(.mci-name.shown) .mci-logo { transform: translate(-760px, -200px) scale(0.3); }
-  .s-mci:has(.mci-name.shown) .mci-logo::before { opacity: 0.4; transition-delay: 0s; }
+  /* Intro names: letters that rise in at their step (the scholarship intro). */
   .mci-name { position: absolute; left: 360px; top: 150px; font-size: 150px; line-height: 1; }
   .mci-name span {
     display: inline-block;
@@ -2130,99 +1807,73 @@ const recap = [
     transition-delay: calc(0.55s + var(--i) * 60ms);
   }
   .mci-name:not(.shown) span { opacity: 0; transform: translateY(50px) rotate(4deg); filter: blur(14px); transition-delay: 0s; }
-  .mci-tag { position: absolute; left: 366px; top: 320px; font-size: 40px; color: var(--fg-dim); }
   .mci-big { position: absolute; left: 150px; top: 560px; width: 1500px; font-size: 76px; line-height: 1.15; }
-  .mci-free, .qb-us .qb-n {
+  .mci-free {
     background: var(--grad);
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
 
-  /* Chapter checks: the concept web, the question, the reference chart. */
-  .s-mc .team-h { font-size: 88px; }
-  .s-mc .mc-sub { top: 308px; width: 760px; font-size: 28px; line-height: 1.3; }
-  .mc-web { position: absolute; left: 150px; top: 470px; width: 760px; height: 400px; }
-  .mc-web svg { position: absolute; inset: 0; overflow: visible; }
-  .mc-web line {
-    stroke: var(--violet); stroke-width: 1.5; stroke-dasharray: 1; stroke-dashoffset: 0;
-    filter: drop-shadow(0 0 6px var(--violet));
-    transition: stroke-dashoffset 1.1s var(--ease); transition-delay: calc(0.35s + var(--i) * 160ms);
+  /* ── 11 · MCatalyst, in the app's own look (as on themcats.org/mcatalyst): its own ink
+     background over every theme, Anybody for the name, the icon's arc for colour. The name
+     opens out from narrow and thin, the diagram draws itself, then the line and the band. */
+  /* font-variation-settings: normal, or the orbit look's deck-wide axes would pin Anybody's width. */
+  .s-mcx { --ink: #0b0a14; --paper: #f4f0e6; --arc: linear-gradient(100deg, #9f93ff, #f09ac0 55%, #f6d39c); color: var(--paper); font-variation-settings: normal; }
+  .mcx-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(55% 50% at 50% 62%, rgb(125 108 245 / 0.2), transparent 70%),
+      radial-gradient(35% 40% at 88% 92%, rgb(224 122 168 / 0.14), transparent 70%),
+      var(--ink);
   }
-  .mc-web:not(.shown) line { stroke-dashoffset: 1; transition-delay: 0s; }
-  .mc-node {
-    position: absolute; translate: -50% -50%; padding: 12px 20px;
-    font-size: 24px; white-space: nowrap; text-align: center;
-    border: 1px solid var(--rule-strong); background: var(--bg-raise);
-    transition: opacity 0.8s var(--ease), transform 0.8s var(--ease), filter 0.8s var(--ease);
-    transition-delay: calc(var(--i) * 160ms);
+  .mcx-tag { position: absolute; left: 150px; top: 112px; font-family: var(--mono); font-size: 20px; letter-spacing: 0.18em; text-transform: uppercase; color: rgb(244 240 230 / 0.68); }
+  .mcx-name {
+    position: absolute; left: 0; right: 0; top: 168px; margin: 0; text-align: center;
+    font-family: 'Anybody Variable', 'Arial Black', sans-serif; font-weight: 900; font-stretch: 150%;
+    font-size: 158px; line-height: 0.8; letter-spacing: -0.01em; text-transform: uppercase; white-space: nowrap;
+    transition: font-stretch 1.6s var(--ease) 0.35s, font-weight 1.6s var(--ease) 0.35s, letter-spacing 1.6s var(--ease) 0.35s, opacity 0.8s var(--ease) 0.35s;
   }
-  .mc-node small { display: block; margin-top: 4px; font-size: 13px; letter-spacing: 0.15em; color: var(--muted); }
-  .mc-node.hub { font-size: 34px; border-color: var(--rose); box-shadow: 0 0 50px -8px var(--rose); }
-  .mc-web:not(.shown) .mc-node { opacity: 0; transform: scale(0.8); filter: blur(8px); transition-delay: 0s; }
-  .s-mc .mc-card { left: 1000px; right: 420px; top: 150px; padding: 34px 36px; }
-  .s-mc .mc-stem { font-size: 27px; }
-  .s-mc .mc-choices li { font-size: 21px; padding: 10px 16px; }
-  .s-mc .mc-why { font-size: 19px; }
-  .mc-fig { position: absolute; left: 1380px; top: 470px; width: 440px; rotate: 2deg; }
-  .mc-fig img { display: block; width: 100%; height: auto; padding: 14px; background: #f4f1ea; box-shadow: 0 40px 90px -20px rgb(0 0 0 / 0.75); }
-  .mc-fig figcaption { margin-top: 12px; font-size: 14px; letter-spacing: 0.15em; color: var(--muted); }
-
-  /* The Q-bank: what it costs elsewhere, and here. */
-  .qb-side { position: absolute; top: 400px; }
-  .qb-side .mono { font-size: 20px; letter-spacing: 0.2em; color: var(--muted); }
-  .qb-them { left: 150px; transition: opacity 0.9s var(--ease); }
-  .qb-us { left: 900px; }
-  .qb-n { font-size: 230px; line-height: 1; }
-  .qb-them .qb-n { position: relative; color: var(--fg-dim); }
-  .qb-them .qb-n::after {
-    content: ''; position: absolute; left: -2%; right: -2%; top: 52%; height: 6px;
-    background: var(--rose); box-shadow: 0 0 24px var(--rose);
-    transform-origin: left; transition: transform 0.9s var(--ease) 0.5s;
+  .slide:not(.on) .mcx-name { font-stretch: 50%; font-weight: 200; letter-spacing: 0.2em; opacity: 0; transition-delay: 0s; }
+  .mcx-barrier { position: absolute; left: 260px; width: 1400px; top: 330px; }
+  .mcx-barrier svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .mcx-high { fill: none; stroke: rgb(244 240 230 / 0.42); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 0.1 14; transition: opacity 1s var(--ease) 0.9s; }
+  .mcx-low { fill: none; stroke: url(#mcx-arc); stroke-width: 11; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 1.7s var(--ease) 1.1s; }
+  .mcx-dot { fill: var(--paper); }
+  .mcx-glow { fill: rgb(244 240 230 / 0.16); }
+  .mcx-pop { transform-box: fill-box; transform-origin: center; transition: transform 0.9s var(--ease) 2.4s; }
+  .mcx-spark { fill: var(--paper); transform: scale(2.6); transform-box: fill-box; transform-origin: center; animation: mcx-twinkle 4s ease-in-out infinite; }
+  @keyframes mcx-twinkle { 50% { transform: scale(2) rotate(45deg); } }
+  .slide:not(.on) .mcx-high { opacity: 0; transition-delay: 0s; }
+  .slide:not(.on) .mcx-low { stroke-dashoffset: 1; transition: none; }
+  .slide:not(.on) .mcx-pop { transform: scale(0) rotate(-90deg); transition-delay: 0s; }
+  .mcx-lab { position: absolute; font-family: var(--mono); font-size: 19px; letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; color: rgb(244 240 230 / 0.68); }
+  .mcx-lab i { margin-right: 0.35em; font-style: normal; color: rgb(244 240 230 / 0.42); }
+  .mcx-learn { left: 0; top: 55%; }
+  .mcx-apply { right: 0; top: 71%; }
+  .mcx-check { left: 50%; top: 58%; translate: -50% 0; padding: 0.35em 0.9em; border-radius: 99px; background: var(--arc); color: var(--ink); font-weight: 500; }
+  .mcx-check i { color: rgb(11 10 20 / 0.55); }
+  .mcx-without { left: calc(50% + 34px); top: 2%; color: rgb(244 240 230 / 0.42); }
+  .mcx-line { position: absolute; left: 150px; top: 732px; width: 1240px; margin: 0; font-family: 'Mona Sans Variable', system-ui, sans-serif; font-weight: 500; font-size: 50px; line-height: 1.22; }
+  .mcx-line em { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 1.12em; line-height: 1; }
+  .mcx-ticker {
+    position: absolute; left: -80px; right: -80px; top: 905px; overflow: hidden;
+    padding: 16px 0; background: var(--arc); color: var(--ink);
+    box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.7);
+    transform: rotate(-2deg);
+    transition: transform 1.1s var(--ease) 2.2s, opacity 0.8s var(--ease) 2.2s;
   }
-  .s-qb:not(:has(.qb-us.shown)) .qb-them .qb-n::after { transform: scaleX(0); transition-delay: 0s; }
-  .s-qb:has(.qb-us.shown) .qb-them { opacity: 0.45; }
-  .qb-feats { position: absolute; left: 150px; right: 150px; top: 760px; list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; }
-  .qb-feats li { --c: var(--fg); padding-top: 22px; border-top: 1px solid color-mix(in srgb, var(--c) 50%, transparent); font-size: 26px; line-height: 1.35; color: var(--fg-dim); }
-  .qb-feats b { display: block; margin-bottom: 8px; font-size: 44px; font-weight: 400; color: var(--fg); }
-
-  /* The chapter map, drawn the way the app draws it. */
-  .s-cm .team-h { top: 188px; font-size: 72px; }
-  .cm-sub { position: absolute; left: 154px; top: 278px; font-size: 28px; color: var(--fg-dim); }
-  .cm { position: absolute; inset: 0; }
-  .cm svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .cm-rail { stroke: color-mix(in srgb, var(--c) 35%, transparent); stroke-width: 2; }
-  .cm-draw {
-    fill: none; stroke: #fff; stroke-width: 14; stroke-dasharray: 1; stroke-dashoffset: 0;
-    transition: stroke-dashoffset 1.3s var(--ease); transition-delay: calc(0.2s + var(--i) * 90ms);
+  .slide:not(.on) .mcx-ticker { transform: translateY(90px) rotate(-2deg); opacity: 0; transition-delay: 0s; }
+  .mcx-run { display: flex; width: max-content; animation: mcx-run 34s linear infinite; }
+  .mcx-set { display: flex; }
+  .mcx-item {
+    display: inline-flex; align-items: center; gap: 30px; padding-right: 30px;
+    font-family: 'Anybody Variable', 'Arial Black', sans-serif; font-weight: 900; font-stretch: 125%;
+    font-size: 34px; text-transform: uppercase; white-space: nowrap;
   }
-  .cm:not(.shown) .cm-draw { stroke-dashoffset: 1; transition-delay: 0s; transition-duration: 0.3s; }
-  .cm-link {
-    fill: none; stroke: rgb(255 255 255 / 0.5); stroke-width: 2.5; stroke-dasharray: 6 8; stroke-linecap: round;
-    animation: cm-flow 1.4s linear infinite;
+  .mcx-item svg { width: 1em; height: 1em; fill: var(--ink); }
+  @keyframes mcx-run { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html:not(.full-motion)) .mcx-dot { display: none; }
   }
-  @keyframes cm-flow { to { stroke-dashoffset: -28; } }
-  .cm-head { position: absolute; top: 335px; font-size: 15px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--c); }
-  .cm ol { list-style: none; }
-  .cm-row { position: absolute; display: flex; align-items: center; width: 400px; translate: 0 -50%; font-size: 19px; line-height: 1.1; }
-  .cm-row .mono { width: 29px; font-size: 13px; color: var(--faint); }
-  .cm-row i {
-    position: relative; flex: none; width: 22px; height: 22px; border-radius: 50%;
-    border: 2px solid var(--c); background: #121318;
-    transform: scale(0.45); transition: transform 0.6s var(--ease), box-shadow 0.6s var(--ease);
-  }
-  .cm-row b { position: relative; margin-left: 16px; font-weight: 400; color: var(--muted); opacity: 0.5; transition: opacity 0.6s var(--ease), color 0.6s var(--ease); }
-  .cm.shown .cm-row.hit i, .cm-row.hub i { transform: none; }
-  .cm.shown .cm-row.hit b, .cm-row.hub b { opacity: 1; color: var(--fg); }
-  .cm.shown .cm-row.hit i, .cm.shown .cm-row.hit b { transition-delay: calc(1.1s + var(--i) * 90ms); }
-  .cm.shown .cm-row.hit i { box-shadow: 0 0 16px -2px var(--c); }
-  .cm-row.hub::before {
-    content: ''; position: absolute; left: 24px; right: 6px; top: -12px; bottom: -12px;
-    border: 1px solid var(--rule-strong); border-radius: 12px; background: rgb(30 32 40 / 0.85);
-  }
-  .cm-row.hub i { box-shadow: 0 0 0 8px color-mix(in srgb, var(--c) 25%, transparent), 0 0 30px var(--c); }
-
-  /* Inside a check: the chart sits left of the question now. */
-  .s-mc .mc-card { right: 150px; }
-  .mc-fig { left: 190px; top: 440px; width: 560px; rotate: -2deg; }
 
   /* Shared by the intros: words that rise in letter by letter when the slide arrives. */
   .intro-word span { display: inline-block; transition: opacity 1s var(--ease), transform 1s var(--ease), filter 1s var(--ease); transition-delay: calc(0.9s + var(--i) * 70ms); }
@@ -2256,92 +1907,6 @@ const recap = [
   .si-kick { position: absolute; left: 366px; top: 128px; font-size: 20px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--rose); }
   .si-name { top: 160px; }
 
-  .qb-us .qb-n { --ca-rest: 0.006em; }
-
-  /* Test mode: the Q-bank's AAMC-style exam screen. */
-  .s-tm .team-h { top: 188px; font-size: 72px; }
-  .tm {
-    position: absolute; left: 150px; right: 150px; top: 300px; height: 700px;
-    display: grid; grid-template-rows: 56px 48px 1fr 56px;
-    font-family: Arial, Helvetica, sans-serif; color: #111; background: #fff;
-    border-radius: 10px; overflow: hidden;
-    box-shadow: 0 60px 140px -30px rgb(0 0 0 / 0.85), 0 0 80px -20px color-mix(in srgb, var(--violet) 40%, transparent);
-  }
-  .tm u { text-decoration: underline; }
-  .tm-top, .tm-foot { display: flex; align-items: center; padding: 0 24px; background: #1d3e72; color: #fff; font-size: 19px; }
-  .tm-top { justify-content: space-between; }
-  .tm-top .r { display: flex; gap: 40px; }
-  .tm-time b::after { content: '9'; animation: tm-tick 10s steps(1) infinite; }
-  @keyframes tm-tick {
-    0% { content: '9'; } 10% { content: '8'; } 20% { content: '7'; } 30% { content: '6'; } 40% { content: '5'; }
-    50% { content: '4'; } 60% { content: '3'; } 70% { content: '2'; } 80% { content: '1'; } 90% { content: '0'; }
-  }
-  .tm-bar { display: flex; align-items: center; gap: 34px; padding: 0 24px; background: #4a72ad; color: #fff; font-size: 18px; }
-  .tm-bar .flag { margin-left: auto; }
-  .tm-body { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
-  .tm-pass { padding: 28px 34px; border-right: 6px solid #c9d3e3; font-size: 19px; line-height: 1.6; overflow: hidden; }
-  .tm-pass p + p { margin-top: 16px; }
-  .tm h4 { margin-bottom: 14px; font-size: 17px; font-weight: 700; }
-  .tm-q { padding: 28px 34px; font-size: 20px; line-height: 1.5; }
-  .tm-hl {
-    background: linear-gradient(#fff176, #fff176) no-repeat 0 0 / 0% 100%;
-    -webkit-box-decoration-break: clone; box-decoration-break: clone;
-    transition: background-size 1.4s var(--ease);
-  }
-  .tm-hl.shown { background-size: 100% 100%; }
-  .tm-ch { list-style: none; display: grid; gap: 16px; margin-top: 24px; }
-  .tm-ch li { display: flex; gap: 14px; align-items: center; }
-  .tm-ch li::before {
-    content: ''; flex: none; width: 18px; height: 18px; border-radius: 50%;
-    border: 2px solid #555; box-shadow: inset 0 0 0 3px #fff; background: #fff;
-    transition: background 0.4s var(--ease), border-color 0.4s var(--ease);
-  }
-  .tm-ch .t { position: relative; transition: color 0.5s var(--ease); }
-  .tm-ch .t::after {
-    content: ''; position: absolute; left: 0; right: 0; top: 55%; height: 2px; background: #222;
-    transform: scaleX(0); transform-origin: left; transition: transform 0.6s var(--ease);
-  }
-  .tm-ch li.x.shown .t { color: #8a8a8a; }
-  .tm-ch li.x.shown .t::after { transform: none; }
-  .tm-ch li.x:nth-child(3) .t::after { transition-delay: 0.25s; }
-  .tm-ch li.ans.shown::before { background: #1d3e72; border-color: #1d3e72; }
-  .tm-foot { justify-content: flex-end; gap: 34px; font-size: 18px; }
-  .tm-foot .l { margin-right: auto; opacity: 0.7; }
-
-  /* Inside a check, take two: question on the left, two big charts on the right. */
-  .s-mc .mc-card { left: 150px; right: auto; width: 760px; top: 420px; }
-  .mc-fig { left: 950px; top: 140px; width: 860px; rotate: -1.5deg; }
-  .mc-fig2 { left: 970px; top: 170px; width: 840px; rotate: 1.2deg; }
-  .mc-pan { height: 760px; overflow: hidden; padding: 14px; background: #f4f1ea; box-shadow: 0 40px 90px -20px rgb(0 0 0 / 0.75); }
-  .mc-fig2 .mc-pan img { padding: 0; box-shadow: none; animation: mc-pan 16s ease-in-out 1.5s infinite alternate; }
-  @keyframes mc-pan { to { transform: translateY(calc(-100% + 732px)); } }
-
-  /* Test screen: taller, with a passage that scrolls down to its figure. */
-  .s-tm .tm { top: 280px; height: 690px; grid-template-rows: 50px 42px 1fr 50px; }
-  .tm-pass { position: relative; font-size: 17px; line-height: 1.5; }
-  .tm-pass-in { transition: transform 1.6s var(--ease); }
-  .tm-pass:has(.tm-scroll.shown) .tm-pass-in { transform: translateY(-415px); }
-  .tm-pass figure { margin-top: 18px; }
-  .tm-pass figure img { display: block; width: 100%; height: auto; }
-  .tm-pass figcaption { margin-top: 8px; font-size: 15px; text-align: center; }
-
-  /* Chapter map, step 2: the whole web, rippling out from the hub. */
-  .cm-web path {
-    fill: none; stroke: var(--c); stroke-width: 1.3; stroke-opacity: 0.32;
-    stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.6s var(--ease);
-  }
-  .cm:has(.cm-all.shown) .cm-web path { stroke-dashoffset: 0; transition-delay: var(--d); }
-  .cm-link { transition: opacity 1s var(--ease); }
-  .cm:has(.cm-all.shown) .cm-link { opacity: 0.35; }
-  .cm:has(.cm-all.shown) .cm-row i { transform: none; transition-delay: calc(0.2s + var(--j) * 70ms); }
-  .cm:has(.cm-all.shown) .cm-row b { opacity: 1; color: var(--fg-dim); transition-delay: calc(0.2s + var(--j) * 70ms); }
-  .cm:has(.cm-all.shown) .cm-row.hit b, .cm:has(.cm-all.shown) .cm-row.hub b { color: var(--fg); }
-  .cm-row b { text-shadow: 0 0 6px #000, 0 0 14px #000, 0 0 2px #000; }
-  .cm-count { position: absolute; right: 150px; top: 150px; text-align: right; transition: opacity 1s var(--ease) 0.4s, filter 1s var(--ease) 0.4s; }
-  .cm-count .display { display: block; font-size: 120px; line-height: 1; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .cm-count .mono { font-size: 16px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); }
-  .cm-count:not(.shown) { opacity: 0; filter: blur(12px); transition-delay: 0s; }
-
   /* Cost recap: the ledger from slide 3, crossed off line by line. */
   .rc-old { position: relative; display: inline-block; transition: opacity 0.6s var(--ease) 0.3s; }
   .rc-old::after {
@@ -2354,6 +1919,8 @@ const recap = [
   .rc-new, .rc-zero, .rc-left { transition: opacity 0.7s var(--ease), filter 0.7s var(--ease), transform 0.7s var(--ease); }
   .rc-zero, .rc-left { display: inline-block; margin-left: 22px; transition-delay: 0.45s; }
   .rc-zero { color: var(--violet); }
+  .rc-if { display: block; margin-top: 6px; font-size: 0.72em; letter-spacing: 0.14em; color: var(--muted); }
+  .rc-total .r-amt { white-space: nowrap; }  /* both totals on one line, running past the column if they must */
   .rc-new:not(.shown), .rc-zero:not(.shown), .rc-left:not(.shown) { opacity: 0; filter: blur(8px); transform: translateY(10px); transition-delay: 0s; }
 
   /* ── 10 · Scholarship ─────────────────────────────────────── */
