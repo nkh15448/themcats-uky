@@ -1,0 +1,2468 @@
+---
+// MCatalyst's page: what the app is for, what it does, what's live, and how to install it.
+// A PROTOTYPE, deliberately unlinked: not in the nav, the search palette or any page, and marked
+// noindex. Keep it that way until the club decides to send students here.
+//
+// It has its own look, louder than the rest of the site: the app's colours, Anybody for display
+// type, Mona Sans for text, paper-white slabs between the dark ones.
+import '@fontsource-variable/anybody/wdth.css';
+import '@fontsource-variable/mona-sans/wght.css';
+import Base from '../layouts/Base.astro';
+import icon from '../assets/mcatalyst-icon.svg?url';
+
+// Stable installer names, so these links never change between versions. The release workflow
+// (catalyst › .github/workflows/app-release.yml) has to upload copies under these names first.
+const RELEASES = 'https://github.com/nkh15448/mcatalyst-releases/releases/latest/download';
+const downloads = {
+  mac: { href: `${RELEASES}/MCatalyst-mac.dmg`, label: 'Download for Mac', note: 'macOS 12 or later · Apple silicon and Intel' },
+  windows: { href: `${RELEASES}/MCatalyst-windows.exe`, label: 'Download for Windows', note: 'Windows 10 or 11' },
+};
+
+// What's live, chapter by chapter. The content-publish job in catalyst writes it with every content
+// release (scripts/publish.mjs › status.json), so this page is as current as the app.
+const STATUS = 'https://mkcpsnyskwbfaqccbbtt.supabase.co/storage/v1/object/public/releases/status.json';
+
+const ticker = ['Check every chapter', 'Free', 'No account', 'Every question approved by an officer', 'Mac and Windows', 'Made by The M-CATS'];
+
+// Where MCatalyst sits between learning the content and practicing it.
+const path = [
+  { n: '01', step: 'Learn', what: 'Kaplan chapters, videos, our seminars', note: 'Teaches the content.' },
+  { n: '02', step: 'Check', what: 'MCatalyst', note: 'Finds out what stuck, chapter by chapter.', ours: true },
+  { n: '03', step: 'Apply', what: 'UWorld, Jack Westin passages', note: 'Trains you to use it in exam-style passages.' },
+  { n: '04', step: 'Prove', what: 'AAMC full-lengths', note: 'Shows where you stand on test day.' },
+];
+
+const steps = [
+  {
+    title: 'Take the chapter’s check',
+    body: 'About twelve questions, one for each thing the chapter expects you to know. Most are short answer, typed in your own words, because picking an answer out of four isn’t the same as knowing it.',
+  },
+  {
+    title: 'Grade it honestly',
+    body: 'Short answers are marked for you. For explain questions you see a full answer next to yours and tick each key point you made.',
+  },
+  {
+    title: 'Practice what you missed',
+    body: 'Every objective comes back solid, shaky or review again, with the section of the chapter to re-read. Practice gives you new questions on just the weak ones, until every one is solid.',
+  },
+];
+
+const results = [
+  ['PFK-1, the rate-limiting step, and its regulators', 100, 'solid', 'Solid', ''],
+  ['Substrates for gluconeogenesis and the Cori cycle', 60, 'shaky', 'Shaky', '9.6'],
+  ['The oxidative phase of the pentose phosphate pathway', 20, 'missed', 'Review again', '9.7'],
+] as const;
+
+// The map card's drawing: chapters as nodes, coloured the way the app colours them.
+const mapNodes: [number, number, string][] = [
+  [52, 58, 'solid'], [146, 36, 'solid'], [244, 66, 'shaky'], [338, 42, 'new'], [96, 140, 'review'], [196, 150, 'solid'],
+  [300, 132, 'turn'], [372, 196, 'new'], [52, 212, 'new'], [156, 214, 'shaky'], [262, 212, 'solid'],
+];
+const mapEdges = [[0, 1], [1, 2], [2, 3], [0, 4], [1, 5], [2, 5], [2, 6], [3, 6], [4, 5], [4, 8], [5, 9], [5, 10], [6, 10], [6, 7], [8, 9], [10, 7]];
+
+// The periodic table's outline, for the exam tools card: [row, first column, last column].
+const tableRows = [[0, 0, 0], [0, 17, 17], [1, 0, 1], [1, 12, 17], [2, 0, 1], [2, 12, 17], [3, 0, 17], [4, 0, 17], [5, 0, 17], [6, 0, 17]];
+
+const faq = [
+  { q: 'Is it really free?', a: 'Yes. The M-CATS is a free club and MCatalyst is part of it. There’s nothing to buy and no account to make.' },
+  {
+    q: 'Does it replace UWorld?',
+    a: 'No. Use MCatalyst while you learn the content, and a passage bank like UWorld once it’s solid. Checking each chapter first means that when you get to practice passages, you already know whether the content is there.',
+  },
+  { q: 'Which chapters have checks?', a: 'The Kaplan biology, biochemistry, general chemistry and organic chemistry chapters the club teaches, once officers have approved their questions. The list under “What’s live” is always current.' },
+  { q: 'Do I have to come to seminars?', a: 'No, but the checks follow the seminars, so it works best alongside them: come to the seminar, then take that chapter’s check.' },
+  { q: 'Does it work on my phone?', a: 'It’s a desktop app, for Mac and Windows.' },
+  { q: 'I found a mistake. What do I do?', a: 'Use “Report a problem” under the question. It goes straight to the officers, and we fix it.' },
+];
+
+const spark = 'M0,-9.5 Q0,0 9.5,0 Q0,0 0,9.5 Q0,0 -9.5,0 Q0,0 0,-9.5Z';
+---
+<Base title="MCatalyst" description="MCatalyst: free chapter checks for the MCAT, from The M-CATS at the University of Kentucky.">
+  <meta slot="head" name="robots" content="noindex, nofollow" />
+
+  <div class="mc" data-mc>
+    {import.meta.env.DEV && (
+      <p class="draft">Prototype, linked from nowhere. The download links need stable installer names from the release workflow, and “What’s live” needs status.json from catalyst’s publish job.</p>
+    )}
+
+    <!-- ── Hero ─────────────────────────────────────────────────── -->
+    <header class="hero">
+      <div class="hero-top">
+        <p class="tag">A free MCAT app from The <span class="nb">M-CATS</span></p>
+        <button class="tag motion" type="button" data-motion aria-pressed="true">Motion <b>on</b></button>
+      </div>
+
+      <h1 class="mega-h">
+        <span class="sr-only">MCatalyst</span>
+        <span class="mega" aria-hidden="true" data-mega>
+          {'MCATALYST'.split('').map((ch) => <span>{ch}</span>)}
+        </span>
+      </h1>
+
+      <!-- The app icon's energy diagram, opened out: a check lowers the step from learning to applying. -->
+      <div class="barrier" aria-hidden="true">
+        <svg viewBox="0 0 1200 280" data-barrier>
+          <defs>
+            <linearGradient id="mc-arc" x1="0" x2="1">
+              <stop offset="0" stop-color="#9f93ff" /><stop offset=".55" stop-color="#f09ac0" /><stop offset="1" stop-color="#f6d39c" />
+            </linearGradient>
+          </defs>
+          <path class="b-high" d="M0,190 H250 C420,190 470,24 600,24 C730,24 790,236 950,236 H1200" />
+          <path class="b-low" id="mc-low" d="M0,190 H250 C420,190 485,122 600,122 C715,122 790,236 950,236 H1200" pathLength="1" />
+          <g class="b-dot">
+            <circle r="16" class="b-dot-glow" /><circle r="6.5" />
+            <animateMotion dur="5.5s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".45 0 .55 1">
+              <mpath href="#mc-low" />
+            </animateMotion>
+            <animate attributeName="opacity" dur="5.5s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;.1;.88;1" />
+          </g>
+          <g transform="translate(600 122)"><path class="b-spark" d={spark} transform="scale(2.6)" /></g>
+        </svg>
+        <span class="b-lab b-learn"><i>01</i> Learn</span>
+        <span class="b-lab b-check"><i>02</i> Check</span>
+        <span class="b-lab b-apply"><i>03</i> Apply</span>
+        <span class="b-lab b-without">Without a check</span>
+      </div>
+
+      <div class="hero-foot">
+        <p class="lede">
+          Chapter checks for the MCAT content you’re learning. Finish a chapter, take its check, and find out
+          what <em>actually</em> stuck before a question bank finds out for you.
+        </p>
+        <div>
+          <div class="dl" data-downloads>
+            {Object.entries(downloads).map(([os, d]) => (
+              <a class="go" href={d.href} data-os={os}>{d.label}<span class="go-arrow" aria-hidden="true">↓</span></a>
+            ))}
+          </div>
+          <p class="fine">Free · no account · <a href="#install">How to install</a></p>
+          <p class="fine phone" data-phone hidden>MCatalyst is a desktop app. Open this page on your Mac or Windows computer to download it.</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Ticker ───────────────────────────────────────────────── -->
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-run">
+        {[0, 1].map(() => (
+          <span class="ticker-set">
+            {ticker.map((t) => (
+              <span class="ticker-item">{t}<svg viewBox="-10 -10 20 20"><path d={spark} /></svg></span>
+            ))}
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <!-- ── The problem ──────────────────────────────────────────── -->
+    <section class="slab paper problem">
+      <div class="wrap">
+        <p class="kick"><span>01</span>The problem</p>
+        <h2 class="shout" data-reveal>Content review has <span class="it">no</span> <span class="hollow">checkpoint</span></h2>
+        <div class="cols" data-reveal>
+          <p>
+            Most MCAT prep runs in two phases. First you learn the content: a Kaplan chapter, a video, a seminar. Then
+            you practice with question banks like UWorld, passages like Jack Westin’s, and eventually the AAMC’s
+            full-lengths.
+          </p>
+          <p>
+            The trouble is the space between them. Reading a chapter feels like learning it, but nothing checks whether
+            it stuck. The first real test comes weeks later, in a passage built to see whether you can <em>apply</em> the
+            content. Miss that question and it’s hard to tell what went wrong: the fact, or the reasoning.
+          </p>
+          <p>
+            Passage banks are good at what they’re for, and UWorld costs money. Neither is built to tell you, chapter
+            by chapter, whether the content itself landed. <strong>That’s the gap MCatalyst fills, for free.</strong>
+          </p>
+        </div>
+
+        <ol class="rail" data-rail aria-label="Where MCatalyst fits">
+          {path.map((p) => (
+            <li class:list={{ ours: p.ours }}>
+              <div class="r-card">
+                <span class="r-n">{p.n}</span>
+                <span class="r-step">{p.step}</span>
+                <span class="r-what">{p.what}</span>
+                <span class="r-note">{p.note}</span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <!-- ── How it works ─────────────────────────────────────────── -->
+    <section class="slab how" data-how>
+      <div class="wrap">
+        <p class="kick"><span>02</span>How it works</p>
+        <h2 class="shout" data-reveal>A check for<br />every chapter</h2>
+        <div class="how-grid">
+          <ol class="steps">
+            {steps.map((st, i) => (
+              <li data-step={i} class:list={{ on: i === 0 }}>
+                <span class="st-n">{String(i + 1).padStart(2, '0')}</span>
+                <h3 class="st-t">{st.title}</h3>
+                <p class="st-b">{st.body}</p>
+              </li>
+            ))}
+          </ol>
+
+          <div class="app-wrap">
+            <!-- Drawn after the app's own screens: system type and the app's colours, so it reads as the app. -->
+            <figure class="app" data-app data-at="0" aria-label="A chapter check in MCatalyst">
+              <div class="app-bar"><i></i><i></i><i></i><span>MCatalyst</span></div>
+              <div class="app-body">
+                <div class="scr" data-scr="0">
+                  <p class="a-crumb">Biochemistry 9 · Carbohydrate Metabolism I</p>
+                  <div class="a-prog"><span>Question 4 of 12</span><i><b></b></i></div>
+                  <p class="a-kind">Explain</p>
+                  <p class="a-q">Why does a lot of ATP slow glycolysis down?</p>
+                  <div class="a-field"><span data-type>ATP binds PFK-1 at a regulatory site and slows the enzyme down.</span><i class="caret"></i></div>
+                  <span class="a-btn">Check my answer</span>
+                </div>
+                <div class="scr" data-scr="1">
+                  <div class="a-two">
+                    <div><p class="a-lb">Your answer</p><p>ATP binds PFK-1 at a regulatory site and slows the enzyme down.</p></div>
+                    <div class="a-full"><p class="a-lb">A full answer</p><p>ATP is an allosteric inhibitor of PFK-1. When energy is plentiful it slows the enzyme, so the cell breaks down less glucose.</p></div>
+                  </div>
+                  <p class="a-lb">Which of these did your answer make?</p>
+                  <ul class="a-pts">
+                    <li class="t">ATP binds an allosteric site on PFK-1</li>
+                    <li class="t">That lowers PFK-1’s activity</li>
+                    <li>So less glucose is broken down when energy is plentiful</li>
+                  </ul>
+                  <p class="a-tally"><b>67%</b><span class="w-chip v-shaky">Shaky</span></p>
+                </div>
+                <div class="scr" data-scr="2">
+                  <p class="a-crumb">Chapter check · results</p>
+                  <div class="a-head"><span>Carbohydrate Metabolism I</span><b>58%</b></div>
+                  {results.map(([title, pct, v, label, sec]) => (
+                    <div class="w-row">
+                      <span class="w-t">{title}</span>
+                      <span class="w-bar"><i class={`v-${v}`} style={`--w:${pct}%`}></i></span>
+                      <span class={`w-chip v-${v}`}>{label}</span>
+                      {sec && <span class="w-re">Re-read section {sec}</span>}
+                    </div>
+                  ))}
+                  <span class="a-go">Practice what you missed: 6 questions →</span>
+                </div>
+              </div>
+            </figure>
+            <div class="app-dots" aria-hidden="true">{steps.map((_, i) => <i class:list={{ on: i === 0 }} data-dot={i}></i>)}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Features ─────────────────────────────────────────────── -->
+    <section class="slab inside">
+      <div class="wrap">
+        <p class="kick"><span>03</span>Features</p>
+        <h2 class="shout" data-reveal>What’s inside</h2>
+        <ul class="bento" data-bento>
+          <li class="card c-map" data-reveal>
+            <svg class="art" viewBox="0 0 420 250" aria-hidden="true">
+              {mapEdges.map(([a, b]) => (
+                <line x1={mapNodes[a][0]} y1={mapNodes[a][1]} x2={mapNodes[b][0]} y2={mapNodes[b][1]} />
+              ))}
+              {mapNodes.map(([x, y, s]) => (
+                <g transform={`translate(${x} ${y})`}>
+                  {s === 'turn' && <circle class="ring" r="15" />}
+                  <circle class={`node n-${s}`} r="11" />
+                </g>
+              ))}
+            </svg>
+            <h3>The map</h3>
+            <p>Every Kaplan chapter the club teaches, coloured by where you stand: not taken, review again or solid. Or see the same chapters as a mind map.</p>
+          </li>
+          <li class="card c-links" data-reveal>
+            <svg class="art" viewBox="0 0 420 110" aria-hidden="true">
+              <path id="mc-link" class="link" d="M70,70 C160,-6 260,-6 350,70" pathLength="1" />
+              <circle class="pulse" r="5">
+                <animateMotion dur="2.6s" repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines=".45 0 .55 1"><mpath href="#mc-link" /></animateMotion>
+              </circle>
+              <circle class="node n-solid" cx="70" cy="70" r="11" /><circle class="node n-shaky" cx="350" cy="70" r="11" />
+              <text x="70" y="104" text-anchor="middle">Enzymes</text><text x="350" y="104" text-anchor="middle">Carbohydrates I</text>
+            </svg>
+            <h3>Connections</h3>
+            <p>Lines between related chapters open questions that need both at once, the way the MCAT mixes topics.</p>
+          </li>
+          <li class="card c-results" data-reveal>
+            <div class="art bars" aria-hidden="true"><i class="v-solid" style="--w:100%"></i><i class="v-shaky" style="--w:60%"></i><i class="v-missed" style="--w:20%"></i></div>
+            <h3>Results by objective</h3>
+            <p>Not just a score. You see which objective slipped and which section to re-read.</p>
+          </li>
+          <li class="card c-tools" data-reveal>
+            <div class="art tools" aria-hidden="true">
+              <svg viewBox="0 0 180 72">
+                {tableRows.flatMap(([r, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => (
+                  <rect x={(a + k) * 10} y={r * 10} width="8" height="8" rx="1.5" class:list={{ hot: r === 1 && a + k === 13 }} />
+                )))}
+              </svg>
+              <kbd class="key">⌥T</kbd>
+            </div>
+            <h3>Exam tools</h3>
+            <p>A periodic table on ⌥T / Alt+T, like the real exam’s, and a focus timer for study sessions.</p>
+          </li>
+          <li class="card" data-reveal>
+            <svg class="art glyph" viewBox="0 0 120 64" aria-hidden="true"><path class="axis" d="M8,4 V56 H116" /><path class="curve" d="M8,56 C24,18 50,12 112,10" pathLength="1" /></svg>
+            <h3>Reference charts</h3>
+            <p>Explanations link to charts drawn for the club, from pathways to structures to trends. Open them and zoom in.</p>
+          </li>
+          <li class="card" data-reveal>
+            <div class="art glyph cols-art" aria-hidden="true">{[40, 72, 55, 88, 64, 96, 80].map((h) => <i style={`--h:${h}%`}></i>)}</div>
+            <h3>Statistics</h3>
+            <p>How your checks have gone over time, chapter by chapter and objective by objective.</p>
+          </li>
+          <li class="card" data-reveal>
+            <div class="art glyph swatches" aria-hidden="true">{['#7d6cf5', '#e07aa8', '#6fd8bf', '#e6c98f', '#f4f0e6'].map((c) => <i style={`--c:${c}`}></i>)}</div>
+            <h3>Make it yours</h3>
+            <p>Themes, fonts and colours, from quiet to loud.</p>
+          </li>
+          <li class="card" data-reveal>
+            <svg class="art glyph" viewBox="0 0 120 64" aria-hidden="true"><path class="axis" d="M20,40 V54 H100 V40" /><path class="curve down" d="M60,6 V40 M46,27 L60,41 L74,27" /></svg>
+            <h3>Works offline</h3>
+            <p>Everything saves on your computer, with no account. New questions download by themselves as officers approve them.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ── How the questions are made ───────────────────────────── -->
+    <section class="slab made">
+      <div class="wrap">
+        <p class="kick"><span>04</span>How the questions are made</p>
+        <h2 class="made-h" data-reveal>
+          <span class="made-ai">Drafted with AI.</span>
+          <span class="made-people">Checked by people.</span>
+        </h2>
+        <div class="made-grid">
+          <p class="claim" data-reveal>
+            We use AI to draft questions from the chapters. It’s how a student club can cover this much material. But a
+            draft isn’t something you should have to trust. <strong><mark>Every question in MCatalyst has been answered and approved by an M‑CATS officer before it reaches you.</mark></strong>
+          </p>
+          <ol class="checks">
+            <li data-reveal><b>Answered blind first.</b> An officer takes each question the way you will, before seeing the answer.</li>
+            <li data-reveal><b>Every part checked.</b> The answer, the explanation and every figure, and fixed wherever something’s off.</li>
+            <li data-reveal><b>Held back until it’s right.</b> A question that isn’t ready doesn’t reach you.</li>
+            <li data-reveal><b>Open to your eyes too.</b> Every question has “Report a problem”, and reports go straight to the officers.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── What's live ──────────────────────────────────────────── -->
+    <section class="slab paper live" id="live">
+      <div class="wrap">
+        <p class="kick"><span>05</span>What’s live<span class="kick-r" data-updated></span></p>
+        <div class="live-top">
+          <h2 class="shout" data-reveal>Always<br />growing</h2>
+          <p class="live-lede" data-reveal>
+            Officers approve new questions all the time. They go out to everyone as they’re approved, and the app
+            downloads them by itself, with nothing to reinstall. This list comes from the same place the app gets its
+            questions, so it’s always current.
+          </p>
+        </div>
+
+        <div class="board" data-board data-state="loading" data-src={STATUS}>
+          <div class="tally">
+            <p class="t-big"><b data-n-live>0</b><span>of <span data-n-all>48</span> chapters have a check</span></p>
+            <p class="t-sub" data-n-q></p>
+          </div>
+          <div class="meter"><i data-meter></i><span data-pct></span></div>
+          <div class="latest" data-latest hidden>
+            <p class="latest-h">Latest update · <span data-latest-date></span></p>
+            <ul data-latest-list></ul>
+          </div>
+          <div class="books" data-books>
+            {['Biology', 'Biochemistry', 'General Chemistry', 'Organic Chemistry'].map((b) => (
+              <div class="book skeleton"><p class="book-h">{b}</p><ul>{Array.from({ length: 12 }, () => <li></li>)}</ul></div>
+            ))}
+          </div>
+          <p class="fail" data-fail hidden>Couldn’t load the list just now. Everything that’s live is in the app.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Install ──────────────────────────────────────────────── -->
+    <section class="slab install" id="install">
+      <div class="wrap">
+        <p class="kick"><span>06</span>Install<span class="kick-r">About two minutes</span></p>
+        <div class="os-grid" data-os-grid>
+          <article class="os" data-os-card="mac" data-reveal>
+            <p class="os-tag">Your computer</p>
+            <h3 class="os-h">Mac</h3>
+            <ol class="os-steps">
+              <li>Download MCatalyst for Mac and open the file.</li>
+              <li>Drag MCatalyst into your Applications folder.</li>
+              <li>Open it. macOS says it can’t verify the app. Click <b>Done</b>.</li>
+              <li>Open <b>System Settings › Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b> next to MCatalyst. Enter your password if it asks.</li>
+              <li>That’s it. You only do this once.</li>
+            </ol>
+            <a class="go" href={downloads.mac.href} data-os="mac">{downloads.mac.label}<span class="go-arrow" aria-hidden="true">↓</span></a>
+            <p class="fine">{downloads.mac.note}</p>
+          </article>
+          <article class="os" data-os-card="windows" data-reveal>
+            <p class="os-tag">Your computer</p>
+            <h3 class="os-h">Windows</h3>
+            <ol class="os-steps">
+              <li>Download MCatalyst for Windows and run the installer.</li>
+              <li>If Windows says <b>Windows protected your PC</b>, click <b>More info</b>, then <b>Run anyway</b>.</li>
+              <li>Follow the installer. MCatalyst opens when it’s done.</li>
+            </ol>
+            <a class="go" href={downloads.windows.href} data-os="windows">{downloads.windows.label}<span class="go-arrow" aria-hidden="true">↓</span></a>
+            <p class="fine">{downloads.windows.note}</p>
+          </article>
+        </div>
+        <aside class="why" data-reveal>
+          <p class="why-h">Why the warning?</p>
+          <p>
+            Apps from big companies are signed with a paid developer certificate, so your computer can check who made
+            them. We’re a student club, so MCatalyst isn’t, and your computer says it can’t verify it. That’s all the
+            warning means. The app comes straight from The <span class="nb">M-CATS</span>. After the first launch it updates itself, and new
+            questions arrive on their own.
+          </p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ── Your data and questions ──────────────────────────────── -->
+    <section class="slab small">
+      <div class="wrap small-grid">
+        <div>
+          <p class="kick"><span>07</span>Your data</p>
+          <ul class="data">
+            <li><b>No account</b><span>Your progress stays on your computer.</span></li>
+            <li><b>Anonymous usage data</b><span>When you open MCatalyst, which checks you start and finish, and whether each answer was right. It never sends what you type, your name or your email. It helps us a lot, and you can turn it off anytime in About.</span></li>
+            <li><b>Reports</b><span>“Report a problem” sends the question and your note to the officers, and nothing about you.</span></li>
+          </ul>
+        </div>
+        <div>
+          <p class="kick"><span>08</span>Questions</p>
+          <div class="faq">
+            {faq.map((f) => (
+              <details>
+                <summary><span>{f.q}</span><span class="plus" aria-hidden="true"></span></summary>
+                <p>{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Last call ────────────────────────────────────────────── -->
+    <section class="end">
+      <div class="wrap end-in">
+        <img src={icon} alt="" width="88" height="88" />
+        <h2 class="end-h" data-reveal>Check what<br />you’ve read</h2>
+        <div class="dl" data-downloads>
+          {Object.entries(downloads).map(([os, d]) => (
+            <a class="go" href={d.href} data-os={os}>{d.label}<span class="go-arrow" aria-hidden="true">↓</span></a>
+          ))}
+        </div>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const mc = document.querySelector<HTMLElement>('[data-mc]')!;
+  const html = document.documentElement;
+
+  // ── Downloads: the visitor's own platform first and solid. On a phone, say it's a desktop app.
+  const ua = navigator.userAgent;
+  const phone = /iPhone|iPad|Android/i.test(ua) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(ua));
+  const mine = /Windows/i.test(ua) ? 'windows' : /Mac/i.test(ua) ? 'mac' : null;
+  if (phone) document.querySelector<HTMLElement>('[data-phone]')!.hidden = false;
+  else if (mine) {
+    document.querySelectorAll<HTMLAnchorElement>(`a[data-os="${mine}"]`).forEach((a) => a.classList.add('solid'));
+    document.querySelectorAll<HTMLElement>('[data-downloads]').forEach((box) => {
+      const first = box.querySelector(`a[data-os="${mine}"]`);
+      if (first) box.prepend(first);
+    });
+    const card = document.querySelector<HTMLElement>(`[data-os-card="${mine}"]`)!;
+    card.classList.add('mine');
+    card.parentElement!.prepend(card);
+  }
+
+  // ── Motion. Off by default for anyone whose system asks for less; either way the button decides.
+  // Off makes every animation jump to its end; on, for someone whose system asks for less, sets
+  // .full-motion so global.css lets this page move.
+  const KEY = 'mcatalyst-page-motion';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let saved: string | null = null;
+  try { saved = localStorage.getItem(KEY); } catch {}
+  let moving = saved ? saved === 'on' : !reduce;
+  const motionBtn = document.querySelector<HTMLButtonElement>('[data-motion]')!;
+  const svgs = () => document.querySelectorAll<SVGSVGElement>('.mc svg');
+  function setMotion(on: boolean, remember = false) {
+    moving = on;
+    mc.classList.toggle('still', !on);
+    html.classList.toggle('full-motion', on && reduce);
+    motionBtn.setAttribute('aria-pressed', String(on));
+    motionBtn.querySelector('b')!.textContent = on ? 'on' : 'off';
+    svgs().forEach((s) => (on ? s.unpauseAnimations() : s.pauseAnimations()));
+    if (remember) try { localStorage.setItem(KEY, on ? 'on' : 'off'); } catch {}
+    if (!on) resetMega();
+  }
+  motionBtn.addEventListener('click', () => setMotion(!moving, true));
+
+  // ── The name: letters near the pointer pull narrow, then flow back out.
+  const mega = document.querySelector<HTMLElement>('[data-mega]')!;
+  const letters = [...mega.children] as HTMLElement[];
+  const WIDE = 150, NARROW = 78;
+  const now = letters.map(() => WIDE), target = letters.map(() => WIDE);
+  let centers: number[] = [], reach = 1, frame = 0, ready = false;
+  const measure = () => {
+    letters.forEach((l) => (l.style.fontStretch = ''));
+    centers = letters.map((l) => { const r = l.getBoundingClientRect(); return r.left + r.width / 2; });
+    reach = mega.getBoundingClientRect().width / 7;
+    letters.forEach((l, i) => (l.style.fontStretch = `${now[i]}%`));
+  };
+  const tick = () => {
+    let busy = false;
+    letters.forEach((l, i) => {
+      const d = target[i] - now[i];
+      if (Math.abs(d) > 0.05) { now[i] += d * 0.14; busy = true; } else now[i] = target[i];
+      l.style.fontStretch = `${now[i]}%`;
+    });
+    frame = busy ? requestAnimationFrame(tick) : 0;
+  };
+  const kick = () => { if (!frame) frame = requestAnimationFrame(tick); };
+  function resetMega() {
+    target.fill(WIDE);
+    if (moving) kick(); else { cancelAnimationFrame(frame); frame = 0; now.fill(WIDE); letters.forEach((l) => (l.style.fontStretch = '')); }
+  }
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    const hero = mega.closest('header')!;
+    mega.addEventListener('animationend', () => { ready = true; measure(); }, { once: true });
+    if (!moving || getComputedStyle(mega).animationName === 'none') ready = true;
+    addEventListener('resize', () => { if (ready) measure(); });
+    hero.addEventListener('pointermove', (e) => {
+      if (!moving || !ready) return;
+      if (!centers.length) measure();
+      const box = mega.getBoundingClientRect();
+      const near = e.clientY > box.top - box.height * 0.6 && e.clientY < box.bottom + box.height * 0.6;
+      centers.forEach((c, i) => {
+        const x = (e.clientX - c) / reach;
+        target[i] = near ? WIDE - (WIDE - NARROW) * Math.exp(-x * x) : WIDE;
+      });
+      kick();
+    });
+    hero.addEventListener('pointerleave', resetMega);
+  }
+
+  // ── The rail: MCatalyst's step drops into its empty slot once the rail is on screen.
+  const rail = document.querySelector<HTMLElement>('[data-rail]')!;
+  if (moving) {
+    rail.classList.add('wait');
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      rail.classList.add('drop');
+      setTimeout(() => rail.classList.remove('wait'), 250);
+    }, { rootMargin: '0px 0px -25% 0px' });
+    io.observe(rail);
+  }
+
+  // ── How it works: the step in the middle of the screen drives the app window. On narrow screens
+  // the window sits above the steps and moves on by itself while it's in view; a tap picks a step.
+  const app = document.querySelector<HTMLElement>('[data-app]')!;
+  const stepEls = [...document.querySelectorAll<HTMLElement>('[data-step]')];
+  const dots = [...document.querySelectorAll<HTMLElement>('[data-dot]')];
+  const typed = app.querySelector<HTMLElement>('[data-type]')!;
+  const sentence = typed.textContent!;
+  let at = -1, typing = 0;
+  function show(i: number) {
+    if (i === at) return;
+    at = i;
+    app.dataset.at = String(i);
+    stepEls.forEach((s, k) => s.classList.toggle('on', k === i));
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+    clearInterval(typing);
+    if (i === 0 && moving) {
+      let n = 0;
+      typed.textContent = '';
+      typing = window.setInterval(() => {
+        typed.textContent = sentence.slice(0, ++n);
+        if (n >= sentence.length) clearInterval(typing);
+      }, 34);
+    } else typed.textContent = sentence;
+  }
+  const narrow = matchMedia('(max-width: 900px)');
+  const middle = new IntersectionObserver(
+    (entries) => {
+      if (narrow.matches) return;
+      entries.forEach((e) => e.isIntersecting && show(Number((e.target as HTMLElement).dataset.step)));
+    },
+    { rootMargin: '-48% 0px -48% 0px' },
+  );
+  stepEls.forEach((s) => middle.observe(s));
+  let cycle = 0, appSeen = false;
+  const auto = () => { clearInterval(cycle); cycle = window.setInterval(() => moving && show((at + 1) % 3), 5200); };
+  new IntersectionObserver(([e]) => {
+    appSeen = e.isIntersecting;
+    if (appSeen && at < 0) show(0);
+    if (appSeen && narrow.matches) auto(); else clearInterval(cycle);
+  }, { threshold: 0.35 }).observe(app);
+  stepEls.forEach((s, i) => s.addEventListener('click', () => {
+    if (!narrow.matches) return;
+    show(i);
+    if (appSeen) auto();
+  }));
+
+  // ── Feature cards: a soft light follows the pointer.
+  document.querySelector('[data-bento]')!.addEventListener('pointermove', (e) => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>('.card');
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', `${(e as PointerEvent).clientX - r.left}px`);
+    card.style.setProperty('--my', `${(e as PointerEvent).clientY - r.top}px`);
+  });
+
+  // ── What's live: status.json from the content releases bucket.
+  interface Chapter { code: string; book: string; bookName: string; number: number; title: string; questions: number; since: string | null; updated: string | null }
+  interface Status { updated: string; connections: number; chapters: Chapter[] }
+  const board = document.querySelector<HTMLElement>('[data-board]')!;
+  const $ = <T extends HTMLElement>(sel: string) => board.querySelector<T>(sel)!;
+  const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const el = (tag: string, cls: string, text?: string | number) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = String(text);
+    return n;
+  };
+  function fill(s: Status) {
+    const live = s.chapters.filter((c) => c.questions > 0);
+    const questions = live.reduce((n, c) => n + c.questions, 0) + s.connections;
+    const pct = s.chapters.length ? Math.round((live.length / s.chapters.length) * 100) : 0;
+    count(live.length);
+    $('[data-n-all]').textContent = String(s.chapters.length);
+    $('[data-n-q]').textContent = `${questions.toLocaleString('en-US')} question${questions === 1 ? '' : 's'} approved${s.connections ? `, ${s.connections} of them connecting chapters` : ''}`;
+    $('[data-pct]').textContent = `${pct}%`;
+    board.style.setProperty('--pct', `${pct}%`);
+    document.querySelector<HTMLElement>('[data-updated]')!.textContent = `Updated ${day(s.updated)}`;
+
+    const added = live.filter((c) => c.updated === s.updated);
+    if (added.length) {
+      $('[data-latest-date]').textContent = day(s.updated);
+      const list = $('[data-latest-list]');
+      list.replaceChildren(...added.map((c) => {
+        const li = el('li', '');
+        li.append(el('span', 'l-new', c.since === s.updated ? 'New' : 'Updated'), el('span', 'l-t', `${c.bookName} ${c.number}: ${c.title}`), el('span', 'l-q', `${c.questions} questions`));
+        return li;
+      }));
+      $('[data-latest]').hidden = false;
+    }
+
+    const books = new Map<string, Chapter[]>();
+    s.chapters.forEach((c) => books.set(c.bookName, [...(books.get(c.bookName) ?? []), c]));
+    $('[data-books]').replaceChildren(...[...books].map(([name, chs]) => {
+      const box = el('div', 'book');
+      const head = el('p', 'book-h', name);
+      head.append(el('span', '', `${chs.filter((c) => c.questions).length}/${chs.length}`));
+      const ul = el('ul', '');
+      ul.append(...chs.map((c) => {
+        const li = el('li', c.questions ? 'on' : '');
+        li.append(el('span', 'box'), el('span', 'c-n', c.number), el('span', 'c-t', c.title), el('span', 'c-q', c.questions || ''));
+        li.title = c.questions ? `${c.questions} questions, live since ${day(c.since!)}` : 'Not live yet';
+        return li;
+      }));
+      box.append(head, ul);
+      return box;
+    }));
+    board.dataset.state = 'ready';
+  }
+  // The meter fills, and the count runs up, once the board is on screen.
+  let seen = false, liveN = 0;
+  function count(n?: number) {
+    if (n !== undefined) liveN = n;
+    const out = $('[data-n-live]');
+    if (!seen || !moving || !liveN) { out.textContent = String(seen || !moving ? liveN : 0); return; }
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / 1400);
+      out.textContent = String(Math.round(liveN * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  new IntersectionObserver(([e], io) => {
+    if (!e.isIntersecting) return;
+    io.disconnect();
+    seen = true;
+    board.classList.add('seen');
+    count();
+  }, { rootMargin: '0px 0px -20% 0px' }).observe(board);
+
+  // A development build can look at a sample: /mcatalyst/?status=<url of a status.json>.
+  const src = (import.meta.env.DEV && new URLSearchParams(location.search).get('status')) || board.dataset.src!;
+  fetch(src, { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then(fill)
+    .catch(() => {
+      board.dataset.state = 'failed';
+      $('[data-fail]').hidden = false;
+    });
+
+  setMotion(moving);
+</script>
+
+<style>
+  /* ── This page's own look ──────────────────────────────────── */
+  :global(html:root) {
+    --bg: #0b0a14;
+  }
+  .mc {
+    --ink: #0b0a14;
+    --ink-2: #14121f;
+    --ink-3: #1c1930;
+    --paper: #f4f0e6;
+    --on: #f4f0e6;
+    --on-dim: rgba(244, 240, 230, 0.68);
+    --on-faint: rgba(244, 240, 230, 0.42);
+    --line: rgba(244, 240, 230, 0.13);
+    --violet: #9f93ff;
+    --pink: #f09ac0;
+    --peach: #f6d39c;
+    --arc: linear-gradient(100deg, #9f93ff, #f09ac0 55%, #f6d39c);
+    --good: #6fd8bf;
+    --gold: #e6c98f;
+    --bad: #ff9a94;
+    --heavy: 'Anybody Variable', 'Arial Black', sans-serif;
+    --text: 'Mona Sans Variable', system-ui, sans-serif;
+    --pad: clamp(4.5rem, 9vw, 8rem);
+
+    color: var(--on);
+    font-family: var(--text);
+    font-size: 1.12rem;
+    line-height: 1.55;
+    overflow-x: clip;
+  }
+  .mc ::selection {
+    background: var(--pink);
+    color: var(--ink);
+  }
+  .draft {
+    padding: 0.6rem var(--gutter);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--peach);
+    border-bottom: 1px solid var(--line);
+  }
+  .nb {
+    white-space: nowrap;
+  }
+  .mc em {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 1.12em;
+    line-height: 1;
+  }
+
+  /* Labels: the site's mono, numbered like a manual. */
+  .kick,
+  .tag {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--on-dim);
+  }
+  .kick {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+    margin-bottom: clamp(1.4rem, 3vw, 2.2rem);
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid currentColor;
+    border-color: var(--line);
+  }
+  .kick span:first-child {
+    color: var(--pink);
+  }
+  .kick-r {
+    margin-left: auto;
+    color: var(--on-faint);
+  }
+  .shout {
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 118%;
+    font-size: clamp(2.6rem, 7vw, 6.4rem);
+    line-height: 0.88;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+  }
+  .shout .it {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 500;
+    font-stretch: normal;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 1.12em;
+  }
+  .hollow {
+    color: transparent;
+    -webkit-text-stroke: 0.035em var(--on);
+  }
+  .slab {
+    position: relative;
+    padding-block: var(--pad);
+  }
+  .paper {
+    --on: #0b0a14;
+    --on-dim: rgba(11, 10, 20, 0.74);
+    --on-faint: rgba(11, 10, 20, 0.5);
+    --line: rgba(11, 10, 20, 0.16);
+    background: var(--paper);
+    color: var(--on);
+  }
+  .paper .kick span:first-child {
+    color: #b0457a;
+  }
+
+  /* Buttons */
+  .dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  .go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8em;
+    padding: 1.05em 1.5em;
+    border: 2px solid var(--on);
+    border-radius: 999px;
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-stretch: 112%;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--on);
+    transition: background 0.3s, color 0.3s, border-color 0.3s, transform 0.3s var(--ease);
+  }
+  .go.solid {
+    background: var(--on);
+    color: var(--ink);
+  }
+  .go:hover {
+    background: var(--arc);
+    border-color: transparent;
+    color: #0b0a14;
+    transform: translateY(-2px);
+  }
+  .go-arrow {
+    display: inline-block;
+    transition: transform 0.35s var(--ease);
+  }
+  .go:hover .go-arrow {
+    transform: translateY(3px);
+  }
+  .fine {
+    margin-top: 0.9rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--on-faint);
+  }
+  .fine a {
+    color: var(--on-dim);
+    border-bottom: 1px solid var(--on-faint);
+  }
+  .fine a:hover {
+    color: var(--on);
+  }
+
+  /* ── Hero ──────────────────────────────────────────────────── */
+  .hero {
+    container-type: inline-size;
+    padding: clamp(1.4rem, 3vw, 2.4rem) var(--gutter) clamp(3.5rem, 7vw, 5.5rem);
+    background:
+      radial-gradient(60% 50% at 50% 70%, rgba(125, 108, 245, 0.18), transparent 70%),
+      radial-gradient(40% 40% at 85% 95%, rgba(224, 122, 168, 0.12), transparent 70%);
+  }
+  .hero-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .motion {
+    cursor: pointer;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid var(--line);
+    transition: color 0.2s;
+  }
+  .motion:hover {
+    color: var(--on);
+  }
+  .motion b {
+    font-weight: 500;
+    color: var(--on);
+  }
+  .mega-h {
+    margin-top: clamp(1.2rem, 3vw, 2.2rem);
+  }
+  .mega {
+    display: flex;
+    justify-content: center;
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 150%;
+    /* fills the hero's width: the name at full width is 10.05 times its size */
+    font-size: min(calc(100cqi / 10.1), 16rem);
+    line-height: 0.8;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    animation: mega-in 1.5s var(--ease) backwards;
+  }
+  .mega span {
+    display: inline-block;
+  }
+  @keyframes mega-in {
+    from {
+      font-stretch: 50%;
+      font-weight: 200;
+      opacity: 0;
+      letter-spacing: 0.2em;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+
+  .barrier {
+    position: relative;
+    margin: clamp(1.4rem, 3vw, 2.2rem) auto 0;
+    max-width: min(1200px, 100%);
+  }
+  .barrier svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .b-high {
+    fill: none;
+    stroke: var(--on-faint);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 0.1 14;
+    animation: fade 1s var(--ease) 0.5s backwards;
+  }
+  .b-low {
+    fill: none;
+    stroke: url(#mc-arc);
+    stroke-width: 11;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    animation: draw 1.6s var(--ease) 0.8s backwards;
+  }
+  .b-dot {
+    fill: var(--paper);
+  }
+  .b-dot-glow {
+    fill: rgba(244, 240, 230, 0.16);
+  }
+  .b-spark {
+    fill: var(--paper);
+    transform: scale(2.6);
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: spark-in 0.8s var(--ease) 2s backwards, twinkle 4s ease-in-out 2.8s infinite;
+  }
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes spark-in {
+    from {
+      transform: scale(0) rotate(-90deg);
+    }
+    to {
+      transform: scale(2.6);
+    }
+  }
+  @keyframes twinkle {
+    0%,
+    100% {
+      transform: scale(2.6);
+    }
+    50% {
+      transform: scale(2) rotate(45deg);
+    }
+  }
+  .b-lab {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: clamp(0.62rem, 1vw, 0.78rem);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--on-dim);
+    white-space: nowrap;
+    animation: fade 1s var(--ease) 1.4s backwards;
+  }
+  .b-lab i {
+    font-style: normal;
+    color: var(--on-faint);
+    margin-right: 0.3em;
+  }
+  .b-learn {
+    left: 0;
+    top: 55%;
+  }
+  .b-apply {
+    right: 0;
+    top: 71%;
+  }
+  .b-check {
+    left: 50%;
+    top: 58%;
+    transform: translateX(-50%);
+    padding: 0.35em 0.9em;
+    border-radius: 99px;
+    background: var(--arc);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .b-check i {
+    color: rgba(11, 10, 20, 0.55);
+  }
+  .b-without {
+    left: calc(50% + 1.6rem);
+    top: 2%;
+    color: var(--on-faint);
+  }
+
+  .hero-foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 2rem clamp(2rem, 6vw, 6rem);
+    align-items: end;
+    max-width: var(--max);
+    margin: clamp(2rem, 4vw, 3rem) auto 0;
+  }
+  .lede {
+    font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+    line-height: 1.32;
+    font-weight: 450;
+    max-width: 30ch;
+  }
+
+  /* ── Ticker ────────────────────────────────────────────────── */
+  .ticker {
+    position: relative;
+    z-index: 2;
+    width: 110%;
+    margin: 0 -5% -1.4rem;
+    padding: 0.95rem 0;
+    background: var(--arc);
+    color: var(--ink);
+    transform: rotate(-2deg);
+    overflow: hidden;
+    box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.6);
+  }
+  .ticker-run {
+    display: flex;
+    width: max-content;
+    animation: run 38s linear infinite;
+  }
+  .ticker-set {
+    display: flex;
+  }
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.6rem;
+    padding-right: 1.6rem;
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 125%;
+    font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .ticker-item svg {
+    width: 1.05em;
+    height: 1.05em;
+    fill: var(--ink);
+  }
+  @keyframes run {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* ── The problem ───────────────────────────────────────────── */
+  .problem {
+    padding-top: calc(var(--pad) + 1.5rem);
+  }
+  .problem .shout {
+    max-width: 14ch;
+  }
+  .cols {
+    columns: 3 18rem;
+    column-gap: clamp(1.5rem, 3vw, 2.6rem);
+    margin-top: clamp(2rem, 4vw, 3.2rem);
+    color: var(--on-dim);
+  }
+  .cols p {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+  .cols strong {
+    color: var(--on);
+    font-weight: 650;
+  }
+
+  .rail {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+    counter-reset: r;
+  }
+  .rail li {
+    position: relative;
+  }
+  .rail li:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -0.6rem;
+    top: 1.1rem;
+    z-index: 1;
+    transform: translateX(50%);
+    font-family: var(--mono);
+    color: var(--on-faint);
+  }
+  .r-card {
+    display: grid;
+    gap: 0.3rem;
+    height: 100%;
+    padding: 1.1rem 1.2rem 1.4rem;
+    border: 2px solid var(--on);
+    border-radius: 16px;
+  }
+  .r-n {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--on-faint);
+  }
+  .r-step {
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 130%;
+    font-size: clamp(1.6rem, 2.8vw, 2.5rem);
+    line-height: 1;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .r-what {
+    font-weight: 600;
+    font-size: 1.02rem;
+    line-height: 1.3;
+  }
+  .r-note {
+    font-size: 0.98rem;
+    color: var(--on-dim);
+    line-height: 1.4;
+  }
+  /* MCatalyst's step starts as an empty slot, then drops in once the rail is on screen. */
+  .rail li.ours::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px dashed var(--on-faint);
+    border-radius: 16px;
+  }
+  .rail li.ours .r-card {
+    position: relative;
+    border-color: transparent;
+    background: var(--arc);
+    color: var(--ink);
+    box-shadow: 0 24px 50px -18px rgba(176, 69, 122, 0.55);
+    transform: rotate(-2.5deg);
+  }
+  .rail li.ours .r-n,
+  .rail li.ours .r-note {
+    color: rgba(11, 10, 20, 0.7);
+  }
+  .rail.wait li.ours .r-card {
+    opacity: 0;
+    transform: translateY(-3.5rem) rotate(-12deg) scale(1.08);
+  }
+  .rail.drop li.ours .r-card {
+    transition: transform 0.9s cubic-bezier(0.3, 1.5, 0.5, 1), opacity 0.4s;
+  }
+
+  /* ── How it works ──────────────────────────────────────────── */
+  .how-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    margin-top: clamp(1.5rem, 4vw, 3rem);
+  }
+  .steps {
+    list-style: none;
+  }
+  .steps li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.2rem 1.3rem;
+    align-content: center;
+    min-height: 62vh;
+    opacity: 0.32;
+    transition: opacity 0.5s var(--ease);
+  }
+  .steps li.on {
+    opacity: 1;
+  }
+  .st-n {
+    grid-row: span 2;
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 120%;
+    font-size: clamp(3.2rem, 6vw, 5.4rem);
+    line-height: 0.85;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--on-faint);
+    background: var(--arc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 0% 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.9s var(--ease), -webkit-text-stroke-color 0.5s;
+  }
+  .steps li.on .st-n {
+    background-size: 100% 100%;
+    -webkit-text-stroke-color: transparent;
+  }
+  .st-t {
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-stretch: 112%;
+    font-size: clamp(1.4rem, 2.4vw, 2rem);
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .st-b {
+    color: var(--on-dim);
+    max-width: 40ch;
+    margin-top: 0.4rem;
+  }
+  .app-wrap {
+    position: sticky;
+    top: calc(64px + (100vh - 64px - 28rem) / 2);
+    align-self: start;
+    margin-top: 16vh;
+  }
+  .app-dots {
+    display: none;
+  }
+
+  /* The app window: system type and the app's colours, so it reads as the app, not the page. */
+  .app {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    background: linear-gradient(160deg, #1d1838, #100e1b 60%);
+    box-shadow:
+      0 60px 120px -40px rgba(111, 100, 242, 0.55),
+      0 0 0 1px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    color: #ece9f6;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .app-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .app-bar i {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .app-bar span {
+    margin-left: auto;
+    margin-right: auto;
+    padding-right: 51px;
+    font-size: 12px;
+    color: #8e8aa3;
+  }
+  .app-body {
+    display: grid;
+    padding: 22px 24px 26px;
+  }
+  .scr {
+    grid-area: 1 / 1;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(12px);
+    visibility: hidden;
+    transition: opacity 0.45s var(--ease), transform 0.6s var(--ease), visibility 0s 0.45s;
+  }
+  .app[data-at='0'] [data-scr='0'],
+  .app[data-at='1'] [data-scr='1'],
+  .app[data-at='2'] [data-scr='2'] {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    transition: opacity 0.45s var(--ease) 0.12s, transform 0.6s var(--ease) 0.12s, visibility 0s;
+  }
+  .a-crumb {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #a99cff;
+  }
+  .a-prog {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: #8e8aa3;
+  }
+  .a-prog i {
+    flex: 1;
+    height: 5px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+  .a-prog b {
+    display: block;
+    width: 33%;
+    height: 100%;
+    background: linear-gradient(90deg, #7d6cf5, #e07aa8);
+  }
+  .a-kind {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #f09ac0;
+  }
+  .a-q {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #fff;
+  }
+  .a-field {
+    min-height: 92px;
+    padding: 12px 14px;
+    border-radius: 11px;
+    border: 1px solid #7d6cf5;
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 0 0 4px rgba(125, 108, 245, 0.15);
+    font-size: 14.5px;
+  }
+  .caret {
+    display: inline-block;
+    width: 1.5px;
+    height: 1.1em;
+    margin-left: 1px;
+    vertical-align: -0.2em;
+    background: #a99cff;
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  .a-btn,
+  .a-go {
+    justify-self: start;
+    padding: 9px 16px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(110deg, #7d6cf5, #a65fd6 55%, #e07aa8);
+  }
+  .a-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .a-two > div {
+    padding: 12px;
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    font-size: 13px;
+    color: #c9c5d8;
+  }
+  .a-two .a-full {
+    border-color: rgba(111, 216, 191, 0.35);
+    background: rgba(111, 216, 191, 0.05);
+  }
+  .a-lb {
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8e8aa3;
+  }
+  .a-pts {
+    list-style: none;
+    display: grid;
+    gap: 7px;
+  }
+  .a-pts li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 11px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    font-size: 13px;
+    color: #c9c5d8;
+  }
+  .a-pts li::before {
+    content: '';
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .a-pts li.t {
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .app[data-at='1'] .a-pts li.t {
+    color: #fff;
+    border-color: rgba(111, 216, 191, 0.4);
+  }
+  .app[data-at='1'] .a-pts li.t::before {
+    border-color: #6fd8bf;
+    background: #6fd8bf url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.6 2.5L12 5.5' fill='none' stroke='%23101019' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat;
+  }
+  .app[data-at='1'] .a-pts li.t:nth-child(1),
+  .app[data-at='1'] .a-pts li.t:nth-child(1)::before {
+    transition-delay: 0.9s;
+  }
+  .app[data-at='1'] .a-pts li.t:nth-child(2),
+  .app[data-at='1'] .a-pts li.t:nth-child(2)::before {
+    transition-delay: 1.6s;
+  }
+  .a-tally {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-self: end;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.4s 0s;
+  }
+  .app[data-at='1'] .a-tally {
+    opacity: 1;
+    transition-delay: 2.2s;
+  }
+  .a-tally b {
+    font-size: 24px;
+  }
+  .a-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .a-head b {
+    font-size: 30px;
+  }
+  .w-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+    align-items: center;
+  }
+  .w-t {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    color: #c9c5d8;
+  }
+  .w-bar {
+    height: 7px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+  .w-bar i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 99px;
+    transition: width 1.3s var(--ease) 0.3s;
+  }
+  .app[data-at='2'] .w-bar i {
+    width: var(--w);
+  }
+  .v-solid {
+    --c: var(--good);
+  }
+  .v-shaky {
+    --c: var(--gold);
+  }
+  .v-missed {
+    --c: var(--bad);
+  }
+  .w-bar i,
+  .bars i {
+    background: var(--c);
+  }
+  .w-chip {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 9px;
+    border-radius: 99px;
+    color: var(--c);
+    background: color-mix(in srgb, var(--c) 15%, transparent);
+  }
+  .w-re {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    color: #8e8aa3;
+  }
+
+  /* ── Features ──────────────────────────────────────────────── */
+  .inside {
+    padding-top: 0;
+  }
+  .bento {
+    margin-top: clamp(1.8rem, 4vw, 3rem);
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+  .card {
+    --mx: 50%;
+    --my: 0%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.4rem 1.4rem 1.6rem;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(320px circle at var(--mx) var(--my), rgba(159, 147, 255, 0.13), transparent 70%),
+      var(--ink-2);
+    overflow: hidden;
+  }
+  .card h3 {
+    margin-top: auto;
+    padding-top: 1rem;
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-stretch: 115%;
+    font-size: 1.3rem;
+    line-height: 1.05;
+    text-transform: uppercase;
+  }
+  .card p {
+    color: var(--on-dim);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .c-map {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .c-links {
+    grid-column: span 2;
+  }
+  .card .art {
+    width: 100%;
+    height: auto;
+  }
+  .c-map .art line,
+  .c-links .link {
+    stroke: rgba(244, 240, 230, 0.2);
+    stroke-width: 2;
+    fill: none;
+  }
+  .node {
+    stroke: var(--ink-2);
+    stroke-width: 3;
+  }
+  .n-solid {
+    fill: var(--good);
+  }
+  .n-shaky {
+    fill: var(--gold);
+  }
+  .n-review {
+    fill: var(--bad);
+  }
+  .n-new {
+    fill: #4a4660;
+  }
+  .n-turn {
+    fill: #4a4660;
+    animation: turn 7s ease-in-out infinite;
+  }
+  @keyframes turn {
+    0%,
+    35% {
+      fill: #4a4660;
+    }
+    45%,
+    90% {
+      fill: var(--good);
+    }
+  }
+  .ring {
+    fill: none;
+    stroke: var(--good);
+    stroke-width: 2;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ring 7s ease-out infinite;
+  }
+  @keyframes ring {
+    0%,
+    38% {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+    42% {
+      opacity: 0.9;
+    }
+    62%,
+    100% {
+      opacity: 0;
+      transform: scale(2.2);
+    }
+  }
+  .c-links .link {
+    stroke: url(#mc-arc);
+    stroke-width: 3;
+    stroke-dasharray: 1;
+  }
+  .c-links.in .link {
+    animation: draw 1.4s var(--ease) both;
+  }
+  .pulse {
+    fill: var(--paper);
+  }
+  .c-links text {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    fill: var(--on-dim);
+  }
+  .bars {
+    display: grid;
+    gap: 0.6rem;
+    padding-top: 0.4rem;
+  }
+  .bars i {
+    display: block;
+    height: 0.6rem;
+    width: 0;
+    border-radius: 99px;
+    transition: width 1.3s var(--ease) 0.2s;
+  }
+  .card.in .bars i {
+    width: var(--w);
+  }
+  .tools {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+  .tools svg {
+    flex: 1;
+    min-width: 0;
+  }
+  .tools rect {
+    fill: rgba(244, 240, 230, 0.16);
+  }
+  .tools rect.hot {
+    fill: var(--pink);
+    animation: hot 3s ease-in-out infinite;
+  }
+  @keyframes hot {
+    50% {
+      fill: var(--violet);
+    }
+  }
+  .key {
+    flex: none;
+    padding: 0.45em 0.6em;
+    border: 1px solid var(--on-faint);
+    border-bottom-width: 3px;
+    border-radius: 8px;
+    font-family: var(--text);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--on);
+  }
+  .glyph {
+    height: 4rem !important;
+    width: auto !important;
+    align-self: flex-start;
+  }
+  .glyph .axis {
+    fill: none;
+    stroke: var(--on-faint);
+    stroke-width: 2;
+  }
+  .glyph .curve {
+    fill: none;
+    stroke: url(#mc-arc);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+  }
+  .glyph .curve.down {
+    stroke: var(--pink);
+    stroke-dasharray: none;
+  }
+  .card.in .glyph .curve {
+    animation: draw 1.6s var(--ease) 0.2s both;
+  }
+  .card.in .glyph .curve.down {
+    animation: none;
+  }
+  .cols-art {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    width: 8rem !important;
+  }
+  .cols-art i {
+    flex: 1;
+    height: var(--h);
+    border-radius: 3px 3px 0 0;
+    background: var(--arc);
+    background-size: 8rem 100%;
+    transform-origin: bottom;
+    transform: scaleY(0.1);
+    transition: transform 1s var(--ease);
+  }
+  .card.in .cols-art i {
+    transform: none;
+  }
+  .card.in .cols-art i:nth-child(2n) {
+    transition-delay: 0.15s;
+  }
+  .swatches {
+    display: flex;
+    align-items: center;
+  }
+  .swatches i {
+    width: 2.6rem;
+    height: 2.6rem;
+    margin-right: -0.7rem;
+    border-radius: 50%;
+    background: var(--c);
+    border: 3px solid var(--ink-2);
+    transition: margin 0.5s var(--ease);
+  }
+  .card:hover .swatches i {
+    margin-right: 0.15rem;
+  }
+
+  /* ── How the questions are made ────────────────────────────── */
+  .made {
+    background:
+      radial-gradient(50% 60% at 15% 40%, rgba(125, 108, 245, 0.16), transparent 70%),
+      var(--ink);
+  }
+  .made-h {
+    display: grid;
+    font-family: var(--heavy);
+    font-size: clamp(2.5rem, 7.6vw, 7.4rem);
+    line-height: 0.92;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+  .made-ai {
+    font-weight: 200;
+    font-stretch: 70%;
+    color: var(--on-faint);
+  }
+  /* The second line takes on the weight: thin and narrow like the first, then heavy and wide. */
+  .made-people {
+    font-weight: 900;
+    font-stretch: 128%;
+    background: var(--arc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: font-weight 1.6s var(--ease) 0.35s, font-stretch 1.6s var(--ease) 0.35s;
+  }
+  .made-h[data-reveal]:not(.in) .made-people {
+    font-weight: 200;
+    font-stretch: 70%;
+  }
+  .made-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    align-items: start;
+  }
+  .claim {
+    font-size: clamp(1.2rem, 1.9vw, 1.5rem);
+    line-height: 1.45;
+    color: var(--on-dim);
+  }
+  .claim strong {
+    display: block;
+    margin-top: 1.2rem;
+    font-weight: 700;
+    font-size: 1.22em;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .claim mark {
+    color: inherit;
+    background: var(--arc) no-repeat 0 0 / 0% 100%;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    padding: 0.05em 0.2em;
+    color: var(--on);
+    transition: background-size 1.4s var(--ease) 0.5s, color 0.6s 0.9s;
+  }
+  .claim.in mark {
+    background-size: 100% 100%;
+    color: var(--ink);
+  }
+  .checks {
+    list-style: none;
+    display: grid;
+    gap: 1.2rem;
+    counter-reset: c;
+  }
+  .checks li {
+    counter-increment: c;
+    position: relative;
+    padding: 0 0 1.2rem 3.4rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--on-dim);
+  }
+  .checks li::before {
+    content: counter(c, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.1rem;
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 120%;
+    font-size: 1.5rem;
+    line-height: 1;
+    background: var(--arc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .checks b {
+    color: var(--on);
+    font-weight: 650;
+  }
+
+  /* ── What's live ───────────────────────────────────────────── */
+  .live .shout {
+    font-size: clamp(2.6rem, 6.2vw, 5.4rem);
+  }
+  .live-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 2rem clamp(2rem, 5vw, 4.5rem);
+    align-items: end;
+  }
+  .live-lede {
+    color: var(--on-dim);
+    font-size: 1.15rem;
+    max-width: 44ch;
+  }
+  .board {
+    --pct: 0%;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  }
+  .tally {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem 2rem;
+  }
+  .t-big {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+    font-family: var(--heavy);
+    font-stretch: 112%;
+    font-weight: 800;
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    text-transform: uppercase;
+  }
+  .t-big b {
+    font-weight: 900;
+    font-stretch: 130%;
+    font-size: clamp(3.4rem, 8vw, 6.5rem);
+    line-height: 0.85;
+  }
+  .t-sub {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--on-dim);
+  }
+  .meter {
+    position: relative;
+    height: 2.4rem;
+    margin-top: 1.2rem;
+    border: 2px solid var(--on);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .meter i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0;
+    background: var(--arc);
+    border-right: 2px solid var(--on);
+    transition: width 1.6s var(--ease) 0.2s;
+  }
+  .board.seen[data-state='ready'] .meter i {
+    width: var(--pct);
+  }
+  .meter span {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+  .latest {
+    margin-top: 1.6rem;
+    padding: 1.1rem 1.3rem;
+    border-radius: 16px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .latest-h {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(244, 240, 230, 0.6);
+    margin-bottom: 0.6rem;
+  }
+  .latest ul {
+    list-style: none;
+    display: grid;
+    gap: 0.45rem;
+  }
+  .latest :global(li) {
+    display: flex;
+    align-items: baseline;
+    gap: 0.9rem;
+  }
+  .latest :global(.l-new) {
+    flex: none;
+    padding: 0.1em 0.6em;
+    border-radius: 99px;
+    background: var(--arc);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .latest :global(.l-t) {
+    font-weight: 600;
+  }
+  .latest :global(.l-q) {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: rgba(244, 240, 230, 0.6);
+    white-space: nowrap;
+  }
+  .books {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.6rem clamp(1rem, 2.4vw, 2rem);
+    margin-top: 2.2rem;
+  }
+  .books :global(.book-h) {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 0.55rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 2px solid var(--on);
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-stretch: 110%;
+    font-size: 1.02rem;
+    text-transform: uppercase;
+  }
+  .books :global(.book-h span) {
+    font-family: var(--mono);
+    font-weight: 400;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--on-dim);
+  }
+  .books :global(ul) {
+    list-style: none;
+  }
+  .books :global(li) {
+    display: grid;
+    grid-template-columns: 1.05rem 1.4rem minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: start;
+    padding: 0.32rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.93rem;
+    line-height: 1.25;
+    color: var(--on-faint);
+  }
+  .books :global(li.on) {
+    color: var(--on);
+  }
+  .books :global(.box) {
+    margin-top: 0.08rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 5px;
+    border: 1.5px solid var(--on-faint);
+  }
+  .books :global(li.on .box) {
+    border: 0;
+    background: #0b0a14 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.6 2.5L12 5.5' fill='none' stroke='%23f6d39c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 0.95rem no-repeat;
+  }
+  .books :global(.c-n) {
+    padding-top: 0.12rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+  }
+  .books :global(.c-t) {
+    min-width: 0;
+  }
+  .books :global(li.on .c-t) {
+    font-weight: 600;
+  }
+  .books :global(.c-q) {
+    padding-top: 0.12rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+  }
+  .skeleton li {
+    height: 1.95rem;
+    background: linear-gradient(90deg, transparent, rgba(11, 10, 20, 0.06), transparent) 0 0 / 50% 100% no-repeat;
+    animation: shimmer 1.4s linear infinite;
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -100% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+  .board[data-state='failed'] .tally,
+  .board[data-state='failed'] .meter,
+  .board[data-state='failed'] .books {
+    display: none;
+  }
+  .fail {
+    padding: 1.2rem 0;
+    color: var(--on-dim);
+  }
+
+  /* ── Install ───────────────────────────────────────────────── */
+  .os-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+  .os {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: clamp(1.4rem, 3vw, 2.2rem);
+    border-radius: 22px;
+    border: 1px solid var(--line);
+    background: var(--ink-2);
+  }
+  .os.mine {
+    border: 2px solid transparent;
+    background:
+      linear-gradient(var(--ink-2), var(--ink-2)) padding-box,
+      var(--arc) border-box;
+  }
+  .os-tag {
+    visibility: hidden;
+    margin-bottom: 0.6rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pink);
+  }
+  .os.mine .os-tag {
+    visibility: visible;
+  }
+  .os-h {
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 130%;
+    font-size: clamp(2.2rem, 4vw, 3.4rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    margin-bottom: 1.4rem;
+  }
+  .os-steps {
+    list-style: none;
+    display: grid;
+    gap: 0.85rem;
+    margin-bottom: 1.8rem;
+    counter-reset: s;
+  }
+  .os-steps li {
+    counter-increment: s;
+    position: relative;
+    padding-left: 2.5rem;
+    color: var(--on-dim);
+    line-height: 1.45;
+  }
+  .os-steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: -0.05rem;
+    display: grid;
+    place-items: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 50%;
+    background: var(--ink-3);
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--on);
+  }
+  .os-steps b {
+    color: var(--on);
+    font-weight: 650;
+  }
+  .os .go {
+    margin-top: auto;
+  }
+  .why {
+    display: grid;
+    grid-template-columns: minmax(10rem, 0.35fr) 1fr;
+    gap: 1rem 2rem;
+    margin-top: 0.9rem;
+    padding: 1.4rem clamp(1.4rem, 3vw, 2.2rem);
+    border-radius: 22px;
+    border: 1px dashed var(--on-faint);
+    color: var(--on-dim);
+  }
+  .why-h {
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-stretch: 112%;
+    font-size: 1.15rem;
+    text-transform: uppercase;
+    color: var(--on);
+  }
+
+  /* ── Your data and questions ───────────────────────────────── */
+  .small {
+    padding-top: 0;
+  }
+  .small-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 3rem clamp(2rem, 6vw, 5rem);
+  }
+  .data {
+    list-style: none;
+    display: grid;
+    gap: 1.3rem;
+  }
+  .data li {
+    display: grid;
+    gap: 0.3rem;
+    color: var(--on-dim);
+    font-size: 1.02rem;
+  }
+  .data b {
+    font-family: var(--heavy);
+    font-weight: 800;
+    font-stretch: 110%;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--on);
+  }
+  .faq details {
+    border-bottom: 1px solid var(--line);
+  }
+  .faq summary {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.05rem 0;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.15rem;
+  }
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .plus {
+    position: relative;
+    flex: none;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--on-faint);
+    transition: transform 0.4s var(--ease), background 0.3s, border-color 0.3s;
+  }
+  .plus::before,
+  .plus::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0.7rem;
+    height: 1.5px;
+    background: var(--on);
+    transform: translate(-50%, -50%);
+  }
+  .plus::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  .faq summary:hover .plus {
+    border-color: var(--on);
+  }
+  .faq details[open] .plus {
+    transform: rotate(135deg);
+    background: var(--arc);
+    border-color: transparent;
+  }
+  .faq details[open] .plus::before,
+  .faq details[open] .plus::after {
+    background: var(--ink);
+  }
+  .faq details p {
+    padding-bottom: 1.2rem;
+    color: var(--on-dim);
+    max-width: 60ch;
+  }
+
+  /* ── Last call ─────────────────────────────────────────────── */
+  .end {
+    --on: #0b0a14;
+    --on-faint: rgba(11, 10, 20, 0.5);
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(5rem, 11vw, 9rem);
+    color: var(--on);
+    isolation: isolate;
+  }
+  .end::before {
+    content: '';
+    position: absolute;
+    inset: 0 -50% 0 0;
+    z-index: -1;
+    background: linear-gradient(100deg, #9f93ff, #f09ac0 30%, #f6d39c 50%, #f09ac0 70%, #9f93ff);
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    to {
+      transform: translateX(-33.3%);
+    }
+  }
+  .end-in {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+    gap: 2rem;
+  }
+  .end img {
+    border-radius: 22%;
+    box-shadow: 0 30px 60px -25px rgba(11, 10, 20, 0.6);
+  }
+  .end-h {
+    font-family: var(--heavy);
+    font-weight: 900;
+    font-stretch: 135%;
+    font-size: clamp(2.1rem, 7.6vw, 7.2rem);
+    line-height: 0.86;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+  .end .go {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .end .go.solid {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .end .go:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ── Motion off: everything at its end state ───────────────── */
+  .mc.still *,
+  .mc.still *::before,
+  .mc.still *::after,
+  .mc.still {
+    animation-delay: 0s !important;
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: 0s !important;
+    transition-duration: 0.001s !important;
+  }
+  .mc.still .caret {
+    display: none;
+  }
+
+  /* ── Narrow screens ────────────────────────────────────────── */
+  @media (max-width: 1000px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .books {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 900px) {
+    .how-grid {
+      grid-template-columns: 1fr;
+    }
+    .app-wrap {
+      position: static;
+      margin-top: 0;
+      order: -1;
+    }
+    .app-dots {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .app-dots i {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 99px;
+      background: var(--on-faint);
+      transition: width 0.4s var(--ease), background 0.3s;
+    }
+    .app-dots i.on {
+      width: 1.6rem;
+      background: var(--arc);
+    }
+    .steps li {
+      min-height: 0;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .st-n {
+      font-size: 2.6rem;
+    }
+    .rail {
+      grid-template-columns: 1fr 1fr;
+      gap: 1.6rem 0.75rem;
+    }
+    .rail li:nth-child(2)::after {
+      display: none;
+    }
+    .made-grid,
+    .live-top,
+    .small-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 680px) {
+    .hero-foot {
+      grid-template-columns: 1fr;
+    }
+    .b-without {
+      display: none;
+    }
+    .b-learn {
+      top: 42%;
+    }
+    .b-apply {
+      top: 60%;
+    }
+    .b-check {
+      top: 57%;
+    }
+    .rail {
+      grid-template-columns: 1fr;
+    }
+    .rail li::after {
+      display: none;
+    }
+    .bento,
+    .books,
+    .os-grid {
+      grid-template-columns: 1fr;
+    }
+    .c-map,
+    .c-links {
+      grid-column: auto;
+      grid-row: auto;
+    }
+    .why {
+      grid-template-columns: 1fr;
+    }
+    .app-body {
+      padding: 18px 16px 20px;
+    }
+    .a-two {
+      grid-template-columns: 1fr;
+    }
+    .latest :global(li) {
+      flex-wrap: wrap;
+      gap: 0.3rem 0.7rem;
+    }
+    .latest :global(.l-q) {
+      margin-left: 0;
+    }
+  }
+</style>
