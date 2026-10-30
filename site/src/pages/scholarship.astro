@@ -252,16 +252,23 @@ const gcal = (() => {
   tick();
 
   // Timeline: fill up to today and place the marker, interpolating within the current gap.
+  // Counts whole days on Lexington's calendar, so on a milestone's date the marker sits on its dot.
   const tl = document.querySelector<HTMLElement>('.tl')!;
   const items = [...tl.querySelectorAll<HTMLElement>('li[data-date]')];
-  const times = items.map((li) => Date.parse(`${li.dataset.date}T12:00:00Z`));
-  const now = Date.now();
+  const day = (iso: string) => Date.parse(`${iso}T00:00:00Z`) / 864e5;
+  const days = items.map((li) => day(li.dataset.date!));
+  const lex = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' })
+      .formatToParts()
+      .map((x) => [x.type, x.value]),
+  );
+  const now = day(`${lex.year}-${lex.month}-${lex.day}`);
   let p = 0;
-  if (now >= times.at(-1)!) p = 100;
-  else if (now > times[0]) {
-    const i = times.findIndex((t) => t > now) - 1;
-    const step = 100 / (times.length - 1);
-    p = step * (i + (now - times[i]) / (times[i + 1] - times[i]));
+  if (now >= days.at(-1)!) p = 100;
+  else if (now > days[0]) {
+    const i = days.findIndex((d) => d > now) - 1;
+    const step = 100 / (days.length - 1);
+    p = step * (i + (now - days[i]) / (days[i + 1] - days[i]));
   }
   tl.querySelector<HTMLElement>('[data-tl-fill]')!.style.width = `${p}%`;
   const today = tl.querySelector<HTMLElement>('[data-tl-today]')!;
@@ -269,7 +276,7 @@ const gcal = (() => {
     today.style.left = `${p}%`;
     today.hidden = false;
   }
-  items.forEach((li, i) => li.classList.toggle('done', times[i] + 12 * 36e5 < now));
+  items.forEach((li, i) => li.classList.toggle('done', days[i] < now));
 </script>
 
 <style>
