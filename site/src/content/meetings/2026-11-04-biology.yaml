@@ -7,3 +7,7 @@ location: White Hall 231
 covers: [biochem-6, biochem-7]
 topics:
   - "Overflow from lipid metabolism"
+
+materials:
+
+  - { kind: slides, chapters: [biochem-6,biochem-7], href: "/powerpoints/DNA, RNA, Gene Expression and Techniques.pdf" }
