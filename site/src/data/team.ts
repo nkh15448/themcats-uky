@@ -81,6 +81,17 @@ export const leadership: Member[] = [
     hobbies: 'Playing music, tennis & golf',
     food: 'Fried rice',
   },
+  {
+    id: 'lara-westhafer',
+    name: 'Lara Westhafer',
+    role: 'Treasurer',
+    year: 'Sophomore',
+    majors: 'Finance & Accounting',
+    minors: 'Economics',
+    subjects: 'The 30 minute break 🙂',
+    hobbies: 'Reading & karate',
+    food: 'Not entirely sure, it changes from day to day. A nice home-cooked meal is always on the list, though.',
+  },
 ];
 
 // Officer application. Leave formUrl empty to point people to the GroupMe instead.
