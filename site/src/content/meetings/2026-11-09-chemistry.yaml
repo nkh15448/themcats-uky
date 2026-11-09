@@ -5,3 +5,7 @@ time: "6:00 PM"
 end: "9:00 PM"
 location: White Hall 231
 covers: [orgo-9, orgo-10, orgo-12]
+
+materials:
+
+  - { kind: slides, chapters: [orgo-9,orgo-10,orgo-12], href: "/powerpoints/seminar17-1.pdf" }
