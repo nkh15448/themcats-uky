@@ -39,7 +39,9 @@ export type Role = {
   questions: Question[];
 };
 
-type Swatch = { bg: string; ink: string };
+// bg is the strong color on buttons and accents, ink is the text on top of it,
+// and tint is the pale full-screen background on that role's page.
+type Swatch = { bg: string; ink: string; tint: string };
 export type Palette = {
   id: string;
   name: string;
@@ -48,7 +50,10 @@ export type Palette = {
   dim: string;
   primary: string;
   primaryInk: string;
-  teams: Record<Role['team'], Swatch>;
+  /** The pale background on the "We're new, we're ambitious" screen. */
+  primaryTint: string;
+  /** One color per role, matched by the role's id. Every role needs a line here. */
+  roles: Record<string, Swatch>;
 };
 
 const white = '#FFFFFF';
@@ -58,12 +63,13 @@ export const palettes: Palette[] = [
     id: 'dusk',
     name: 'Dusk',
     paper: '#FBF6EE', ink: '#241B3A', dim: '#675C70',
-    primary: '#3B2A78', primaryInk: white,
-    teams: {
-      Outreach: { bg: '#F2A33C', ink: '#241B3A' },
-      Media: { bg: '#D1432E', ink: white },
-      Tutoring: { bg: '#7B2F6F', ink: white },
-      Seminars: { bg: '#2F3F8F', ink: white },
+    primary: '#3B2A78', primaryInk: white, primaryTint: '#E9E3F5',
+    roles: {
+      outreach: { bg: '#F2A33C', ink: '#241B3A', tint: '#FBE6C6' },
+      video: { bg: '#D1432E', ink: white, tint: '#F8DDD3' },
+      design: { bg: '#1F7A6D', ink: white, tint: '#D8ECE5' },
+      tutor: { bg: '#7B2F6F', ink: white, tint: '#EFDDEB' },
+      lecturer: { bg: '#2F3F8F', ink: white, tint: '#DFE2F3' },
     },
   },
 ];

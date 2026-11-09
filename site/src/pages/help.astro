@@ -114,9 +114,10 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
   function setRole(next: Role) {
     if (role?.id !== next.id) delete answers.also;
     role = next;
-    const c = palette.teams[next.team];
+    const c = palette.roles[next.id];
     app.style.setProperty('--accent', c.bg);
     app.style.setProperty('--accent-ink', c.ink);
+    app.style.setProperty('--tint', c.tint);
   }
 
   function applyPalette(p: Palette) {
@@ -127,6 +128,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     root.setProperty('--dim', p.dim);
     root.setProperty('--primary', p.primary);
     root.setProperty('--primary-ink', p.primaryInk);
+    root.setProperty('--primary-tint', p.primaryTint);
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', p.paper);
     if (role) setRole(role);
   }
@@ -164,7 +166,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
 
   function rolesScreen() {
     const row = (r: Role) => {
-      const c = palette.teams[r.team];
+      const c = palette.roles[r.id];
       return `<li><button class="role" type="button" data-role="${r.id}" style="--r:${c.bg};--ri:${c.ink}">
         <span class="role-top"><span class="role-name">${esc(r.name)}</span><span class="arrow" aria-hidden="true">→</span></span>
         <span class="role-line">${esc(r.line)}</span>
@@ -202,7 +204,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
       <p class="yours">${esc(data.makeItYours.body)} ${esc(r.yours)}</p>
       <h2 class="mono group">${esc(data.briefHeads.expect)}</h2>
       ${list(r.expect)}
-      <button class="cta on-color" data-next type="button">I’m interested <span aria-hidden="true">→</span></button>`);
+      <button class="cta" data-next type="button">I’m interested <span aria-hidden="true">→</span></button>`);
     el.querySelector('[data-next]')!.addEventListener('click', next);
     return el;
   }
@@ -321,8 +323,6 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     $('back').hidden = at === 'know' || at === 'done';
     const share = role ? list.indexOf(at) / (list.length - 1) : 0;
     $('fill').style.transform = `scaleX(${share})`;
-    app.classList.toggle('on-color', at === 'brief' || at === 'done');
-    app.classList.toggle('on-primary', at === 'pledge');
   }
 
   function settle(el: HTMLElement) {
@@ -411,6 +411,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     --hair: color-mix(in srgb, var(--ink) 16%, transparent);
     --accent: var(--primary);
     --accent-ink: var(--primary-ink);
+    --tint: var(--primary-tint);
     transition: --accent 0.5s var(--ease);
     color: var(--ink);
   }
@@ -425,8 +426,6 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     transform-origin: left;
     transition: transform 0.6s var(--ease), background-color 0.3s;
   }
-  .on-color .bar span { background: var(--accent-ink); }
-  .on-primary .top { color: var(--primary-ink); }
 
   .top {
     position: fixed;
@@ -437,9 +436,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     align-items: center;
     padding: 1rem clamp(1.25rem, 4vw, 2.5rem);
     pointer-events: none;
-    transition: color 0.3s;
   }
-  .on-color .top { color: var(--accent-ink); }
   .top .mono { font-size: 0.66rem; letter-spacing: 0.14em; font-weight: 400; }
   .back { grid-column: 1; justify-self: start; pointer-events: auto; padding: 0.4rem 0; }
   .brand { grid-column: 2; display: flex; align-items: center; gap: 0.5rem; }
@@ -454,9 +451,9 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     display: flex;
     background: transparent;
   }
-  :global(.screen.color) { background: var(--accent); color: var(--accent-ink); }
-  :global(.screen.primary) { background: var(--primary); color: var(--primary-ink); }
-  :global(.screen.primary .cta) { margin-top: 2.2rem; background: var(--primary-ink); color: var(--primary); border-color: var(--primary-ink); }
+  :global(.screen.color) { background: var(--tint); }
+  :global(.screen.primary) { background: var(--primary-tint); }
+  :global(.screen.primary .cta) { margin-top: 2.2rem; background: var(--primary); color: var(--primary-ink); border-color: var(--primary); }
   :global(.screen .inner) {
     width: 100%;
     max-width: 44rem;
@@ -495,7 +492,6 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
   }
   :global(.cta:active) { transform: scale(0.98); }
   :global(.cta.ghost) { background: transparent; color: var(--ink); border-color: var(--ink); }
-  :global(.cta.on-color) { background: var(--accent-ink); color: var(--accent); border-color: var(--accent-ink); }
   @media (hover: hover) {
     :global(.cta.ghost:hover) { background: var(--ink); color: var(--paper); }
   }
@@ -667,7 +663,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
 </style>
 
 <style is:global>
-  :root:has(#app) { --paper: #fbf6ee; --ink: #241b3a; --dim: #675c70; --primary: #3b2a78; --primary-ink: #fff; }
+  :root:has(#app) { --paper: #fbf6ee; --ink: #241b3a; --dim: #675c70; --primary: #3b2a78; --primary-ink: #fff; --primary-tint: #e9e3f5; }
   html:has(#app) { background: var(--paper); color-scheme: light; }
   body:has(#app) { background: var(--paper); color: var(--ink); }
   body:has(#app)::after { content: none; }
