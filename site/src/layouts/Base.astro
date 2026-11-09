@@ -21,9 +21,11 @@ interface Props {
 const {
   title,
   bare = false,
-  description = 'A free, peer-driven MCAT preparation community at the University of Kentucky.',
+  description = 'The M-CATS is a free MCAT prep club at the University of Kentucky, with weekly seminars, one-on-one peer tutoring, and a searchable library of study materials.',
 } = Astro.props;
-const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · University of Kentucky';
+const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · Free MCAT Prep at the University of Kentucky';
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(url('/og-image.png'), Astro.site).href;
 ---
 <!doctype html>
 <html lang="en">
@@ -35,8 +37,17 @@ const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · University o
     <meta name="theme-color" content="#0d0d0c" />
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
     <link rel="preload" href={playfair} as="font" type="font/woff2" crossorigin />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="The M-CATS" />
+    <meta property="og:url" content={canonical} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The M-CATS: free MCAT preparation at the University of Kentucky" />
+    <meta name="twitter:card" content="summary_large_image" />
     <slot name="head" />
     {import.meta.env.PUBLIC_PREVIEW === '1' && <meta name="robots" content="noindex, nofollow" />}
     {/* Anonymous, cookie-free visit counts: themcats.goatcounter.com. Live site only. */}

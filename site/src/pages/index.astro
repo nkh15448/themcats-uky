@@ -37,8 +37,45 @@ const layers = [
   { id: 'back', clip: { y: -60, height: orb.cy + 60 } },
   { id: 'front', clip: { y: orb.cy, height: 400 - orb.cy + 60 } },
 ] as const;
+
+// Tells search engines and AI search who "The M-CATS" is, since the name alone reads as "MCATs".
+const home = new URL(url('/'), Astro.site).href;
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${home}#website`,
+      url: home,
+      name: 'The M-CATS',
+      alternateName: ['M-CATS', 'The M-CATS at the University of Kentucky'],
+      publisher: { '@id': `${home}#organization` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${home}#organization`,
+      name: 'The M-CATS',
+      alternateName: 'M-CATS',
+      url: home,
+      logo: new URL(url('/logo.png'), Astro.site).href,
+      description:
+        'A free MCAT preparation club for students at the University of Kentucky, offering weekly seminars, one-on-one peer tutoring, and a searchable library of study materials.',
+      foundingDate: '2026',
+      knowsAbout: 'Medical College Admission Test (MCAT) preparation',
+      location: {
+        '@type': 'CollegeOrUniversity',
+        name: 'University of Kentucky',
+        sameAs: 'https://www.uky.edu/',
+        address: { '@type': 'PostalAddress', addressLocality: 'Lexington', addressRegion: 'KY', addressCountry: 'US' },
+      },
+      sameAs: [links.bbnvolved],
+    },
+  ],
+};
 ---
 <Base>
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(schema)} />
+
   <!-- ── Hero ─────────────────────────────────────────────── -->
   <section class="hero">
     <div class="wrap hero-grid">
@@ -103,6 +140,7 @@ const layers = [
   <section class="section offer">
     <div class="wrap">
       <h2 class="offer-title display" data-reveal>Free MCAT Preparation</h2>
+      <p class="offer-lede italic" data-reveal>The M-CATS is a free MCAT prep club at the University of Kentucky. We teach weekly seminars, offer one-on-one peer tutoring, and keep every slide deck, handout, and Anki deck in one searchable library.</p>
       <div class="offer-grid" data-reveal>
         <div class="offer-col">
           <p class="mono col-head">MCAT Classes</p>
@@ -537,7 +575,16 @@ const layers = [
     font-size: clamp(2.6rem, 7.4vw, 6.4rem);
     text-align: center;
     letter-spacing: -0.03em;
-    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  }
+  .offer-lede {
+    max-width: 44rem;
+    margin: 0 auto clamp(2.5rem, 5vw, 4rem);
+    text-align: center;
+    text-wrap: balance;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    line-height: 1.3;
+    color: var(--fg-dim);
   }
   .offer-grid {
     display: grid;

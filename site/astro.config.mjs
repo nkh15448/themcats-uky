@@ -1,5 +1,9 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
+
+// Unlisted pages stay out of the sitemap (most of them are noindex too).
+const UNLISTED = /\/(help|mcatalyst|present|presentSpace|presentOrbit)\/?$/;
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,4 +15,5 @@ export default defineConfig({
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   // Old Hugo address, kept working for links already out there.
   redirects: { '/leadership': '/team' },
+  integrations: [sitemap({ filter: (page) => !UNLISTED.test(new URL(page).pathname) })],
 });
