@@ -3,7 +3,9 @@ import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import Base from '../layouts/Base.astro';
 import Logo from '../components/Logo.astro';
-import { leadership, officerApp as app } from '../data/team';
+import PersonCard from '../components/PersonCard.astro';
+import { leadership, teams, officerApp as app, type Member } from '../data/team';
+import { roles as hiringRoles } from '../data/hiring';
 
 const GROUPME = 'https://groupme.com/join_group/113607612/J0DBPuPV';
 
@@ -16,73 +18,222 @@ const photosOf = (id: string) =>
     .map(([, mod]) => mod.default)
     .slice(0, 3);
 
-const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2);
+type Person = Member & { photos: ImageMetadata[] };
+let people: Person[] = leadership.map((m) => ({ ...m, photos: photosOf(m.id) }));
 
-const members = leadership.map((m) => ({ ...m, photos: photosOf(m.id) }));
-const rows = (m: (typeof members)[number]) =>
+// Local preview only: start the dev server with TEAM_DEMO=1 to add made-up people and see how
+// the page fills out. (Query strings don't reach prebuilt pages, so this is an env switch.)
+const demo = import.meta.env.DEV && process.env.TEAM_DEMO === '1';
+if (demo) {
+  const fake = (name: string, team: Member['team'], extra: Partial<Member> = {}): Person => ({
+    id: `demo-${name.toLowerCase().replace(/\s+/g, '-')}`,
+    name,
+    role: 'Officer',
+    team,
+    year: 'Sophomore',
+    majors: 'Biology',
+    hobbies: 'Placeholder hobbies',
+    food: 'Placeholder food',
+    photos: [],
+    ...extra,
+  });
+  people = [
+    ...people,
+    fake('Jordan Example', 'seminars', { year: 'Senior', majors: 'Neuroscience' }),
+    fake('Riley Example', 'seminars', { year: 'Junior', majors: 'Chemistry & Spanish' }),
+    fake('Sam Example', 'seminars'),
+    fake('Avery Example', 'peer-mentors', { year: 'Senior', majors: 'Biochemistry' }),
+    fake('Morgan Example', 'peer-mentors', { year: 'Junior', majors: 'Psychology' }),
+    fake('Quinn Example', 'peer-mentors'),
+    fake('Taylor Example', 'peer-mentors', { year: 'Senior', majors: 'Physics' }),
+    fake('Casey Example', 'media', { lead: true, year: 'Junior', majors: 'Digital Media & Design' }),
+    fake('Drew Example', 'media', { year: 'Freshman', majors: 'Film' }),
+    fake('Jamie Example', 'operations', { year: 'Freshman', majors: 'Undecided' }),
+  ];
+}
+
+const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2);
+const plural = (n: number) => `${n} ${n === 1 ? 'person' : 'people'}`;
+
+const exec = people.filter((p) => p.exec);
+const byTeam = teams.map((t, i) => {
+  const on = people.filter((p) => p.team === t.id);
+  return {
+    ...t,
+    n: String(i + 1).padStart(2, '0'),
+    leads: on.filter((p) => p.lead),
+    members: on.filter((p) => !p.lead),
+    size: on.length,
+    also: people.filter((p) => p.also?.includes(t.id)),
+    roles: t.hires ? hiringRoles.filter((r) => r.team === t.hires) : [],
+  };
+});
+// Officers who aren't on a team yet.
+const unassigned = people.filter((p) => !p.exec && !p.team);
+
+const teamName = (id: string) => teams.find((t) => t.id === id)?.name ?? id;
+const alsoNote = (p: Person) => (p.also?.length ? `Also on the ${p.also.map(teamName).join(' and ')} team` : undefined);
+const leadLabel = (p: Person) => ['Lead', p.role !== 'Officer' && p.role].filter(Boolean).join(' · ');
+const moreRows = (p: Person) =>
   [
-    ['Year', m.year],
-    ['Studying', [m.majors, m.minors && `Minor: ${m.minors}`].filter(Boolean).join(' · ')],
-    ['Favorite MCAT Subject(s)', m.subjects],
-    ['Off the clock', m.hobbies],
+    ['Studying', p.minors && `Minor: ${p.minors}`],
+    ['Favorite MCAT Subject(s)', p.subjects],
+    ['Off the clock', p.hobbies],
+    ['Comfort food', p.food],
   ].filter(([, v]) => v) as [string, string][];
 ---
-<Base title="Team" description="Meet the students behind The M-CATS, and apply to join the officer team.">
+<Base title="Team" description="Meet the students behind The M-CATS, see who leads each team, and apply to join.">
   <header class="wrap head">
-    <p class="label">Team · {leadership.length} officers</p>
+    <p class="label">Team · {people.length} officers · {teams.length} teams</p>
     <h1 class="display ca ca-in">The Team</h1>
     <p class="intro italic">
       Pre-meds who have been through the MCAT, or are in the middle of it right now, building the support we wished we’d had.
     </p>
+    {demo && <p class="demo-tag mono">Demo · the “Example” people are made up, to show a fuller team</p>}
   </header>
 
-  <section class="wrap">
-    <ol class="grid">
-      {members.map((m, i) => (
-        <li class="card" data-reveal style={`--d:${(i % 3) * 90}ms`}>
-          <div
-            class="stack"
-            data-count={Math.max(1, m.photos.length)}
-            role={m.photos.length > 1 ? 'button' : undefined}
-            tabindex={m.photos.length > 1 ? 0 : undefined}
-            aria-label={m.photos.length > 1 ? `Photos of ${m.name}: show next` : undefined}
-          >
-            {m.photos.length > 0 ? (
-              m.photos.map((p, j) => (
-                <figure class="print" data-pos={j}>
-                  <Image src={p} alt={j === 0 ? m.name : ''} widths={[360, 560, 760]} sizes="(max-width: 700px) 90vw, 380px" loading={i < 3 ? "eager" : "lazy"} />
-                </figure>
-              ))
-            ) : (
-              <figure class="print empty" data-pos="0" aria-hidden="true">
-                <Logo class="ph-lion" label="" />
-                <span class="ph-initials display ca">{initials(m.name)}</span>
-                <span class="ph-note mono">Photo coming soon</span>
-              </figure>
-            )}
-            {m.photos.length > 1 && (
-              <span class="count mono" aria-hidden="true"><span data-n>1</span> / {m.photos.length}</span>
-            )}
-          </div>
-
-          <div class="info">
-            <p class="role mono">{m.role}</p>
-            <h2 class="name display">{m.name}</h2>
-            {m.quote && <p class="quote italic">“{m.quote}”</p>}
-            <dl class="spec">
-              {rows(m).map(([k, v]) => (
-                <div><dt class="mono">{k}</dt><dd>{v}</dd></div>
-              ))}
-              {m.food && <div class="food"><dt class="mono">Comfort food</dt><dd class="italic">{m.food}</dd></div>}
-            </dl>
-          </div>
+  <!-- ── Who leads what: the whole structure at a glance ── -->
+  <section class="wrap mast" aria-labelledby="mast-title" data-reveal>
+    <div class="section-head"><p class="label" id="mast-title">Who leads what</p><p class="label">Tap a team to jump to it</p></div>
+    <ul class="mast-exec">
+      {exec.map((p) => (
+        <li>
+          <a href={`#${p.id}`}>
+            <span class="mono">{p.role}</span>
+            <span class="who italic">{p.name}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <ol class="mast-teams">
+      {byTeam.map((t) => (
+        <li>
+          <a href={`#${t.id}`} class:list={['row', { open: t.leads.length === 0 }]}>
+            <span class="n mono">{t.n}</span>
+            <span class="t display">{t.name}</span>
+            <span class="who italic">{t.leads.length ? t.leads.map((p) => p.name).join(' & ') : 'Open seat'}</span>
+            <span class="c mono">{t.leads.length ? plural(t.size) : 'Looking for a lead'}</span>
+          </a>
         </li>
       ))}
     </ol>
   </section>
 
+  <!-- ── President and vice president ── -->
+  <section class="wrap block" aria-labelledby="exec-title">
+    <div class="section-head"><p class="label" id="exec-title">Leadership</p><p class="label">The whole club</p></div>
+    <div class="grid" data-reveal>
+      <div class="exec-copy">
+        <h2 class="block-title display">Running the club</h2>
+        <p class="block-body">
+          Our president and vice president look after the club as a whole. Each team below has its own lead, who runs that team day
+          to day.
+        </p>
+      </div>
+      {exec.map((p) => <PersonCard person={p} label={p.role} note={alsoNote(p)} eager />)}
+    </div>
+  </section>
+
+  <!-- ── The teams: lead first, then everyone else ── -->
+  <section class="wrap block" aria-labelledby="teams-title">
+    <div class="section-head"><p class="label" id="teams-title">Teams</p><p class="label">{teams.length} teams</p></div>
+    <div class="teams">
+      {byTeam.map((t) => (
+        <section class="team" id={t.id} aria-labelledby={`${t.id}-name`} data-reveal>
+          <header class="team-head">
+            <p class="team-n mono"><span>{t.n}</span><span>{t.size ? plural(t.size) : 'Open'}</span></p>
+            <h2 class="team-name display" id={`${t.id}-name`}>{t.name}</h2>
+            <p class="team-line italic">{t.line}</p>
+          </header>
+
+          <div class="team-leads">
+            {t.leads.map((p) => <PersonCard person={p} label={leadLabel(p)} note={alsoNote(p)} />)}
+            {t.leads.length === 0 && (
+              <div class="seat">
+                <a class="seat-print" href="#join" aria-label={`Join the ${t.name} team`}>
+                  <Logo class="seat-lion" label="" />
+                  <span class="seat-mark display ca">?</span>
+                  <span class="seat-note mono">This seat is open</span>
+                </a>
+                <div class="seat-info">
+                  <p class="role mono">Lead</p>
+                  <h3 class="seat-name display">Could be you</h3>
+                  {t.roles.length > 0 && (
+                    <dl class="spec">
+                      {t.roles.map((r) => (
+                        <div><dt class="mono">{r.name}</dt><dd>{r.line}</dd></div>
+                      ))}
+                    </dl>
+                  )}
+                  <a class="arrow-link" href="#join">How to join <span aria-hidden="true">↓</span></a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div class="team-members">
+            {t.members.length > 0 && (
+              <>
+                <p class="label">Members · {t.members.length}</p>
+                <ul class="mems">
+                  {t.members.map((p) => (
+                    <li class="mem" id={p.id}>
+                      <button class="mem-head" type="button" aria-expanded="false" aria-controls={`${p.id}-more`}>
+                        <span class="thumb" aria-hidden="true">
+                          {p.photos[0] ? (
+                            <Image src={p.photos[0]} alt="" widths={[120, 180]} sizes="60px" loading="lazy" />
+                          ) : (
+                            <span class="thumb-i display">{initials(p.name)}</span>
+                          )}
+                        </span>
+                        <span class="mem-text">
+                          <span class="mem-name display">{p.name}</span>
+                          <span class="mem-meta mono">{[p.year, p.majors].filter(Boolean).join(' · ')}</span>
+                        </span>
+                        <span class="mem-plus" aria-hidden="true"></span>
+                      </button>
+                      <div class="mem-more" id={`${p.id}-more`}>
+                        <div>
+                          <dl class="spec">
+                            {moreRows(p).map(([k, v]) => (
+                              <div><dt class="mono">{k}</dt><dd>{v}</dd></div>
+                            ))}
+                          </dl>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+
+          <div class="team-also">
+            {t.also.length > 0 && (
+              <p class="also mono">
+                Also on this team:{' '}
+                {t.also.map((p, j) => (
+                  <>{j > 0 && ' & '}<a href={`#${p.id}`}>{p.name}</a></>
+                ))}
+              </p>
+            )}
+          </div>
+        </section>
+      ))}
+    </div>
+  </section>
+
+  {unassigned.length > 0 && (
+    <section class="wrap block" aria-labelledby="officers-title">
+      <div class="section-head"><p class="label" id="officers-title">Officers</p><p class="label">{plural(unassigned.length)}</p></div>
+      <div class="grid" data-reveal>
+        {unassigned.map((p) => <PersonCard person={p} label={p.role} />)}
+      </div>
+    </section>
+  )}
+
   <!-- ── Officer application ──────────────────────────────── -->
-  <section class="wrap ta">
+  <section class="wrap ta" id="join">
     <div class="section-head"><p class="label">Join the officer team</p><p class="label">Now recruiting</p></div>
     <div class="ta-grid">
       <div data-reveal>
@@ -100,10 +251,10 @@ const rows = (m: (typeof members)[number]) =>
       <div class="ta-side" data-reveal>
         <p class="label">Open roles</p>
         <ul class="roles">
-          {app.roles.map((r) => (
+          {hiringRoles.map((r) => (
             <li>
-              <span class="role-name">{r.name}</span>
-              <span class="role-body">{r.body}</span>
+              <span class="role-top"><span class="role-name">{r.name}</span><span class="role-team mono">{teams.find((t) => t.hires === r.team)?.name}</span></span>
+              <span class="role-body">{r.line}</span>
             </li>
           ))}
         </ul>
@@ -122,30 +273,19 @@ const rows = (m: (typeof members)[number]) =>
 </Base>
 
 <script>
-  // Click (or Enter/Space) deals the next photo to the front of the stack.
-  document.querySelectorAll<HTMLElement>('.stack[role="button"]').forEach((stack) => {
-    const prints = [...stack.querySelectorAll<HTMLElement>('.print')];
-    const n = prints.length;
-    const counter = stack.querySelector('[data-n]');
-    let offset = 0;
-    const deal = () => {
-      offset = (offset + 1) % n;
-      prints.forEach((p, i) => (p.dataset.pos = String((i - offset + n) % n)));
-      if (counter) counter.textContent = String(offset + 1);
-    };
-    stack.addEventListener('click', deal);
-    stack.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        deal();
-      }
+  // Members open in place to show the rest of their details.
+  document.querySelectorAll<HTMLButtonElement>('.mem-head').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const open = btn.getAttribute('aria-expanded') !== 'true';
+      btn.setAttribute('aria-expanded', String(open));
+      btn.closest('.mem')?.classList.toggle('open', open);
     });
   });
 </script>
 
 <style>
   .head {
-    padding-block: clamp(3rem, 7vw, 5rem) 3rem;
+    padding-block: clamp(3rem, 7vw, 5rem) 2rem;
   }
   .head h1 {
     font-size: clamp(3.6rem, 13vw, 11rem);
@@ -158,146 +298,352 @@ const rows = (m: (typeof members)[number]) =>
     color: var(--fg-dim);
     max-width: 38ch;
   }
+  .demo-tag {
+    margin-top: 1.5rem;
+    display: inline-block;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid var(--neb-violet);
+    color: var(--neb-violet);
+    font-size: 0.6rem;
+  }
 
-  .grid {
+  .block {
+    padding-block: clamp(2.5rem, 6vw, 4.5rem);
+  }
+  [id] {
+    scroll-margin-top: 90px;
+  }
+
+  /* ── Who leads what ── */
+  .mast {
+    padding-block: clamp(2rem, 5vw, 3.5rem);
+  }
+  .mast .section-head {
+    margin-bottom: 0;
+  }
+  .mast-exec {
     list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .mast-exec a {
+    display: grid;
+    gap: 0.15rem;
+    padding: 1.1rem 0;
+  }
+  .mast-exec li + li a {
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--rule);
+  }
+  .mast-exec .mono {
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+  .mast-exec .who {
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    line-height: 1.1;
+    transition: color 0.3s;
+  }
+  .mast-exec a:hover .who {
+    color: var(--neb-violet);
+  }
+
+  .mast-teams {
+    list-style: none;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 1fr) 11rem;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .row .n,
+  .row .c {
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+  .row .c {
+    text-align: right;
+  }
+  .row .t {
+    font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+    text-transform: none;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    transition: transform 0.45s var(--ease);
+  }
+  .row .who {
+    font-size: clamp(1.25rem, 1.9vw, 1.55rem);
+    color: var(--fg-dim);
+    transition: color 0.3s;
+  }
+  .row:hover .t {
+    transform: translateX(0.5rem);
+  }
+  .row:hover .who {
+    color: var(--fg);
+  }
+  .row.open .who {
+    color: var(--muted);
+  }
+  .row.open .c {
+    color: var(--neb-violet);
+  }
+
+  /* ── Shared three-column grid ── */
+  .grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(3rem, 6vw, 5rem) clamp(2rem, 4vw, 3.5rem);
-    padding-block: 2rem 4rem;
+    padding-top: 1rem;
   }
-  .card[data-reveal] {
-    transition-delay: var(--d);
+  .exec-copy {
+    padding-top: 0.75rem;
   }
-
-  /* ── The stack of prints ── */
-  .stack {
-    position: relative;
-    aspect-ratio: 4 / 5;
-    margin: 0.75rem 0.75rem 2rem;
+  .block-title {
+    font-size: clamp(2.2rem, 3.6vw, 3.2rem);
+    text-transform: none;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
   }
-  .stack[role='button'] {
-    cursor: pointer;
-  }
-  .print {
-    position: absolute;
-    inset: 0;
-    padding: 7px;
-    background: var(--print-bg);
-    border: 1px solid var(--rule-strong);
-    box-shadow: 0 18px 40px -18px rgb(var(--shade) / calc(0.9 * var(--shade-k)));
-    transition:
-      transform 0.6s var(--ease),
-      box-shadow 0.6s var(--ease),
-      opacity 0.4s;
-    overflow: hidden;
-  }
-  .print :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 30%;
-    filter: var(--photo);
-    transition: filter 0.8s var(--ease);
-  }
-  /* film grain on every print */
-  .print::after {
-    content: '';
-    position: absolute;
-    inset: 7px;
-    pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
-    opacity: 0.35;
+  .block-body {
+    margin-top: 1.25rem;
+    color: var(--fg-dim);
+    font-size: 1.25rem;
+    max-width: 30ch;
   }
 
-  /* resting positions: a loose pile */
-  .print[data-pos='0'] { z-index: 3; transform: rotate(-1.2deg); }
-  .print[data-pos='1'] { z-index: 2; transform: translate(10px, 8px) rotate(3.2deg); }
-  .print[data-pos='2'] { z-index: 1; transform: translate(-10px, 12px) rotate(-4.6deg); }
-  .stack[data-count='1'] .print[data-pos='0'] { transform: rotate(-1.2deg); }
-
-  /* hover: the pile fans out and the top print develops into colour */
-  .card:hover .print[data-pos='0'],
-  .stack:focus-visible .print[data-pos='0'] {
-    transform: rotate(0deg) translateY(-6px);
-    box-shadow:
-      -3px 0 0 rgba(255, 30, 70, 0.45),
-      3px 0 0 rgba(30, 140, 255, 0.45),
-      0 26px 50px -20px rgb(var(--shade) / calc(0.95 * var(--shade-k)));
+  /* ── Teams ──
+     Each team spans four rows of the parent grid (head, lead, members, also) through
+     subgrid, so the photos line up across a row even when one team's line runs longer. */
+  .teams {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: clamp(2rem, 4vw, 3.5rem);
+    padding-top: 1rem;
   }
-  .card:hover .print[data-pos='0'] :global(img) {
-    filter: none;
+  .team {
+    grid-row: span 4;
+    display: grid;
+    grid-template-rows: subgrid;
+    align-content: start;
+    padding-bottom: clamp(3.5rem, 7vw, 5.5rem);
   }
-  .card:hover .print[data-pos='1'] { transform: translate(34px, 4px) rotate(7deg); }
-  .card:hover .print[data-pos='2'] { transform: translate(-34px, 10px) rotate(-9deg); }
-  .stack:focus-visible {
-    outline: none;
+  .team-head {
+    padding-bottom: 1.25rem;
   }
-
-  .count {
-    position: absolute;
-    right: 0;
-    bottom: -1.9rem;
-    font-size: 0.64rem;
+  .team-n {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.62rem;
+    color: var(--muted);
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--rule-strong);
+    margin-bottom: 1rem;
+  }
+  .team-name {
+    font-size: clamp(2.2rem, 3.4vw, 3rem);
+    text-transform: none;
+    letter-spacing: -0.015em;
+    line-height: 1;
+  }
+  .team-line {
+    margin-top: 0.6rem;
+    font-size: 1.2rem;
+    line-height: 1.3;
+    color: var(--fg-dim);
+  }
+  .team-leads {
+    display: grid;
+    gap: 3rem;
+    align-content: start;
+  }
+  .team-members:not(:empty) {
+    margin-top: 2rem;
+  }
+  .team-also:not(:empty) {
+    margin-top: 1.25rem;
+  }
+  .also {
+    font-size: 0.62rem;
     color: var(--muted);
   }
+  .also a {
+    color: var(--fg-dim);
+    border-bottom: 1px solid var(--rule-strong);
+    transition: color 0.2s;
+  }
+  .also a:hover {
+    color: var(--fg);
+  }
 
-  /* placeholder print */
-  .empty {
+  /* ── An open seat ── */
+  .seat-print {
+    position: relative;
     display: grid;
     place-items: center;
+    aspect-ratio: 4 / 5;
+    margin: 0.75rem 0.75rem 2rem;
+    border: 1px dashed var(--rule-strong);
     background:
-      repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--fg) 2.5%, transparent) 7px 8px),
-      radial-gradient(ellipse at 50% 40%, rgba(160, 140, 246, 0.08), transparent 70%),
-      var(--bg-raise);
+      radial-gradient(ellipse at 50% 42%, rgba(160, 140, 246, 0.07), transparent 70%),
+      transparent;
+    transform: rotate(-1.2deg);
+    transition:
+      transform 0.6s var(--ease),
+      border-color 0.4s;
   }
-  .empty :global(.ph-lion) {
+  .seat-print:hover {
+    transform: rotate(0deg) translateY(-6px);
+    border-color: var(--fg-dim);
+  }
+  .seat-print :global(.seat-lion) {
     position: absolute;
     width: 62%;
     height: auto;
     color: var(--fg);
-    opacity: 0.07;
-    transition: opacity 0.6s var(--ease);
+    opacity: 0.05;
   }
-  .card:hover .empty :global(.ph-lion) {
-    opacity: 0.14;
-  }
-  .ph-initials {
+  .seat-mark {
     position: relative;
-    font-size: clamp(4rem, 7vw, 6rem);
-    --ca-rest: 0.035em;
+    font-size: clamp(6rem, 10vw, 9rem);
+    text-transform: none;
+    color: var(--fg-dim);
   }
-  .ph-note {
+  .seat-note {
     position: absolute;
     bottom: 1.1rem;
     font-size: 0.6rem;
     letter-spacing: 0.18em;
     color: var(--muted);
   }
-
-  /* ── Details ── */
-  .info {
+  .seat-info {
     display: grid;
     gap: 0.4rem;
+    justify-items: start;
   }
-  .role {
+  .seat-info .role {
     font-size: 0.68rem;
     color: var(--muted);
   }
-  .name {
+  .seat-name {
     font-size: clamp(2rem, 3vw, 2.6rem);
     text-transform: none;
     letter-spacing: -0.01em;
     line-height: 1;
-  }
-  .quote {
-    font-size: 1.2rem;
     color: var(--fg-dim);
-    margin-top: 0.3rem;
   }
+  .seat-info .spec {
+    width: 100%;
+    margin-bottom: 0.9rem;
+  }
+  .seat-info .spec div {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  /* ── Members: compact rows that open in place ── */
+  .mems {
+    list-style: none;
+    margin-top: 0.6rem;
+    border-top: 1px solid var(--rule);
+  }
+  .mem {
+    border-bottom: 1px solid var(--rule);
+  }
+  .mem-head {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) 1rem;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.7rem 0;
+    text-align: left;
+  }
+  .thumb {
+    width: 52px;
+    aspect-ratio: 1;
+    padding: 3px;
+    background: var(--print-bg);
+    border: 1px solid var(--rule-strong);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+    filter: var(--photo);
+    transition: filter 0.6s var(--ease);
+  }
+  .mem-head:hover .thumb :global(img),
+  .mem.open .thumb :global(img) {
+    filter: none;
+  }
+  .thumb-i {
+    font-size: 1.15rem;
+    text-transform: none;
+    color: var(--fg-dim);
+  }
+  .mem-text {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .mem-name {
+    font-size: 1.35rem;
+    text-transform: none;
+    letter-spacing: -0.005em;
+    line-height: 1.05;
+  }
+  .mem-meta {
+    font-size: 0.58rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  /* a plus that turns into a minus */
+  .mem-plus {
+    position: relative;
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  .mem-plus::before,
+  .mem-plus::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 1px solid var(--muted);
+    transition: transform 0.4s var(--ease);
+  }
+  .mem-plus::after {
+    transform: rotate(90deg);
+  }
+  .mem.open .mem-plus::after {
+    transform: rotate(0deg);
+  }
+  .mem-more {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.5s var(--ease);
+  }
+  .mem-more > div {
+    overflow: hidden;
+  }
+  .mem.open .mem-more {
+    grid-template-rows: 1fr;
+  }
+  .mem .spec {
+    margin: 0 0 0.9rem calc(52px + 0.9rem);
+  }
+
+  /* detail rows, shared by open seats and members */
   .spec {
-    margin-top: 1rem;
     border-top: 1px solid var(--rule);
   }
   .spec div {
@@ -308,6 +654,9 @@ const rows = (m: (typeof members)[number]) =>
     border-bottom: 1px solid var(--rule);
     align-items: baseline;
   }
+  .spec div:last-child {
+    border-bottom: 0;
+  }
   .spec dt {
     font-size: 0.6rem;
     color: var(--muted);
@@ -316,10 +665,6 @@ const rows = (m: (typeof members)[number]) =>
     font-size: 1.05rem;
     line-height: 1.3;
     color: var(--fg-dim);
-  }
-  .spec .food dd {
-    color: var(--fg);
-    font-size: 1.15rem;
   }
 
   /* ── Officer application ── */
@@ -371,10 +716,21 @@ const rows = (m: (typeof members)[number]) =>
     padding: 0.8rem 0;
     border-bottom: 1px solid var(--rule);
   }
+  .role-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+  }
   .role-name {
     font-family: var(--display);
     font-weight: 700;
     font-size: 1.35rem;
+  }
+  .role-team {
+    font-size: 0.58rem;
+    color: var(--muted);
+    white-space: nowrap;
   }
   .role-body {
     color: var(--fg-dim);
@@ -405,31 +761,40 @@ const rows = (m: (typeof members)[number]) =>
   }
 
   @media (max-width: 1000px) {
-    .grid {
+    .grid,
+    .teams {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .exec-copy {
+      grid-column: 1 / -1;
+    }
+    .row {
+      grid-template-columns: 2.4rem minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .row .c {
+      display: none;
     }
   }
   @media (max-width: 640px) {
-    .grid {
-      grid-template-columns: 1fr;
-    }
+    .grid,
+    .teams,
     .ta-grid {
       grid-template-columns: 1fr;
     }
-  }
-  @media (hover: none) {
-    /* touch: show colour on the front print, since there is no hover */
-    .print[data-pos='0'] :global(img) {
-      filter: none;
+    .mast-exec {
+      grid-template-columns: 1fr;
     }
-  }
-
-  /* Fall: a lifted photo gets the same two offset print layers as the titles. */
-  :global(:root[data-theme='fall']) .card:hover .print[data-pos='0'],
-  :global(:root[data-theme='fall']) .stack:focus-visible .print[data-pos='0'] {
-    box-shadow:
-      6px 6px 0 #f2a33c,
-      12px 12px 0 #d1432e,
-      0 26px 50px -20px rgb(var(--shade) / calc(0.95 * var(--shade-k)));
+    .mast-exec li + li a {
+      padding-left: 0;
+      border-left: 0;
+      border-top: 1px solid var(--rule);
+    }
+    .row {
+      grid-template-columns: 2rem minmax(0, 1fr);
+      row-gap: 0.1rem;
+    }
+    .row .who {
+      grid-column: 2;
+    }
   }
 </style>
