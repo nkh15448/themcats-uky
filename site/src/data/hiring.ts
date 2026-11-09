@@ -93,7 +93,7 @@ export const intro = {
 export const pledge = {
   kicker: 'We’re just getting started',
   title: 'We’re new, we’re ambitious and we’re growing fast.',
-  body: 'That means there’s a lot of room to build something amazing here. We’re looking for dedicated, passionate people to build it with us. Any major, any year. So are you a hardworking communicative person?',
+  body: 'That means there’s a lot of room to build something amazing here. We’re looking for dedicated, passionate people to build it with us. Any major, any year. These are volunteer roles, so they’re unpaid, but you’ll walk away with service hours and real experience. So are you a hardworking communicative person?',
   button: 'That’s me',
 };
 
