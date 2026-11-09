@@ -1,0 +1,676 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done } from '../data/hiring';
+import teaching from '../assets/present/classes/04.jpg';
+import whiteboard from '../assets/present/classes/05.jpg';
+import slides from '../assets/present/classes/03.jpg';
+const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done, preview: true };
+---
+<Base title="Join the team" description="Help run free MCAT prep at UK." bare>
+  <meta slot="head" name="robots" content="noindex, nofollow" />
+
+  <div class="app" id="app">
+    <div class="bar" aria-hidden="true"><span id="fill"></span></div>
+    <header class="top">
+      <button class="back mono" id="back" type="button" hidden>← Back</button>
+      <span class="brand mono"><Logo class="mark" label="" /> The M-CATS</span>
+      <span class="count mono" id="count"></span>
+    </header>
+    <div id="stage"></div>
+    {data.preview && <p class="mono preview-tag">Preview</p>}
+
+    <div class="sheet-wrap" id="sheet" hidden>
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+        <div class="sheet-scroll" id="sheet-scroll">
+          <img class="sheet-hero" src={teaching.src} width={teaching.width} height={teaching.height} alt="An M-CATS officer teaching at a whiteboard in front of a room of students" />
+          <div class="sheet-body">
+            <h2 id="sheet-title">{intro.title}</h2>
+            <p class="lead">{intro.lead}</p>
+            <p class="need">{intro.need}</p>
+            <p class="mono does-title">{intro.doesTitle}</p>
+            <ul class="does">
+              {intro.does.map((d) => <li><span class="mono">{d.title}</span><span>{d.body}</span></li>)}
+            </ul>
+            <div class="pics">
+              <img src={whiteboard.src} width={whiteboard.width} height={whiteboard.height} loading="lazy" alt="An officer explaining a metabolic pathway drawn across the whiteboard" />
+              <img src={slides.src} width={slides.width} height={slides.height} loading="lazy" alt="A title slide reading Embryogenesis, designed by the officers presenting it" />
+            </div>
+            <p class="caption">{intro.caption}</p>
+            <p class="mcat-note">{intro.mcatNote}</p>
+          </div>
+        </div>
+        <div class="sheet-foot">
+          <button class="cta" id="got-it" type="button">{intro.button} <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="hiring-data" set:html={JSON.stringify(data)} />
+</Base>
+
+<script>
+  import type { Question, Role, Palette } from '../data/hiring';
+
+  type Data = {
+    intro: { question: string };
+    groups: { question: string; open: string; mcat: string };
+    roles: Role[];
+    everyone: Question[];
+    palettes: Palette[];
+    pledge: { kicker: string; title: string; body: string; button: string };
+    makeItYours: { title: string; body: string };
+    briefHeads: { gets: string; expect: string };
+    also: { q: string; help: string; mcatNote: string; mcatNoteOne: string };
+    done: { title: string; next: string[] };
+    preview: boolean;
+  };
+  const data: Data = JSON.parse(document.getElementById('hiring-data')!.textContent!);
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const app = $('app');
+  const stage = $('stage');
+  const sheet = $('sheet');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EASE = 'cubic-bezier(0.2, 0.7, 0.1, 1)';
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+  const answers: Record<string, string> = {};
+  let role: Role | null = null;
+  let palette: Palette = data.palettes[0];
+  let at = 'know';
+  let current: HTMLElement | null = null;
+  let busy = false;
+
+  // Multiple picks are stored together, separated by |.
+  const picked = (id: string) => (answers[id] ?? '').split('|').filter(Boolean);
+
+  function alsoQuestion(main: Role): Question {
+    const others = data.roles.filter((r) => r.id !== main.id);
+    const needMcat = others.filter((r) => r.group === 'mcat');
+    return {
+      id: 'also',
+      type: 'multi',
+      q: data.also.q,
+      help: data.also.help,
+      optional: true,
+      options: others.map((r) => r.name),
+      note: needMcat.length ? { from: needMcat[0].name, text: needMcat.length > 1 ? data.also.mcatNote : data.also.mcatNoteOne } : undefined,
+    };
+  }
+
+  // The main role's questions, then "anything else", then whatever those extra picks need. No question is asked twice.
+  function allQuestions(): Question[] {
+    if (!role) return data.everyone;
+    const extras = data.roles.filter((r) => picked('also').includes(r.name)).flatMap((r) => r.questions);
+    const seen = new Set<string>();
+    return [...(role.parts ? [role.parts] : []), ...data.everyone, ...role.questions, alsoQuestion(role), ...extras].filter((q) => !seen.has(q.id) && seen.add(q.id));
+  }
+  const questions = () => allQuestions().filter((q) => !q.showIf || picked(q.showIf.id).includes(q.showIf.is));
+  const order = () => ['know', 'pledge', 'roles', ...(role ? ['brief', ...questions().map((q) => q.id), 'done'] : [])];
+  const question = (id: string) => allQuestions().find((q) => q.id === id);
+
+  function setRole(next: Role) {
+    if (role?.id !== next.id) delete answers.also;
+    role = next;
+    const c = palette.teams[next.team];
+    app.style.setProperty('--accent', c.bg);
+    app.style.setProperty('--accent-ink', c.ink);
+  }
+
+  function applyPalette(p: Palette) {
+    palette = p;
+    const root = document.documentElement.style;
+    root.setProperty('--paper', p.paper);
+    root.setProperty('--ink', p.ink);
+    root.setProperty('--dim', p.dim);
+    root.setProperty('--primary', p.primary);
+    root.setProperty('--primary-ink', p.primaryInk);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', p.paper);
+    if (role) setRole(role);
+  }
+
+  // ── Screens ─────────────────────────────────────────────
+  function make(cls: string, html: string) {
+    const el = document.createElement('section');
+    el.className = `screen ${cls}`;
+    el.innerHTML = `<div class="inner">${html}</div>`;
+    return el;
+  }
+
+  function knowScreen() {
+    const el = make('', `
+      <h1 tabindex="-1">${esc(data.intro.question)}</h1>
+      <div class="pair">
+        <button class="cta" data-know="yes" type="button">Yes</button>
+        <button class="cta ghost" data-know="no" type="button">No</button>
+      </div>`);
+    el.querySelector('[data-know=yes]')!.addEventListener('click', (e) => go('pledge', tapPoint(e as MouseEvent)));
+    el.querySelector('[data-know=no]')!.addEventListener('click', openSheet);
+    return el;
+  }
+
+  function pledgeScreen() {
+    const p = data.pledge;
+    const el = make('primary tall', `
+      <p class="mono kicker">${esc(p.kicker)}</p>
+      <h1 tabindex="-1">${esc(p.title)}</h1>
+      <p class="about">${esc(p.body)}</p>
+      <button class="cta" data-next type="button">${esc(p.button)} <span aria-hidden="true">→</span></button>`);
+    el.querySelector('[data-next]')!.addEventListener('click', next);
+    return el;
+  }
+
+  function rolesScreen() {
+    const row = (r: Role) => {
+      const c = palette.teams[r.team];
+      return `<li><button class="role" type="button" data-role="${r.id}" style="--r:${c.bg};--ri:${c.ink}">
+        <span class="role-top"><span class="role-name">${esc(r.name)}</span><span class="arrow" aria-hidden="true">→</span></span>
+        <span class="role-line">${esc(r.line)}</span>
+      </button></li>`;
+    };
+    const group = (label: string, list: Role[]) => `<h2 class="mono group">${esc(label)}</h2><ul class="roles">${list.map(row).join('')}</ul>`;
+    const el = make('tall', `
+      <h1 tabindex="-1">${esc(data.groups.question)}</h1>
+      ${group(data.groups.open, data.roles.filter((r) => r.group === 'open'))}
+      ${group(data.groups.mcat, data.roles.filter((r) => r.group === 'mcat'))}`);
+    el.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((b) =>
+      b.addEventListener('click', (e) => {
+        setRole(data.roles.find((r) => r.id === b.dataset.role)!);
+        go('brief', tapPoint(e));
+      }),
+    );
+    return el;
+  }
+
+  function tapPoint(e: MouseEvent) {
+    return { x: e.clientX || innerWidth / 2, y: e.clientY || innerHeight / 2 };
+  }
+
+  function briefScreen() {
+    const r = role!;
+    const list = (items: string[]) => `<ul class="expect">${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`;
+    const el = make('color tall', `
+      <p class="mono kicker">${esc(r.name)}</p>
+      <h1 tabindex="-1">${esc(r.hook)}</h1>
+      <p class="about">${esc(r.about)}</p>
+      ${r.warning ? `<p class="warning">${esc(r.warning)}</p>` : ''}
+      <h2 class="mono group">${esc(data.briefHeads.gets)}</h2>
+      ${list(r.gets)}
+      <h2 class="mono group">${esc(data.makeItYours.title)}</h2>
+      <p class="yours">${esc(data.makeItYours.body)} ${esc(r.yours)}</p>
+      <h2 class="mono group">${esc(data.briefHeads.expect)}</h2>
+      ${list(r.expect)}
+      <button class="cta on-color" data-next type="button">I’m interested <span aria-hidden="true">→</span></button>`);
+    el.querySelector('[data-next]')!.addEventListener('click', next);
+    return el;
+  }
+
+  function validate(q: Question, v: string) {
+    if (!v) return q.optional ? '' : 'We’ll need this one.';
+    if (q.type === 'tel' && v.replace(/\D/g, '').length < 10) return 'That phone number looks too short.';
+    if (q.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'That email doesn’t look right.';
+    if (q.type === 'url' && !/\S+\.\S+/.test(v)) return 'That link doesn’t look right.';
+    return '';
+  }
+
+  function questionScreen(q: Question) {
+    const help = q.help ? `<p class="help">${esc(q.help)}</p>` : '';
+    const isLast = () => { const l = order(); return l[l.indexOf(q.id) + 1] === 'done'; };
+    const ctaLabel = (filled: boolean) => (filled || !q.optional ? (isLast() ? 'Send' : 'Continue') : isLast() ? 'Skip and send' : 'Skip');
+    if (q.type === 'multi') {
+      const el = make('tall', `
+        <form novalidate>
+          <h1 tabindex="-1">${esc(q.q)}</h1>${help}
+          ${q.optional ? '<p class="mono optional">Optional</p>' : ''}
+          <div class="choices">${q.options!.map((o) => `${q.note?.from === o ? `<p class="mono choice-note">${esc(q.note.text)}</p>` : ''}<button class="choice multi${picked(q.id).includes(o) ? ' on' : ''}" type="button" aria-pressed="${picked(q.id).includes(o)}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>
+          <p class="error mono" role="alert" hidden></p>
+          <button class="cta" type="submit"><span class="cta-text"></span> <span aria-hidden="true">→</span></button>
+        </form>`);
+      const text = el.querySelector('.cta-text')!;
+      const err = el.querySelector('.error') as HTMLElement;
+      text.textContent = ctaLabel(picked(q.id).length > 0);
+      el.querySelectorAll<HTMLButtonElement>('.choice').forEach((b) =>
+        b.addEventListener('click', () => {
+          const on = b.classList.toggle('on');
+          b.setAttribute('aria-pressed', String(on));
+          answers[q.id] = [...el.querySelectorAll<HTMLElement>('.choice.on')].map((x) => x.dataset.v!).join('|');
+          err.hidden = true;
+          text.textContent = ctaLabel(picked(q.id).length > 0);
+          chrome();
+        }),
+      );
+      el.querySelector('form')!.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!q.optional && !picked(q.id).length) { err.textContent = 'Pick at least one.'; err.hidden = false; return; }
+        next();
+      });
+      return el;
+    }
+    if (q.type === 'choice') {
+      const el = make('', `
+        <h1 tabindex="-1">${esc(q.q)}</h1>${help}
+        <div class="choices">${q.options!.map((o) => `<button class="choice${answers[q.id] === o ? ' on' : ''}" type="button" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`);
+      el.querySelectorAll<HTMLButtonElement>('.choice').forEach((b) =>
+        b.addEventListener('click', () => {
+          answers[q.id] = b.dataset.v!;
+          el.querySelectorAll('.choice').forEach((x) => x.classList.toggle('on', x === b));
+          window.setTimeout(next, reduce ? 0 : 170);
+        }),
+      );
+      return el;
+    }
+    const value = esc(answers[q.id] ?? '');
+    const attrs = `id="field" autocomplete="${q.type === 'tel' ? 'tel' : q.type === 'email' ? 'email' : q.id === 'name' ? 'name' : 'off'}" placeholder="${esc(q.placeholder ?? '')}" aria-label="${esc(q.q)}"`;
+    const control = q.type === 'long'
+      ? `<textarea rows="3" maxlength="800" ${attrs}>${value}</textarea>`
+      : `<input type="${q.type === 'tel' ? 'tel' : q.type === 'email' ? 'email' : 'text'}" ${q.type === 'url' ? 'inputmode="url" autocapitalize="off" autocorrect="off"' : ''} maxlength="200" value="${value}" ${attrs} />`;
+    const label = () => ctaLabel(!!field.value.trim());
+    const el = make('', `
+      <form novalidate>
+        <h1 tabindex="-1">${esc(q.q)}</h1>${help}
+        ${q.optional ? '<p class="mono optional">Optional</p>' : ''}
+        ${control}
+        <p class="error mono" role="alert" hidden></p>
+        <button class="cta" type="submit"><span class="cta-text"></span> <span aria-hidden="true">→</span></button>
+      </form>`);
+    const field = el.querySelector('#field') as HTMLInputElement;
+    const text = el.querySelector('.cta-text')!;
+    const err = el.querySelector('.error') as HTMLElement;
+    text.textContent = label();
+    field.addEventListener('input', () => { text.textContent = label(); err.hidden = true; });
+    el.querySelector('form')!.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = field.value.trim();
+      const problem = validate(q, v);
+      if (problem) { err.textContent = problem; err.hidden = false; field.focus(); return; }
+      answers[q.id] = v;
+      next();
+    });
+    return el;
+  }
+
+  function doneScreen() {
+    const first = (answers.name ?? '').split(/\s+/)[0];
+    const byText = answers.preferred === 'Text';
+    const el = make('color tall', `
+      <p class="mono kicker">${esc(role!.name)}</p>
+      <h1 tabindex="-1">${esc(data.done.title)}, ${esc(first)}.</h1>
+      <p class="about">We’ll ${byText ? 'text' : 'email'} you at ${esc(byText ? answers.phone : answers.email)}.</p>
+      <ol class="steps">${data.done.next.map((s, i) => `<li><span class="mono">0${i + 1}</span><span>${esc(s)}</span></li>`).join('')}</ol>
+      ${data.preview ? '<p class="mono mock">This is a preview, so nothing was sent.</p>' : ''}`);
+    return el;
+  }
+
+  function build(id: string) {
+    if (id === 'know') return knowScreen();
+    if (id === 'pledge') return pledgeScreen();
+    if (id === 'roles') return rolesScreen();
+    if (id === 'brief') return briefScreen();
+    if (id === 'done') return doneScreen();
+    return questionScreen(question(id)!);
+  }
+
+  // ── Moving between screens ──────────────────────────────
+  function chrome() {
+    const list = order();
+    const qs = questions().map((q) => q.id);
+    const n = qs.indexOf(at);
+    $('count').textContent = n >= 0 ? `${n + 1} / ${qs.length}` : '';
+    $('back').hidden = at === 'know' || at === 'done';
+    const share = role ? list.indexOf(at) / (list.length - 1) : 0;
+    $('fill').style.transform = `scaleX(${share})`;
+    app.classList.toggle('on-color', at === 'brief' || at === 'done');
+    app.classList.toggle('on-primary', at === 'pledge');
+  }
+
+  function settle(el: HTMLElement) {
+    busy = false;
+    const target = el.querySelector<HTMLElement>('#field') ?? el.querySelector<HTMLElement>('h1');
+    target?.focus({ preventScroll: true });
+  }
+
+  function go(id: string, from?: { x: number; y: number }) {
+    if (busy) return;
+    busy = true;
+    at = id;
+    const el = build(id);
+    const old = current;
+    current = el;
+    chrome();
+    stage.append(el);
+    el.scrollTop = 0;
+    if (reduce || !old) {
+      old?.remove();
+      settle(el);
+      return;
+    }
+    if (from) {
+      const r = Math.hypot(Math.max(from.x, innerWidth - from.x), Math.max(from.y, innerHeight - from.y));
+      el.animate(
+        [{ clipPath: `circle(0px at ${from.x}px ${from.y}px)` }, { clipPath: `circle(${r}px at ${from.x}px ${from.y}px)` }],
+        { duration: 620, easing: EASE },
+      ).finished.then(() => { old.remove(); settle(el); });
+      return;
+    }
+    old.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-14px)' }], { duration: 200, easing: 'ease-in', fill: 'forwards' });
+    el.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 440, delay: 110, easing: EASE, fill: 'backwards' })
+      .finished.then(() => { old.remove(); settle(el); });
+  }
+
+  function next() {
+    const list = order();
+    go(list[list.indexOf(at) + 1]);
+  }
+
+  $('back').addEventListener('click', () => {
+    const list = order();
+    go(list[list.indexOf(at) - 1]);
+  });
+
+  // ── The "what is this" sheet ────────────────────────────
+  const panel = sheet.querySelector('.sheet') as HTMLElement;
+  const scrim = $('scrim');
+  function openSheet() {
+    sheet.hidden = false;
+    $('sheet-scroll').scrollTop = 0;
+    $('got-it').focus({ preventScroll: true });
+    if (reduce) return;
+    panel.animate([{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 560, easing: EASE });
+    scrim.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  }
+  async function closeSheet(thenRoles: boolean) {
+    if (!reduce) {
+      await Promise.all([
+        panel.animate([{ transform: 'none' }, { transform: 'translateY(100%)' }], { duration: 340, easing: 'ease-in', fill: 'forwards' }).finished,
+        scrim.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 340, fill: 'forwards' }).finished,
+      ]);
+      panel.getAnimations().forEach((a) => a.cancel());
+      scrim.getAnimations().forEach((a) => a.cancel());
+    }
+    sheet.hidden = true;
+    if (thenRoles) go('pledge', { x: innerWidth / 2, y: innerHeight * 0.85 });
+  }
+  $('got-it').addEventListener('click', () => closeSheet(true));
+  scrim.addEventListener('click', () => closeSheet(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(false); });
+
+  // A flyer can open on one role: /help2?role=video
+  const preset = data.roles.find((r) => r.id === new URLSearchParams(location.search).get('role'));
+  if (preset) setRole(preset);
+
+  applyPalette(data.palettes[0]);
+  go('know');
+</script>
+
+<style>
+  @property --accent { syntax: '<color>'; inherits: true; initial-value: #1437FF; }
+
+  .app {
+    --hair: color-mix(in srgb, var(--ink) 16%, transparent);
+    --accent: var(--primary);
+    --accent-ink: var(--primary-ink);
+    transition: --accent 0.5s var(--ease);
+    color: var(--ink);
+  }
+
+  /* progress */
+  .bar { position: fixed; inset: 0 0 auto; height: 4px; z-index: 30; }
+  .bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.6s var(--ease), background-color 0.3s;
+  }
+  .on-color .bar span { background: var(--accent-ink); }
+  .on-primary .top { color: var(--primary-ink); }
+
+  .top {
+    position: fixed;
+    inset: 4px 0 auto;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 1rem clamp(1.25rem, 4vw, 2.5rem);
+    pointer-events: none;
+    transition: color 0.3s;
+  }
+  .on-color .top { color: var(--accent-ink); }
+  .top .mono { font-size: 0.66rem; letter-spacing: 0.14em; font-weight: 400; }
+  .back { grid-column: 1; justify-self: start; pointer-events: auto; padding: 0.4rem 0; }
+  .brand { grid-column: 2; display: flex; align-items: center; gap: 0.5rem; }
+  .brand :global(.mark) { width: 1.25rem; height: auto; }
+  .count { grid-column: 3; justify-self: end; }
+
+  /* screens */
+  .screen, :global(.screen) {
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    display: flex;
+    background: transparent;
+  }
+  :global(.screen.color) { background: var(--accent); color: var(--accent-ink); }
+  :global(.screen.primary) { background: var(--primary); color: var(--primary-ink); }
+  :global(.screen.primary .cta) { margin-top: 2.2rem; background: var(--primary-ink); color: var(--primary); border-color: var(--primary-ink); }
+  :global(.screen .inner) {
+    width: 100%;
+    max-width: 44rem;
+    margin: auto;
+    padding: 5.5rem clamp(1.25rem, 5vw, 2.5rem) 3.5rem;
+  }
+  :global(.screen h1) {
+    font-family: var(--display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 300;
+    font-size: clamp(2.5rem, 7vw, 4.4rem);
+    line-height: 1.04;
+    letter-spacing: -0.022em;
+    outline: none;
+  }
+  :global(.screen .help) { margin-top: 0.8rem; font-size: 1.32rem; line-height: 1.3; color: var(--dim); }
+  :global(.screen .optional) { margin-top: 0.8rem; font-size: 0.66rem; font-weight: 400; color: var(--dim); }
+
+  /* buttons */
+  :global(.cta) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7em;
+    min-height: 3.5rem;
+    padding: 0 1.9em;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 1.5px solid var(--accent);
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: transform 0.2s var(--ease), background-color 0.2s, color 0.2s, border-color 0.2s;
+  }
+  :global(.cta:active) { transform: scale(0.98); }
+  :global(.cta.ghost) { background: transparent; color: var(--ink); border-color: var(--ink); }
+  :global(.cta.on-color) { background: var(--accent-ink); color: var(--accent); border-color: var(--accent-ink); }
+  @media (hover: hover) {
+    :global(.cta.ghost:hover) { background: var(--ink); color: var(--paper); }
+  }
+  :global(.pair) { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 2.5rem; max-width: 26rem; }
+
+  /* role list */
+  :global(.group) { margin: 2.4rem 0 0.7rem; font-size: 0.68rem; font-weight: 400; }
+  :global(.screen:not(.color) .group) { color: var(--dim); }
+  :global(.roles) { list-style: none; border-top: 1px solid var(--hair); }
+  :global(.roles li) { border-bottom: 1px solid var(--hair); }
+  :global(.role) {
+    display: grid;
+    gap: 0.1rem;
+    width: 100%;
+    padding: 0.95rem 0.8rem 0.9rem;
+    text-align: left;
+    transition: background-color 0.22s, color 0.22s, padding 0.3s var(--ease);
+  }
+  :global(.role-top) { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  :global(.role-name) {
+    font-family: var(--display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 96;
+    font-size: 1.6rem;
+    line-height: 1.12;
+    letter-spacing: -0.012em;
+  }
+  :global(.role-line) { font-size: 1.22rem; line-height: 1.22; color: var(--dim); transition: color 0.22s; }
+  :global(.arrow) { font-family: var(--mono); font-size: 1rem; color: var(--r); transition: color 0.22s, transform 0.3s var(--ease); }
+  :global(.role:active), :global(.role:focus-visible) { background: var(--r); color: var(--ri); }
+  :global(.role:active .role-line), :global(.role:active .arrow), :global(.role:focus-visible .role-line), :global(.role:focus-visible .arrow) { color: var(--ri); }
+  @media (hover: hover) {
+    :global(.role:hover) { background: var(--r); color: var(--ri); padding-left: 1.2rem; }
+    :global(.role:hover .role-line), :global(.role:hover .arrow) { color: var(--ri); }
+    :global(.role:hover .arrow) { transform: translateX(-0.35rem); }
+  }
+
+  /* role brief and thank you */
+  :global(.kicker) { font-size: 0.7rem; font-weight: 400; margin-bottom: 0.9rem; }
+  :global(.about) { margin-top: 1.3rem; font-size: 1.65rem; line-height: 1.22; font-weight: 500; }
+  :global(.warning) {
+    margin-top: 1.3rem;
+    padding-left: 1rem;
+    border-left: 2px solid currentColor;
+    font-size: 1.36rem;
+    line-height: 1.26;
+    font-weight: 500;
+  }
+  :global(.yours) { font-size: 1.36rem; line-height: 1.26; font-weight: 500; padding-top: 0.75rem; border-top: 1px solid currentColor; }
+  :global(.expect) { list-style: none; border-top: 1px solid currentColor; }
+  :global(.expect li) { padding: 0.7rem 0; border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent); font-size: 1.32rem; line-height: 1.22; font-weight: 500; }
+  :global(.screen.color .cta) { margin-top: 2.2rem; }
+  :global(.steps) { list-style: none; margin-top: 2rem; border-top: 1px solid currentColor; }
+  :global(.steps li) { display: grid; grid-template-columns: 2.6rem 1fr; align-items: baseline; padding: 0.75rem 0; border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent); font-size: 1.36rem; line-height: 1.22; font-weight: 500; }
+  :global(.steps .mono) { font-size: 0.68rem; }
+  .preview-tag { position: fixed; left: 0.75rem; bottom: 0.75rem; z-index: 35; padding: 0.25rem 0.55rem; background: var(--ink); color: var(--paper); font-size: 0.56rem; font-weight: 400; pointer-events: none; }
+  :global(.mock) { margin-top: 1.6rem; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: none; }
+
+  /* questions */
+  :global(.screen input), :global(.screen textarea) {
+    display: block;
+    width: 100%;
+    margin-top: 2rem;
+    background: none;
+    border: 0;
+    border-bottom: 2px solid var(--ink);
+    border-radius: 0;
+    padding: 0.35rem 0 0.5rem;
+    color: var(--ink);
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 1.95rem;
+    line-height: 1.2;
+    outline: none;
+    resize: none;
+    transition: border-color 0.25s;
+  }
+  :global(.screen input:focus), :global(.screen textarea:focus) { border-color: var(--accent); }
+  :global(.screen input::placeholder), :global(.screen textarea::placeholder) { color: color-mix(in srgb, var(--ink) 32%, transparent); }
+  :global(.screen form .cta) { margin-top: 1.9rem; }
+  :global(.error) { margin-top: 0.8rem; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.04em; text-transform: none; color: #c32200; }
+  :global(.choices) { display: grid; gap: 0.6rem; margin-top: 2rem; max-width: 26rem; }
+  :global(.choice) {
+    min-height: 3.6rem;
+    padding: 0 1.2rem;
+    text-align: left;
+    border: 1.5px solid var(--ink);
+    font-family: var(--display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 96;
+    font-size: 1.3rem;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  }
+  :global(.choice.on) { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  :global(.choice.multi) { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; line-height: 1.15; padding-block: 0.5rem; }
+  :global(.choice.multi)::after { content: ''; display: grid; place-items: center; flex: none; width: 1.25rem; height: 1.25rem; border: 1.5px solid currentColor; font-family: var(--mono); font-size: 0.78rem; line-height: 1; }
+  :global(.choice.multi.on)::after { content: '✓'; }
+  :global(.choice-note) { margin-top: 0.7rem; font-size: 0.66rem; font-weight: 500; letter-spacing: 0.06em; text-transform: none; color: var(--dim); }
+  @media (hover: hover) {
+    :global(.choice:hover) { background: var(--ink); color: var(--paper); }
+    :global(.choice.on:hover) { background: var(--accent); color: var(--accent-ink); }
+  }
+
+  /* what is this? */
+  .sheet-wrap { position: fixed; inset: 0; z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+  .scrim { position: absolute; inset: 0; background: rgba(21, 20, 15, 0.42); }
+  .sheet {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 44rem;
+    max-height: 94dvh;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--ink);
+    --accent: var(--primary);
+    --accent-ink: var(--primary-ink);
+    border-radius: 20px 20px 0 0;
+  }
+  .sheet-scroll { overflow-y: auto; min-height: 0; }
+  .sheet img { display: block; width: 100%; height: auto; object-fit: cover; }
+  .sheet-hero { aspect-ratio: 16 / 9; }
+  .sheet-body { padding: 1.6rem clamp(1.4rem, 5vw, 2.8rem) 1.4rem; }
+  .sheet h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 300;
+    font-size: clamp(2.05rem, 6vw, 3rem);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+  .lead { font-size: 1.36rem; line-height: 1.27; font-weight: 500; color: var(--ink); }
+  .does-title { margin-top: 1.7rem; font-size: 0.66rem; font-weight: 400; color: var(--dim); }
+  .does { list-style: none; margin-top: 0.6rem; border-top: 1px solid var(--hair); }
+  .does li {
+    display: grid;
+    grid-template-columns: 7.2rem 1fr;
+    gap: 0.75rem;
+    align-items: baseline;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--hair);
+    font-size: 1.28rem;
+    line-height: 1.22;
+    font-weight: 500;
+  }
+  .does .mono { font-size: 0.64rem; font-weight: 500; letter-spacing: 0.1em; color: var(--primary); }
+  .pics { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1.4rem; }
+  .pics img { aspect-ratio: 16 / 10; border-radius: 4px; }
+  .caption { margin-top: 0.55rem; font-size: 1.14rem; line-height: 1.22; font-style: italic; color: var(--dim); }
+  .need {
+    margin-top: 1.1rem;
+    font-family: var(--display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 96;
+    font-size: 1.42rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--primary);
+  }
+  .mcat-note { margin-top: 1.3rem; padding-top: 0.9rem; border-top: 1px solid var(--hair); font-size: 1.14rem; line-height: 1.24; font-weight: 500; color: var(--dim); }
+  .sheet-foot { padding: 0.8rem clamp(1.4rem, 5vw, 2.8rem) calc(0.8rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--hair); }
+  .sheet-foot .cta { width: 100%; }
+  @media (min-width: 700px) {
+    .sheet-wrap { align-items: center; padding: 1.5rem; }
+    .sheet { border-radius: 20px; }
+  }
+</style>
+
+<style is:global>
+  :root:has(#app) { --paper: #fbf6ee; --ink: #241b3a; --dim: #675c70; --primary: #3b2a78; --primary-ink: #fff; }
+  html:has(#app) { background: var(--paper); color-scheme: light; }
+  body:has(#app) { background: var(--paper); color: var(--ink); }
+  body:has(#app)::after { content: none; }
+  body:has(#app) ::selection { background: var(--primary); color: var(--primary-ink); }
+  body:has(#app) :focus-visible { outline-color: currentColor; }
+</style>
