@@ -216,3 +216,12 @@ export const done = {
   title: 'Thanks',
   next: ['We read every application and get back to you within a week.', 'If it’s a good fit, we’ll set up a short chat.', 'Then you get started on your first project.'],
 };
+
+// What the Send button says while it sends, and the messages if it doesn't go through.
+// {field} is replaced with the answer that didn't look right, like "phone number".
+export const sending = {
+  button: 'Sending',
+  failed: 'That didn’t send. Check your connection and try again.',
+  slow: 'Too many tries from here. Wait a little while and try again.',
+  check: 'Your {field} doesn’t look right. Go back and check it.',
+};

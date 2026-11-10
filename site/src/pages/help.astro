@@ -1,11 +1,19 @@
 ---
 import Base from '../layouts/Base.astro';
 import Logo from '../components/Logo.astro';
-import { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done } from '../data/hiring';
+import { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done, sending } from '../data/hiring';
 import teaching from '../assets/present/classes/04.jpg';
 import whiteboard from '../assets/present/classes/05.jpg';
 import slides from '../assets/present/classes/03.jpg';
-const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done, preview: true };
+
+// Set live to true to start taking applications. Until then the page shows a Preview tag, sends
+// nothing and says so at the end. Applications go to the join-request function in Supabase
+// (catalyst/supabase/functions/join-request), which saves them and posts each one in #applications.
+// In dev, HELP_SEND=1 sends for real so the whole path can be tested before going live.
+const live = false;
+const preview = !live && !(import.meta.env.DEV && process.env.HELP_SEND === '1');
+const endpoint = 'https://mkcpsnyskwbfaqccbbtt.supabase.co/functions/v1/join-request';
+const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done, sending, preview, endpoint };
 ---
 <Base title="Join the team" description="Help run free MCAT prep at UK." bare>
   <meta slot="head" name="robots" content="noindex, nofollow" />
@@ -19,6 +27,9 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     </header>
     <div id="stage"></div>
     {data.preview && <p class="mono preview-tag">Preview</p>}
+    <!-- Left empty by people; bots that fill in every field get a quiet fake success. -->
+    <input class="hp" id="hp" name="m-extra" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
 
     <div class="sheet-wrap" id="sheet" hidden>
       <div class="scrim" id="scrim"></div>
@@ -53,6 +64,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
 
 <script>
   import type { Question, Role, Palette } from '../data/hiring';
+  import { track } from '../lib/track';
 
   type Data = {
     intro: { question: string };
@@ -65,7 +77,9 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     briefHeads: { gets: string; expect: string };
     also: { q: string; help: string; mcatNote: string; mcatNoteOne: string };
     done: { title: string; next: string[] };
+    sending: { button: string; failed: string; slow: string; check: string };
     preview: boolean;
+    endpoint: string;
   };
   const data: Data = JSON.parse(document.getElementById('hiring-data')!.textContent!);
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -253,7 +267,8 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     if (q.type === 'choice') {
       const el = make('', `
         <h1 tabindex="-1">${esc(q.q)}</h1>${help}
-        <div class="choices">${q.options!.map((o) => `<button class="choice${answers[q.id] === o ? ' on' : ''}" type="button" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`);
+        <div class="choices">${q.options!.map((o) => `<button class="choice${answers[q.id] === o ? ' on' : ''}" type="button" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>
+        <p class="error mono" role="alert" hidden></p>`);
       el.querySelectorAll<HTMLButtonElement>('.choice').forEach((b) =>
         b.addEventListener('click', () => {
           answers[q.id] = b.dataset.v!;
@@ -335,6 +350,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     if (busy) return;
     busy = true;
     at = id;
+    if (id === 'brief') count('started');
     const el = build(id);
     const old = current;
     current = el;
@@ -359,12 +375,84 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
       .finished.then(() => { old.remove(); settle(el); });
   }
 
-  function next() {
+  // ── Where they came from ────────────────────────────────
+  // Each flyer or link gets its own label: themcats.org/help?from=library-poster. GoatCounter counts
+  // three steps per label as events, "help opened: library-poster" when the page loads, "help started"
+  // when they pick a role and "help sent" when the application goes through, so we can see which
+  // places bring people in and where they drop off. A visit with no label counts as "no label".
+  // The same label goes along with the application, so its #applications post says where it came
+  // from. Nothing is counted while the page is a preview.
+  const source = (new URLSearchParams(location.search).get('from') ?? '').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40);
+  const counted = new Set<string>();
+  function count(step: 'opened' | 'started' | 'sent') {
+    if (data.preview || counted.has(step)) return;
+    counted.add(step);
+    track(`help ${step}: ${source || 'no label'}`);
+  }
+  // The counter script loads in the background, so wait for it before counting the visit.
+  if (document.readyState === 'complete') count('opened');
+  else window.addEventListener('load', () => count('opened'), { once: true });
+
+  // ── Sending ─────────────────────────────────────────────
+  // Only answers to questions still on the path count, so an answer to a question that was later
+  // skipped (like a social link after unpicking Social media) isn't sent.
+  function application() {
+    const asked = new Set(questions().map((q) => q.id));
+    const get = (id: string) => (asked.has(id) ? answers[id] ?? '' : '');
+    return {
+      website: ($('hp') as HTMLInputElement).value,
+      role: { id: role!.id, name: role!.name },
+      parts: role!.parts && asked.has(role!.parts.id) ? picked(role!.parts.id) : [],
+      also: data.roles.filter((r) => asked.has('also') && picked('also').includes(r.name)).map((r) => ({ id: r.id, name: r.name })),
+      name: get('name'), phone: get('phone'), email: get('email'), preferred: get('preferred'),
+      year: get('year'), major: get('major'), experience: get('experience'),
+      portfolio: get('portfolio'), social: get('social-link'), taken: get('taken'), score: get('score'),
+      source,
+    };
+  }
+
+  const fieldNames: Record<string, string> = { name: 'name', phone: 'phone number', email: 'email' };
+  let sendingNow = false;
+  async function send(screen: HTMLElement) {
+    const err = screen.querySelector('.error') as HTMLElement | null;
+    const label = screen.querySelector('.cta-text');
+    const was = label?.textContent;
+    const buttons = [...screen.querySelectorAll<HTMLButtonElement>('button')];
+    sendingNow = true;
+    buttons.forEach((b) => (b.disabled = true));
+    if (label) label.textContent = data.sending.button;
+    if (err) err.hidden = true;
+    const stop = new AbortController();
+    const timer = window.setTimeout(() => stop.abort(), 20000);
+    let problem = data.sending.failed;
+    try {
+      const res = await fetch(data.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(application()), signal: stop.signal });
+      if (res.ok) { count('sent'); return true; }
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 429) problem = data.sending.slow;
+      else if (body.field && fieldNames[body.field]) problem = data.sending.check.replace('{field}', fieldNames[body.field]);
+    } catch {
+      // offline or timed out: the default message fits
+    } finally {
+      window.clearTimeout(timer);
+      sendingNow = false;
+    }
+    buttons.forEach((b) => (b.disabled = false));
+    if (label && was) label.textContent = was;
+    if (err) { err.textContent = problem; err.hidden = false; }
+    return false;
+  }
+
+  async function next() {
+    if (sendingNow) return;
     const list = order();
-    go(list[list.indexOf(at) + 1]);
+    const to = list[list.indexOf(at) + 1];
+    if (to === 'done' && !data.preview && current && !(await send(current))) return;
+    go(to);
   }
 
   $('back').addEventListener('click', () => {
+    if (sendingNow) return;
     const list = order();
     go(list[list.indexOf(at) - 1]);
   });
@@ -548,6 +636,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
   :global(.steps li) { display: grid; grid-template-columns: 2.6rem 1fr; align-items: baseline; padding: 0.75rem 0; border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent); font-size: 1.36rem; line-height: 1.22; font-weight: 500; }
   :global(.steps .mono) { font-size: 0.68rem; }
   .preview-tag { position: fixed; left: 0.75rem; bottom: 0.75rem; z-index: 35; padding: 0.25rem 0.55rem; background: var(--ink); color: var(--paper); font-size: 0.56rem; font-weight: 400; pointer-events: none; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
   :global(.mock) { margin-top: 1.6rem; font-size: 0.62rem; letter-spacing: 0.08em; text-transform: none; }
 
   /* questions */
