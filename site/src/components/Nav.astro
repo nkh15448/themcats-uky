@@ -2,6 +2,7 @@
 import { url, stripBase } from '../lib/url';
 import Logo from './Logo.astro';
 import { links as ext } from '../data/join';
+import { season } from '../data/season';
 const path = stripBase(Astro.url.pathname);
 const links = [
   { href: '/resources/', label: 'Resources' },
@@ -27,6 +28,35 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       </ul>
     </nav>
     <div class="nav-actions">
+      <div class="look">
+        <button class="look-btn" id="look-btn" aria-label="Theme and motion" aria-expanded="false" aria-controls="look-panel">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" /><path d="M8 2.5a5.5 5.5 0 0 1 0 11z" /></svg>
+        </button>
+        <div class="look-panel" id="look-panel" hidden>
+          <div class="look-group theme-group">
+            <p class="label">Theme</p>
+            <div class="seg" role="group" aria-label="Theme">
+              <button type="button" data-theme-pick="auto">Auto</button>
+              <button type="button" data-theme-pick="light">Light</button>
+              <button type="button" data-theme-pick="dark">Dark</button>
+            </div>
+            <p class="look-note italic">Auto matches your device’s setting.</p>
+            {season.on && (
+              <button type="button" class="season-pick" data-theme-pick={season.id}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c-4.6 4-6.4 9-3.6 13.6 1 1.6 2.3 2.7 3.6 3.4 1.3-.7 2.6-1.8 3.6-3.4 2.8-4.6 1-9.6-3.6-13.6Z" /><path d="M12 6v16M12 11l-2.6-2M12 14.5l3-2.4" /></svg>
+                <span class="season-text"><span class="season-name">{season.name}</span><span class="season-line italic">{season.line}</span></span>
+              </button>
+            )}
+          </div>
+          <div class="look-group">
+            <p class="label">Motion</p>
+            <div class="seg" role="group" aria-label="Motion">
+              <button type="button" data-motion-pick="full">Full</button>
+              <button type="button" data-motion-pick="reduced">Reduced</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <button class="search-trigger" data-open-palette aria-label="Search everything">
         <svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" /><path d="M11 11l3.5 3.5" /></svg>
         <span class="st-text">Search</span><kbd>⌘K</kbd>
@@ -61,6 +91,8 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
 </div>
 
 <script>
+  import { track } from '../lib/track';
+
   const btn = document.getElementById('menu-btn')!;
   const menu = document.getElementById('menu')!;
   const root = document.documentElement;
@@ -86,6 +118,72 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
       btn.focus();
     }
   });
+  // ── Theme and motion panel ──
+  // Picks are counted in GoatCounter as "theme: fall", "motion: reduced" and so on.
+  // Once per visit it also counts the theme someone is actually seeing, like
+  // "theme in use: light (auto)", since most people never open the panel.
+  const lookBtn = document.getElementById('look-btn')!;
+  const panel = document.getElementById('look-panel')!;
+  const w = window as unknown as { __setTheme?: (p: string) => void; __themePref?: () => string };
+  const sync = () => {
+    const pref = w.__themePref?.() ?? 'dark';
+    panel.querySelectorAll<HTMLButtonElement>('[data-theme-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themePick === pref)));
+    const motion = root.dataset.motion === 'reduced' ? 'reduced' : 'full';
+    panel.querySelectorAll<HTMLButtonElement>('[data-motion-pick]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.motionPick === motion)));
+  };
+  const setPanel = (open: boolean) => {
+    lookBtn.setAttribute('aria-expanded', String(open));
+    panel.hidden = !open;
+    if (open) sync();
+  };
+  lookBtn.addEventListener('click', () => setPanel(panel.hidden));
+  document.addEventListener('click', (e) => {
+    if (!panel.hidden && !(e.target as HTMLElement).closest('.look')) setPanel(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !panel.hidden) {
+      setPanel(false);
+      lookBtn.focus();
+    }
+  });
+  panel.querySelectorAll<HTMLButtonElement>('[data-theme-pick]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const change = () => {
+        w.__setTheme?.(b.dataset.themePick!);
+        sync();
+      };
+      track(`theme: ${b.dataset.themePick}`);
+      // Cross-fade between themes where the browser can, unless motion is off.
+      const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+      const still = root.dataset.motion === 'reduced' || matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (doc.startViewTransition && !still) doc.startViewTransition(change);
+      else change();
+    }),
+  );
+  panel.querySelectorAll<HTMLButtonElement>('[data-motion-pick]').forEach((b) =>
+    b.addEventListener('click', () => {
+      const reduced = b.dataset.motionPick === 'reduced';
+      if (reduced) root.dataset.motion = 'reduced';
+      else delete root.dataset.motion;
+      try { localStorage.setItem('mcats-motion', reduced ? 'reduced' : 'full'); } catch {}
+      track(`motion: ${reduced ? 'reduced' : 'full'}`);
+      sync();
+    }),
+  );
+
+  // The counter script loads with the page, so wait for load before counting.
+  addEventListener('load', () => {
+    if (root.hasAttribute('data-theme-lock')) return;
+    try {
+      if (sessionStorage.getItem('mcats-theme-counted')) return;
+      sessionStorage.setItem('mcats-theme-counted', '1');
+    } catch {
+      return;
+    }
+    const pref = w.__themePref?.() ?? 'auto';
+    track(`theme in use: ${pref === 'auto' ? `${root.dataset.theme} (auto)` : pref}`);
+  });
+
   // If the window grows past phone size while the menu is open, close it.
   matchMedia('(min-width: 901px)').addEventListener('change', (e) => e.matches && setOpen(false));
 </script>
@@ -186,6 +284,132 @@ const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWi
     border-color: var(--rule-strong);
     color: var(--fg);
   }
+  /* ── theme and motion ── */
+  .look {
+    position: relative;
+  }
+  .look-btn {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .look-btn:hover,
+  .look-btn[aria-expanded='true'] {
+    border-color: var(--rule-strong);
+    color: var(--fg);
+  }
+  .look-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
+  }
+  .look-btn svg path {
+    fill: currentColor;
+    stroke: none;
+  }
+  .look-panel {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 96;
+    width: 16.5rem;
+    display: grid;
+    gap: 1.1rem;
+    padding: 1.1rem;
+    background: var(--bg-raise);
+    border: 1px solid var(--rule-strong);
+    box-shadow: 0 24px 50px -24px rgb(var(--shade) / calc(0.9 * var(--shade-k)));
+  }
+  .look-group {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .seg {
+    display: flex;
+    border: 1px solid var(--rule-strong);
+  }
+  .seg button {
+    flex: 1;
+    padding: 0.55rem 0.4rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: background 0.25s, color 0.25s;
+  }
+  .seg button + button {
+    border-left: 1px solid var(--rule-strong);
+  }
+  .seg button:hover {
+    color: var(--fg);
+  }
+  .seg button[aria-pressed='true'] {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .season-pick {
+    display: grid;
+    grid-template-columns: 1.4rem 1fr;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 0.35rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--rule-strong);
+    text-align: left;
+    color: var(--fg-dim);
+    transition: border-color 0.25s, color 0.25s, background 0.25s;
+  }
+  .season-pick svg {
+    width: 1.3rem;
+    height: 1.3rem;
+    fill: none;
+    stroke: #d1432e;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.6s var(--ease);
+  }
+  .season-pick:hover {
+    color: var(--fg);
+    border-color: var(--fg-dim);
+  }
+  .season-pick:hover svg {
+    transform: rotate(-14deg);
+  }
+  .season-pick[aria-pressed='true'] {
+    border-color: var(--neb-gold);
+    color: var(--fg);
+  }
+  .season-text {
+    display: grid;
+  }
+  .season-name {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .season-line {
+    font-size: 0.98rem;
+    color: var(--muted);
+    line-height: 1.25;
+  }
+  .look-note {
+    font-size: 1rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  :global(html[data-theme-lock]) .theme-group {
+    display: none;
+  }
+
   .search-icon {
     display: none;
     width: 16px;

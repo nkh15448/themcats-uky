@@ -183,9 +183,9 @@ const rows = (m: (typeof members)[number]) =>
     position: absolute;
     inset: 0;
     padding: 7px;
-    background: #171716;
+    background: var(--print-bg);
     border: 1px solid var(--rule-strong);
-    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 18px 40px -18px rgb(var(--shade) / calc(0.9 * var(--shade-k)));
     transition:
       transform 0.6s var(--ease),
       box-shadow 0.6s var(--ease),
@@ -197,7 +197,7 @@ const rows = (m: (typeof members)[number]) =>
     height: 100%;
     object-fit: cover;
     object-position: 50% 30%;
-    filter: grayscale(1) contrast(1.06) brightness(0.9);
+    filter: var(--photo);
     transition: filter 0.8s var(--ease);
   }
   /* film grain on every print */
@@ -224,7 +224,7 @@ const rows = (m: (typeof members)[number]) =>
     box-shadow:
       -3px 0 0 rgba(255, 30, 70, 0.45),
       3px 0 0 rgba(30, 140, 255, 0.45),
-      0 26px 50px -20px rgba(0, 0, 0, 0.95);
+      0 26px 50px -20px rgb(var(--shade) / calc(0.95 * var(--shade-k)));
   }
   .card:hover .print[data-pos='0'] :global(img) {
     filter: none;
@@ -248,9 +248,9 @@ const rows = (m: (typeof members)[number]) =>
     display: grid;
     place-items: center;
     background:
-      repeating-linear-gradient(135deg, transparent 0 7px, rgba(238, 235, 228, 0.025) 7px 8px),
+      repeating-linear-gradient(135deg, transparent 0 7px, color-mix(in srgb, var(--fg) 2.5%, transparent) 7px 8px),
       radial-gradient(ellipse at 50% 40%, rgba(160, 140, 246, 0.08), transparent 70%),
-      #141413;
+      var(--bg-raise);
   }
   .empty :global(.ph-lion) {
     position: absolute;
@@ -422,5 +422,14 @@ const rows = (m: (typeof members)[number]) =>
     .print[data-pos='0'] :global(img) {
       filter: none;
     }
+  }
+
+  /* Fall: a lifted photo gets the same two offset print layers as the titles. */
+  :global(:root[data-theme='fall']) .card:hover .print[data-pos='0'],
+  :global(:root[data-theme='fall']) .stack:focus-visible .print[data-pos='0'] {
+    box-shadow:
+      6px 6px 0 #f2a33c,
+      12px 12px 0 #d1432e,
+      0 26px 50px -20px rgb(var(--shade) / calc(0.95 * var(--shade-k)));
   }
 </style>

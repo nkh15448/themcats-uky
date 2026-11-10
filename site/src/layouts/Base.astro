@@ -11,16 +11,20 @@ import Footer from '../components/Footer.astro';
 import Palette from '../components/Palette.astro';
 import Tuner from '../components/Tuner.astro';
 import playfair from '../assets/fonts/playfair-mcats.woff2?url';
+import { season } from '../data/season';
 
 interface Props {
   title?: string;
   description?: string;
   /** Full-screen pages (the presentation): no nav, footer or search palette. */
   bare?: boolean;
+  /** Pages with a look of their own (like /mcatalyst) stay dark whatever the switch says. */
+  darkOnly?: boolean;
 }
 const {
   title,
   bare = false,
+  darkOnly = false,
   description = 'The M-CATS is a free MCAT prep club at the University of Kentucky, with weekly seminars, one-on-one peer tutoring, and a searchable library of study materials.',
 } = Astro.props;
 const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · Free MCAT Prep at the University of Kentucky';
@@ -28,13 +32,35 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const ogImage = new URL(url('/og-image.png'), Astro.site).href;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-theme-lock={bare || darkOnly ? '' : undefined} data-bare={bare ? '' : undefined}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content="#0d0d0c" />
+    {!(bare || darkOnly) && (
+      /* Theme and motion, before first paint so nothing flashes. "auto" follows the device. */
+      <script is:inline define:vars={{ season }}>
+        const root = document.documentElement;
+        const light = matchMedia('(prefers-color-scheme: light)');
+        const fixed = { light: '#fbf6ee', dark: '#0d0d0c', fall: '#17110d' };
+        const valid = (p) => p === 'auto' || p === 'light' || p === 'dark' || (season.on && p === season.id);
+        let pref = null;
+        try { pref = localStorage.getItem('mcats-theme'); } catch {}
+        if (!valid(pref)) pref = season.on && season.isDefault ? season.id : 'auto';
+        const apply = () => {
+          const t = pref === 'auto' ? (light.matches ? 'light' : 'dark') : pref;
+          root.dataset.theme = t;
+          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', fixed[t] || fixed.dark);
+        };
+        apply();
+        light.addEventListener('change', () => pref === 'auto' && apply());
+        window.__setTheme = (p) => { pref = p; try { localStorage.setItem('mcats-theme', p); } catch {} apply(); };
+        window.__themePref = () => pref;
+        try { if (localStorage.getItem('mcats-motion') === 'reduced') root.dataset.motion = 'reduced'; } catch {}
+      </script>
+    )}
     <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
     <link rel="preload" href={playfair} as="font" type="font/woff2" crossorigin />
     <link rel="canonical" href={canonical} />

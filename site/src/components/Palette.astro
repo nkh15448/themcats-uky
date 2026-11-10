@@ -208,7 +208,7 @@ const index = [
     padding: 0;
   }
   .palette::backdrop {
-    background: rgba(5, 5, 5, 0.72);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
     backdrop-filter: blur(6px);
   }
   .palette[open] {
@@ -270,7 +270,7 @@ const index = [
     border-left: 2px solid transparent;
   }
   .results :global(li[aria-selected='true']) {
-    background: rgba(238, 235, 228, 0.06);
+    background: color-mix(in srgb, var(--fg) 6%, transparent);
     border-left-color: var(--fg);
   }
   .results :global(.r-kind) {

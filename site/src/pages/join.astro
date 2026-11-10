@@ -176,7 +176,7 @@ const steps = [
 
   // ── Card: tilt and foil follow the pointer ──
   const card = document.getElementById('card')!;
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'reduced';
   if (!reduce) {
     card.addEventListener('pointermove', (e) => {
       const r = card.getBoundingClientRect();
@@ -309,10 +309,10 @@ const steps = [
       radial-gradient(ellipse 70% 60% at 85% 10%, rgba(111, 134, 242, 0.18), transparent 60%),
       radial-gradient(ellipse 60% 50% at 10% 100%, rgba(229, 143, 196, 0.12), transparent 60%),
       linear-gradient(160deg, #1a1a1c, #0f0f10 60%);
-    border: 1px solid rgba(238, 235, 228, 0.18);
+    border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
     box-shadow:
-      0 40px 80px -30px rgba(0, 0, 0, 0.9),
-      0 0 0 1px rgba(0, 0, 0, 0.6) inset;
+      0 40px 80px -30px rgb(var(--shade) / calc(0.9 * var(--shade-k))),
+      0 0 0 1px rgb(var(--shade) / calc(0.6 * var(--shade-k))) inset;
     transform: rotateX(var(--rx)) rotateY(var(--ry));
     transform-style: preserve-3d;
     transition: transform 0.6s var(--ease);
@@ -471,7 +471,7 @@ const steps = [
     background: #eeebe4;
     border-radius: 6px;
     transform: rotate(1.5deg);
-    box-shadow: 0 18px 30px -16px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 18px 30px -16px rgb(var(--shade) / calc(0.9 * var(--shade-k)));
   }
   .qr-code :global(svg) {
     width: 100%;

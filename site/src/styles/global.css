@@ -58,7 +58,7 @@
   /* Effect strength. Tune these three to taste. */
   --grain: 0.16;
   --ca-rest: 0.045em;
-  --soft-rest: 0.6px;
+  --soft-rest: 0.35px;
 
   /* chromatic aberration fringe colours */
   --ca-r: rgba(255, 30, 70, 0.9);
@@ -69,9 +69,135 @@
   --serif: 'Cormorant Garamond Variable', 'Cormorant Garamond', Georgia, serif;
   --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-  --max: 1240px;
+  /* Photo prints, drop shadows and the soft halo on display type. */
+  --print-bg: #171716;
+  --shade: 0 0 0; /* shadow colour as r g b */
+  --shade-k: 1; /* shadow strength */
+  --halo: rgba(255, 255, 255, 0.18);
+  --photo: grayscale(1) contrast(1.06) brightness(0.9); /* team photos at rest */
+
+  --max: 77.5rem; /* 1240px at full size; in rem so it scales with the 90% desktop size */
   --gutter: clamp(1rem, 4vw, 3.5rem);
   --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+
+
+/* ── Light theme ─────────────────────────────────────────────
+   Paper and ink, borrowed from the /help questionnaire's Dusk palette.
+   Set by the switch in the nav (or the visitor's system setting) as
+   data-theme="light" on <html>; see the script in Base.astro. */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #fbf6ee;
+  --bg-raise: #f3ece1;
+  --fg: #241b3a;
+  --fg-dim: #4a4060;
+  --muted: #675c70;
+  --faint: #a69caf;
+  --rule: rgba(36, 27, 58, 0.13);
+  --rule-strong: rgba(36, 27, 58, 0.28);
+
+  --cp: #c25b76;
+  --cars: #a07c33;
+  --bb: #3f7cc0;
+  --ps: #8462c2;
+
+  --neb-indigo: #4a62d8;
+  --neb-violet: #6a4fd0;
+  --neb-rose: #c4508e;
+  --neb-gold: #c98a2e;
+  --nebula-glow: 0.6;
+
+  /* Effects: the fringe reads as print misregistration on paper. */
+  --grain: 0.07;
+  --ca-rest: 0.03em;
+  --soft-rest: 0px;
+  --ca-r: rgba(232, 40, 90, 0.5);
+  --ca-g: rgba(20, 170, 120, 0);
+  --ca-b: rgba(40, 120, 240, 0.55);
+  --halo: transparent;
+
+  --print-bg: #fffdf9;
+  --shade: 36 27 58;
+  --shade-k: 0.28;
+  --photo: grayscale(1) contrast(1.04);
+}
+/* Dark specks instead of light ones. */
+:root[data-theme='light'] body::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.14 0 0 0 0 0.1 0 0 0 0 0.22 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Fall ─────────────────────────────────────────────────────
+   Built from the strong colours of the /help questionnaire: warm paper and
+   espresso ink, with indigo, plum, vermilion and amber running like an
+   October sky at dusk (that's the order of the orbit on the home page),
+   and teal for evergreen. Buttons are vermilion, the colour fringe on display
+   type prints in vermilion and teal, and photos develop in sepia.
+   Offered while data/season.ts says so. */
+:root[data-theme='fall'] {
+  color-scheme: light;
+
+  --bg: #faf1e4;
+  --bg-raise: #f3e4cf;
+  --fg: #2a1a14;
+  --fg-dim: #5a4238;
+  --muted: #7a6155;
+  --faint: #b9a493;
+  --rule: rgba(42, 26, 20, 0.14);
+  --rule-strong: rgba(42, 26, 20, 0.3);
+
+  --cp: #d1432e;
+  --cars: #f2a33c;
+  --bb: #1f7a6d;
+  --ps: #7b2f6f;
+
+  --neb-indigo: #2f3f8f;
+  --neb-violet: #7b2f6f; /* plum: the small accent marks */
+  --neb-rose: #d1432e; /* vermilion */
+  --neb-gold: #f2a33c; /* amber */
+  --nebula-glow: 1;
+
+  --grain: 0.07;
+  --ca-rest: 0.028em; /* offset of each print layer */
+  --soft-rest: 0px;
+  --ca-r: rgba(209, 67, 46, 0.75);
+  --ca-g: rgba(242, 163, 60, 0);
+  --ca-b: rgba(31, 122, 109, 0.7);
+  --halo: transparent;
+
+  --print-bg: #fffaf2;
+  --shade: 70 34 20;
+  --shade-k: 0.3;
+  --photo: grayscale(1) sepia(0.45) contrast(1.04);
+}
+:root[data-theme='fall'] ::selection {
+  background: #f2a33c;
+  color: #2a1a14;
+}
+/* Warm brown specks. */
+:root[data-theme='fall'] body::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.18 0 0 0 0 0.1 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* Instead of the colour fringe, display type is printed over two offset layers,
+   amber then vermilion, like a vintage two-colour poster. The same numbers drive
+   it, so it still slides into register as a title loads and spreads on hover. */
+:root[data-theme='fall'] .ca {
+  --ca: calc(var(--ca-rest) * (1 + var(--hov) * 0.8) + var(--boost) * 0.16em);
+  text-shadow:
+    var(--ca) var(--ca) 0 #f2a33c,
+    calc(var(--ca) * 2) calc(var(--ca) * 2) 0 #d1432e;
+}
+
+/* The main buttons are vermilion, like the questionnaire's role buttons. */
+:root[data-theme='fall'] .btn-solid {
+  background: #d1432e;
+  border-color: #d1432e;
+  color: #fff;
+}
+:root[data-theme='fall'] .btn-solid:hover {
+  background: transparent;
+  color: #d1432e;
 }
 
 *,
@@ -86,6 +212,16 @@ html {
   background: var(--bg);
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+}
+/* Laptops and desktops see the site at 90%, like a browser zoomed out one step:
+   type and spacing are in rem, so they shrink together. Phones keep full size so
+   text stays readable, and full-screen pages (the presentation, /help) are left
+   alone. Media queries still measure in the browser's own 16px, so breakpoints
+   don't move. */
+@media (min-width: 900px) {
+  html:not([data-bare]) {
+    font-size: 90%;
+  }
 }
 
 body {
@@ -170,11 +306,17 @@ button {
 .display {
   font-family: var(--display);
   font-weight: 700;
-  /* Playfair's largest optical size: hairline serifs, maximum contrast. */
-  font-variation-settings: 'opsz' var(--opsz, 1200);
+  /* Optical size: lower numbers give sturdier hairlines. Headings use 72;
+     the big page titles get 300 so they keep their contrast without the
+     strokes vanishing (1200, the old setting, was all hairline). */
+  font-variation-settings: 'opsz' var(--opsz, 72);
   line-height: 0.86;
   letter-spacing: -0.02em;
   text-transform: uppercase;
+}
+
+h1.display {
+  --opsz: 300;
 }
 
 .italic {
@@ -206,7 +348,7 @@ button {
     calc(var(--ca) * -1) 0 0.02em var(--ca-r),
     var(--ca) 0 0.02em var(--ca-b),
     0 calc(var(--ca) * 0.5) 0.04em var(--ca-g),
-    0 0 0.12em rgba(255, 255, 255, 0.18);
+    0 0 0.12em var(--halo);
   filter: blur(var(--soft-rest));
 }
 .ca-in {
@@ -347,13 +489,20 @@ kbd {
   transform: none;
 }
 
-/* .full-motion on <html> opts a page back in (the presentation asks first). */
+/* Less motion: every animation and transition jumps straight to its end state.
+   (Switching them off outright left anything that fades in, like the home page's
+   buttons, stuck invisible.) Applies when the visitor's system asks for less
+   motion, unless a page opts back in with .full-motion on <html> (the
+   presentation asks first), and when the nav's motion switch is set to Reduced. */
 @media (prefers-reduced-motion: reduce) {
   html:not(.full-motion) *,
   html:not(.full-motion) *::before,
   html:not(.full-motion) *::after {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 1ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
   }
   [data-reveal] {
     opacity: 1;
@@ -362,6 +511,22 @@ kbd {
   html {
     scroll-behavior: auto;
   }
+}
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 1ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  transition-delay: 0s !important;
+}
+html[data-motion='reduced'] [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+html[data-motion='reduced'] {
+  scroll-behavior: auto;
 }
 
 /* Gradient text for the rare word that deserves it. */

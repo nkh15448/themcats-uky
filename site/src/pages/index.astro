@@ -72,12 +72,49 @@ const schema = {
     },
   ],
 };
+
+// Fall theme only: line-art leaves drifting down behind the wordmark. x and y are
+// percentages of the hero (y is where each one rests when motion is reduced),
+// s is size in px, t the seconds one fall takes, d where in that fall it starts.
+const leaves = [
+  { shape: 'maple', x: 5, y: 24, s: 40, t: 26, d: -4, dx: 120, sway: 3.6, c: '#d1432e', o: 0.9, r: -20 },
+  { shape: 'birch', x: 20, y: 74, s: 26, t: 21, d: -15, dx: -60, sway: 2.9, c: '#f2a33c', o: 0.9, r: 30 },
+  { shape: 'ginkgo', x: 38, y: 10, s: 32, t: 29, d: -9, dx: 90, sway: 4.2, c: '#f2a33c', o: 0.85, r: 12 },
+  { shape: 'maple', x: 55, y: 86, s: 30, t: 24, d: -19, dx: -80, sway: 3.2, c: '#7b2f6f', o: 0.85, r: 40 },
+  { shape: 'birch', x: 70, y: 38, s: 34, t: 27, d: -2, dx: 70, sway: 3.9, c: '#1f7a6d', o: 0.85, r: -35 },
+  { shape: 'maple', x: 85, y: 60, s: 44, t: 31, d: -12, dx: -110, sway: 4.4, c: '#d1432e', o: 0.9, r: 15 },
+  { shape: 'ginkgo', x: 93, y: 8, s: 24, t: 22, d: -7, dx: -40, sway: 3, c: '#7b2f6f', o: 0.8, r: -10 },
+];
+const leafPaths: Record<string, string[]> = {
+  maple: [
+    'M12 2.2l1.6 4.2 2.8-1.2-.8 3.8 5-1-1.8 3.4 2.7 1.2-4.9 3.2.8 2.4-4.6-1-.2 4.8h-1.2l-.2-4.8-4.6 1 .8-2.4-4.9-3.2 2.7-1.2-1.8-3.4 5 1-.8-3.8 2.8 1.2z',
+    'M12 21V7M12 15l-5.2-3.4M12 15l5.2-3.4',
+  ],
+  birch: [
+    'M12 2.5c-4.6 4-6.4 9-3.6 13.6 1 1.6 2.3 2.7 3.6 3.4 1.3-.7 2.6-1.8 3.6-3.4 2.8-4.6 1-9.6-3.6-13.6Z',
+    'M12 6v16M12 11l-2.6-2M12 14.5l3-2.4',
+  ],
+  ginkgo: [
+    'M12 13c-5 0-8.5-3.5-9-8 3-1.5 6-1.6 8.2.6L12 8l.8-2.4C15 3.4 18 3.5 21 5c-.5 4.5-4 8-9 8Z',
+    'M12 13v8.5M12 13 8 7.5M12 13l4-5.5',
+  ],
+};
 ---
 <Base>
   <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(schema)} />
 
   <!-- ── Hero ─────────────────────────────────────────────── -->
   <section class="hero">
+    <div class="leaves" aria-hidden="true">
+      {leaves.map((l) => (
+        <span
+          class="leaf"
+          style={`--x:${l.x}%;--y:${l.y}%;--s:${l.s}px;--t:${l.t}s;--d:${l.d}s;--dx:${l.dx}px;--sway:${l.sway}s;--c:${l.c};--o:${l.o};--r:${l.r}deg`}
+        >
+          <svg viewBox="0 0 24 24">{leafPaths[l.shape].map((d, i) => <path d={d} class={i === 0 ? 'blade' : 'vein'} />)}</svg>
+        </span>
+      ))}
+    </div>
     <div class="wrap hero-grid">
       <div class="hero-top">
         <p class="label">Free MCAT preparation · Est. 2026</p>
@@ -97,10 +134,10 @@ const schema = {
               <defs>
                 {l.id === 'back' && (
                   <linearGradient id="orb-grad" x1="0" y1="1" x2="1" y2="0">
-                    <stop offset="0" stop-color="#6f86f2" />
-                    <stop offset="0.4" stop-color="#a08cf6" />
-                    <stop offset="0.72" stop-color="#e58fc4" />
-                    <stop offset="1" stop-color="#f3d3a0" />
+                    <stop offset="0" style="stop-color: var(--neb-indigo)" />
+                    <stop offset="0.4" style="stop-color: var(--neb-violet)" />
+                    <stop offset="0.72" style="stop-color: var(--neb-rose)" />
+                    <stop offset="1" style="stop-color: var(--neb-gold)" />
                   </linearGradient>
                 )}
                 <clipPath id={`orb-${l.id}-clip`}>
@@ -670,7 +707,7 @@ const schema = {
     transition: background 0.3s;
   }
   .next-row:hover {
-    background: linear-gradient(90deg, transparent, rgba(238, 235, 228, 0.03), transparent);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--fg) 3%, transparent), transparent);
   }
   .n-date {
     display: grid;
@@ -948,6 +985,116 @@ const schema = {
     }
     .n-arrow {
       display: none;
+    }
+  }
+
+  /* Light theme: on paper the star is ink, not light. */
+  :global(:root[data-theme='light']) .g-core {
+    background: var(--neb-violet);
+    box-shadow:
+      0 0 4px 1px rgba(106, 79, 208, 0.45),
+      0 0 16px 4px rgba(201, 138, 46, 0.18);
+  }
+  :global(:root[data-theme='light']) .g-ray {
+    background: linear-gradient(90deg, transparent, rgba(106, 79, 208, 0.8) 50%, transparent);
+  }
+  :global(:root[data-theme='light']) .g-v {
+    background: linear-gradient(180deg, transparent, rgba(106, 79, 208, 0.8) 50%, transparent);
+  }
+  :global(:root[data-theme='light']) .hero::before {
+    opacity: 0.8;
+  }
+
+  /* ── Fall: a low sun behind the wordmark, a vermilion star, falling leaves ── */
+  :global(:root[data-theme='fall']) .hero::before {
+    background:
+      radial-gradient(ellipse 36% 30% at 66% 46%, rgba(242, 163, 60, 0.22), transparent 70%),
+      radial-gradient(ellipse 26% 22% at 40% 60%, rgba(209, 67, 46, 0.1), transparent 70%),
+      radial-gradient(ellipse 22% 18% at 86% 26%, rgba(242, 163, 60, 0.18), transparent 70%),
+      radial-gradient(ellipse 30% 24% at 14% 82%, rgba(31, 122, 109, 0.08), transparent 70%);
+  }
+  :global(:root[data-theme='fall']) .g-core {
+    background: #d1432e;
+    box-shadow:
+      0 0 4px 1px rgba(209, 67, 46, 0.55),
+      0 0 18px 5px rgba(242, 163, 60, 0.35);
+  }
+  :global(:root[data-theme='fall']) .g-ray {
+    background: linear-gradient(90deg, transparent, rgba(209, 67, 46, 0.85) 50%, transparent);
+  }
+  :global(:root[data-theme='fall']) .g-v {
+    background: linear-gradient(180deg, transparent, rgba(209, 67, 46, 0.85) 50%, transparent);
+  }
+
+  .leaves {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  :global(:root[data-theme='fall']) .leaves {
+    display: block;
+  }
+  .leaf {
+    position: absolute;
+    left: var(--x);
+    top: -6%;
+    width: var(--s);
+    color: var(--c);
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: leaf-fall var(--t) linear var(--d) infinite;
+  }
+  .leaf svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: leaf-sway var(--sway) ease-in-out infinite alternate;
+  }
+  .leaf .blade {
+    fill: currentColor;
+    fill-opacity: 0.32;
+  }
+  .leaf .vein {
+    stroke-width: 0.8;
+    opacity: 0.8;
+  }
+  @keyframes leaf-fall {
+    0% { transform: translate3d(0, 0, 0); opacity: 0; }
+    8% { opacity: var(--o); }
+    86% { opacity: var(--o); }
+    100% { transform: translate3d(var(--dx), calc(100svh + 40px), 0); opacity: 0; }
+  }
+  /* a leaf rocks side to side and turns over as it falls */
+  @keyframes leaf-sway {
+    from { transform: translateX(-18px) rotate(-32deg) rotateY(0deg); }
+    to { transform: translateX(18px) rotate(26deg) rotateY(55deg); }
+  }
+  /* With less motion the leaves rest where they are, as if they'd just landed. */
+  :global(html[data-motion='reduced']) .leaf,
+  :global(html[data-motion='reduced']) .leaf svg {
+    animation: none !important;
+  }
+  :global(html[data-motion='reduced']) .leaf {
+    top: var(--y);
+    opacity: var(--o);
+    transform: rotate(var(--r));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :global(html:not(.full-motion)) .leaf,
+    :global(html:not(.full-motion)) .leaf svg {
+      animation: none !important;
+    }
+    :global(html:not(.full-motion)) .leaf {
+      top: var(--y);
+      opacity: var(--o);
+      transform: rotate(var(--r));
     }
   }
 </style>

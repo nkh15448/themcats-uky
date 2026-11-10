@@ -125,9 +125,9 @@ const { title = 'Moments' } = Astro.props;
     display: block;
     width: 100%;
     padding: 7px;
-    background: #171716;
+    background: var(--print-bg);
     border: 1px solid var(--rule-strong);
-    box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 18px 40px -20px rgb(var(--shade) / calc(0.9 * var(--shade-k)));
     cursor: zoom-in;
     transform: rotate(var(--tilt)); /* only the print tilts; captions stay level */
     transition:
@@ -146,7 +146,7 @@ const { title = 'Moments' } = Astro.props;
     box-shadow:
       -2px 0 0 rgba(255, 30, 70, 0.4),
       2px 0 0 rgba(30, 140, 255, 0.4),
-      0 26px 50px -20px rgba(0, 0, 0, 0.95);
+      0 26px 50px -20px rgb(var(--shade) / calc(0.95 * var(--shade-k)));
   }
   .shot:hover .frame :global(img),
   .frame:focus-visible :global(img) {
