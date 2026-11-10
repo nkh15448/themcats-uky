@@ -88,7 +88,7 @@ const total = costs.reduce((a, c) => a + c.amount, 0);
 const portraits = import.meta.glob<{ default: ImageMetadata }>('../assets/present/*.jpg', { eager: true });
 const officers = leadership.map((m) => ({ ...m, photo: portraits[`../assets/present/${m.id}.jpg`]?.default }));
 // Full-length photos: keep the face, not the shoes.
-const tall = new Set(['anmol-nayak', 'zander-houchens', 'andrew-peng']);
+const tall = new Set(['anmol-nayak', 'andrew-peng']);
 
 const qr = (url: string) =>
   QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0d0d0c', light: '#eeebe4' } });

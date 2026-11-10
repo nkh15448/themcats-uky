@@ -102,16 +102,6 @@ export const leadership: Member[] = [
     food: 'Marie Callender’s chicken pot pies',
   },
   {
-    id: 'zander-houchens',
-    name: 'Zander Houchens',
-    role: 'Officer',
-    year: 'Senior',
-    majors: 'Agricultural & Medical Biotechnology',
-    subjects: 'B/B & P/S',
-    hobbies: 'Jiu jitsu, lifting, making beats & songwriting',
-    food: 'Lemon pepper wings!!!',
-  },
-  {
     id: 'andrew-peng',
     name: 'Andrew Peng',
     role: 'Secretary',
@@ -138,9 +128,11 @@ export const leadership: Member[] = [
   },
 ];
 
-// Officer application. Leave formUrl empty to point people to the GroupMe instead.
+// Officer application. While formUrl is empty, the Team page shows the `soon` note
+// in place of a button. When the /help questionnaire goes live, set formUrl to '/help/'.
 export const officerApp = {
   formUrl: '',
+  soon: 'Applications open very soon',
   perks: ['Help run a club that makes the MCAT free for everyone', 'Leadership experience for your applications', 'Earn service hours', 'Stay sharp on MCAT content yourself'],
   process: ['Fill out the application.', 'Meet with a few members of leadership.', 'Join the officer team and pick up a role.'],
 };

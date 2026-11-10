@@ -243,9 +243,9 @@ const moreRows = (p: Person) =>
           more people. It’s a real commitment, and it’s also the most direct way to help other pre-meds get through the MCAT.
         </p>
         {app.formUrl ? (
-          <a class="btn btn-solid" href={app.formUrl} target="_blank" rel="noopener">Officer application ↗</a>
+          <a class="btn btn-solid" href={app.formUrl}>Apply to join →</a>
         ) : (
-          <a class="btn btn-solid" href={GROUPME} target="_blank" rel="noopener">Message us in the GroupMe ↗</a>
+          <p class="soon mono"><span class="soon-dot" aria-hidden="true"></span>{app.soon}</p>
         )}
       </div>
       <div class="ta-side" data-reveal>
@@ -750,6 +750,37 @@ const moreRows = (p: Person) =>
     font-size: 0.7rem;
     color: var(--muted);
   }
+  /* Until the application is live: a quiet status note where the button goes. */
+  .soon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.95em 1.4em;
+    border: 1px dashed var(--rule-strong);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    color: var(--fg);
+  }
+  .soon-dot {
+    position: relative;
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background: var(--neb-violet);
+  }
+  .soon-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--neb-violet);
+    animation: soon-ping 2.4s var(--ease) infinite;
+  }
+  @keyframes soon-ping {
+    from { transform: scale(1); opacity: 0.6; }
+    to { transform: scale(3); opacity: 0; }
+  }
+
   .contact {
     margin-top: 3rem;
     font-size: 1.35rem;
