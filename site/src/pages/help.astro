@@ -4,13 +4,29 @@ import Logo from '../components/Logo.astro';
 import { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done, sending } from '../data/hiring';
 import teaching from '../assets/present/classes/04.jpg';
 import whiteboard from '../assets/present/classes/05.jpg';
-import slides from '../assets/present/classes/03.jpg';
+import nihal from '../assets/help/nihal-endocrine.jpg';
+import anmol from '../assets/help/anmol-dna.jpg';
+import lee from '../assets/help/lee-orgo.jpg';
+
+// The small photo grid on the "what is The M-CATS" screen, in order. Names and alt text are in hiring.ts.
+const p = intro.photos;
+const pics = [{ img: nihal, ...p.nihal }, { img: anmol, ...p.anmol }, { img: lee, ...p.lee }, { img: whiteboard, ...p.whiteboard }];
+
+// The opening animation's lion: the logo's own drawing, with every stroke given a length of 1 so
+// the whole lion can draw itself on in one sweep.
+import logoRaw from '../assets/logo.svg?raw';
+const introMark = logoRaw
+  .replace(/<\?xml[^>]*\?>/, '')
+  .replace(/\s(id|data-name)="[^"]*"/g, '')
+  .replace(/stroke:\s*#fff;/g, 'stroke: currentColor;')
+  .replace(/<path /g, '<path pathLength="1" ')
+  .replace('<svg ', '<svg class="intro-mark" aria-hidden="true" ');
 
 // Set live to true to start taking applications. Until then the page shows a Preview tag, sends
 // nothing and says so at the end. Applications go to the join-request function in Supabase
 // (catalyst/supabase/functions/join-request), which saves them and posts each one in #applications.
 // In dev, HELP_SEND=1 sends for real so the whole path can be tested before going live.
-const live = false;
+const live = true;
 const preview = !live && !(import.meta.env.DEV && process.env.HELP_SEND === '1');
 const endpoint = 'https://mkcpsnyskwbfaqccbbtt.supabase.co/functions/v1/join-request';
 const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, briefHeads, also, done, sending, preview, endpoint };
@@ -27,6 +43,10 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     </header>
     <div id="stage"></div>
     {data.preview && <p class="mono preview-tag">Preview</p>}
+    <div class="intro" id="intro" aria-hidden="true">
+      <div class="intro-field"><Fragment set:html={introMark} /></div>
+      <div class="intro-ink"><Fragment set:html={introMark} /></div>
+    </div>
     <!-- Left empty by people; bots that fill in every field get a quiet fake success. -->
     <input class="hp" id="hp" name="m-extra" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
@@ -35,7 +55,10 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
       <div class="scrim" id="scrim"></div>
       <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
         <div class="sheet-scroll" id="sheet-scroll">
-          <img class="sheet-hero" src={teaching.src} width={teaching.width} height={teaching.height} alt="An M-CATS officer teaching at a whiteboard in front of a room of students" />
+          <figure class="hero-fig">
+            <img class="sheet-hero" src={teaching.src} width={teaching.width} height={teaching.height} alt={p.hero.alt} />
+            {p.hero.who && <figcaption class="mono tag" aria-hidden="true">{p.hero.who} · {p.hero.topic}</figcaption>}
+          </figure>
           <div class="sheet-body">
             <h2 id="sheet-title">{intro.title}</h2>
             <p class="lead">{intro.lead}</p>
@@ -45,8 +68,12 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
               {intro.does.map((d) => <li><span class="mono">{d.title}</span><span>{d.body}</span></li>)}
             </ul>
             <div class="pics">
-              <img src={whiteboard.src} width={whiteboard.width} height={whiteboard.height} loading="lazy" alt="An officer explaining a metabolic pathway drawn across the whiteboard" />
-              <img src={slides.src} width={slides.width} height={slides.height} loading="lazy" alt="A title slide reading Embryogenesis, designed by the officers presenting it" />
+              {pics.map((x) => (
+                <figure>
+                  <img src={x.img.src} width={x.img.width} height={x.img.height} loading="lazy" alt={x.alt} />
+                  {x.who && <figcaption class="mono tag" aria-hidden="true">{x.who} · {x.topic}</figcaption>}
+                </figure>
+              ))}
             </div>
             <p class="caption">{intro.caption}</p>
             <p class="mcat-note">{intro.mcatNote}</p>
@@ -86,7 +113,8 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
   const app = $('app');
   const stage = $('stage');
   const sheet = $('sheet');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Calm motion if the device asks for it, or if they picked Reduced in the main site's motion switch.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || (() => { try { return localStorage.getItem('mcats-motion') === 'reduced'; } catch { return false; } })();
   const EASE = 'cubic-bezier(0.2, 0.7, 0.1, 1)';
   const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
@@ -252,6 +280,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
           const on = b.classList.toggle('on');
           b.setAttribute('aria-pressed', String(on));
           answers[q.id] = [...el.querySelectorAll<HTMLElement>('.choice.on')].map((x) => x.dataset.v!).join('|');
+          save();
           err.hidden = true;
           text.textContent = ctaLabel(picked(q.id).length > 0);
           chrome();
@@ -296,7 +325,8 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     const text = el.querySelector('.cta-text')!;
     const err = el.querySelector('.error') as HTMLElement;
     text.textContent = label();
-    field.addEventListener('input', () => { text.textContent = label(); err.hidden = true; });
+    // Kept as they type, so a reload mid-answer doesn't lose it. Moving on still needs a valid answer.
+    field.addEventListener('input', () => { answers[q.id] = field.value; save(); text.textContent = label(); err.hidden = true; });
     el.querySelector('form')!.addEventListener('submit', (e) => {
       e.preventDefault();
       const v = field.value.trim();
@@ -344,12 +374,41 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     busy = false;
     const target = el.querySelector<HTMLElement>('#field') ?? el.querySelector<HTMLElement>('h1');
     target?.focus({ preventScroll: true });
+    if (queued) { const id = queued; queued = null; go(id, undefined, 'none'); }
   }
 
-  function go(id: string, from?: { x: number; y: number }) {
-    if (busy) return;
+  // ── History and saving ──────────────────────────────────
+  // Each screen is its own step in the browser's history, so a phone's back swipe (or the browser's
+  // back button) goes back one screen like ← Back does, instead of leaving the form. Answers are kept
+  // for this tab only (sessionStorage), so a reload, or a phone reopening the tab after switching
+  // apps, picks up where they left off. They're cleared once the application is sent, and the
+  // browser drops them when the tab closes.
+  type Step = { help?: string; n?: number; sheet?: boolean };
+  type Saved = { role: string | null; answers: Record<string, string>; at: string; counted: string[] };
+  const KEY = 'mcats-help';
+  let depth = 0; // how many steps into the form this history entry is
+  let queued: string | null = null; // a back or forward that came in mid-animation
+  function save() {
+    try {
+      if (at === 'done') sessionStorage.removeItem(KEY);
+      else sessionStorage.setItem(KEY, JSON.stringify({ role: role?.id ?? null, answers, at, counted: [...counted] } satisfies Saved));
+    } catch {
+      // private browsing or storage turned off: the form still works, it just won't survive a reload
+    }
+  }
+  function restore(): Saved | null {
+    try { return JSON.parse(sessionStorage.getItem(KEY) ?? 'null'); } catch { return null; }
+  }
+
+  // how: 'push' adds a history step (moving forward), 'replace' swaps the current one, and 'none' is
+  // for when the browser already moved (a back or forward swipe).
+  function go(id: string, from?: { x: number; y: number }, how: 'push' | 'replace' | 'none' = 'push') {
+    if (busy) { if (how === 'none') queued = id; return; }
     busy = true;
     at = id;
+    if (how === 'push') { depth += 1; history.pushState({ help: id, n: depth } satisfies Step, ''); }
+    else if (how === 'replace') history.replaceState({ help: id, n: depth } satisfies Step, '');
+    save();
     if (id === 'brief') count('started');
     const el = build(id);
     const old = current;
@@ -389,9 +448,6 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     counted.add(step);
     track(`help ${step}: ${source || 'no label'}`);
   }
-  // The counter script loads in the background, so wait for it before counting the visit.
-  if (document.readyState === 'complete') count('opened');
-  else window.addEventListener('load', () => count('opened'), { once: true });
 
   // ── Sending ─────────────────────────────────────────────
   // Only answers to questions still on the path count, so an answer to a question that was later
@@ -451,16 +507,32 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     go(to);
   }
 
+  // ← Back steps back through the browser's history, so it and the phone's back swipe always agree.
   $('back').addEventListener('click', () => {
     if (sendingNow) return;
-    const list = order();
-    go(list[list.indexOf(at) - 1]);
+    if (((history.state as Step | null)?.n ?? 0) > 0) history.back();
+    else { const list = order(); go(list[list.indexOf(at) - 1], undefined, 'replace'); }
+  });
+
+  window.addEventListener('popstate', (e) => {
+    const s = e.state as Step | null;
+    // After sending, going back shouldn't land on the last question, where they could send it again.
+    // The first back jumps to the start of the form's history (Thanks stays up), the next one leaves.
+    if (at === 'done') { if (s?.n) history.go(-s.n); return; }
+    if (!sheet.hidden && !s?.sheet) closeSheet(false);
+    if (s?.sheet && sheet.hidden) openSheet(false);
+    if (sendingNow || !s?.help) return;
+    depth = s.n ?? 0;
+    const target = order().includes(s.help) ? s.help : 'know';
+    if (target !== at) go(target, undefined, 'none');
   });
 
   // ── The "what is this" sheet ────────────────────────────
+  // Opening it is a history step too, so a back swipe closes it instead of leaving the page.
   const panel = sheet.querySelector('.sheet') as HTMLElement;
   const scrim = $('scrim');
-  function openSheet() {
+  function openSheet(push = true) {
+    if (push) { depth += 1; history.pushState({ help: 'know', n: depth, sheet: true } satisfies Step, ''); }
     sheet.hidden = false;
     $('sheet-scroll').scrollTop = 0;
     $('got-it').focus({ preventScroll: true });
@@ -478,18 +550,84 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
       scrim.getAnimations().forEach((a) => a.cancel());
     }
     sheet.hidden = true;
-    if (thenRoles) go('pledge', { x: innerWidth / 2, y: innerHeight * 0.85 });
+    // "Got it" takes the sheet's place in history, so back from the next screen returns to the question.
+    if (thenRoles) go('pledge', { x: innerWidth / 2, y: innerHeight * 0.85 }, 'replace');
   }
+  // Tapping outside it or pressing Escape steps back in history, and popstate closes it.
+  const dismissSheet = () => ((history.state as Step | null)?.sheet ? history.back() : closeSheet(false));
   $('got-it').addEventListener('click', () => closeSheet(true));
-  scrim.addEventListener('click', () => closeSheet(false));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(false); });
+  scrim.addEventListener('click', dismissSheet);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !sheet.hidden) dismissSheet(); });
 
-  // A flyer can open on one role: /help2?role=video
-  const preset = data.roles.find((r) => r.id === new URLSearchParams(location.search).get('role'));
-  if (preset) setRole(preset);
+  // ── Opening ─────────────────────────────────────────────
+  // The lion draws itself on the purple field, then the field lifts like a curtain while the lion
+  // flies into its spot in the header and the first question rises into place underneath. About a
+  // second long; a tap or key skips to the end, and it doesn't play with reduced motion.
+  function opening(instant = false) {
+    const intro = $('intro');
+    const field = intro.querySelector('.intro-field') as HTMLElement;
+    const ink = intro.querySelector('.intro-ink') as HTMLElement;
+    const mark = field.querySelector('.intro-mark') as SVGSVGElement;
+    const inkMark = ink.querySelector('.intro-mark') as SVGSVGElement;
+    const target = document.querySelector('.brand .mark') as SVGSVGElement;
+    const finish = () => { intro.remove(); target.style.opacity = ''; };
+    if (reduce || instant) { finish(); return; }
+    intro.style.animation = 'none'; // the script is running, so the safety timeout isn't needed
+    target.style.opacity = '0';
+
+    // Where the lion starts and where it lands, measured before anything moves.
+    const from = mark.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+    const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+
+    const LIFT = 'cubic-bezier(0.76, 0, 0.24, 1)';
+    const start = 440, lift = 680;
+    const anims: Animation[] = [];
+    mark.querySelectorAll('path').forEach((path) =>
+      anims.push(path.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 560, easing: 'cubic-bezier(0.45, 0, 0.2, 1)', fill: 'forwards' })),
+    );
+    anims.push(mark.animate([{ opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1 }], { duration: 420, easing: EASE, fill: 'backwards' }));
+    const timing = { duration: lift, delay: start, easing: LIFT, fill: 'forwards' } as const;
+    for (const m of [mark, inkMark]) anims.push(m.animate([{ translate: '0 0', scale: 1 }, { translate: `${dx}px ${dy}px`, scale: to.width / from.width }], timing));
+    const curtain = field.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 100% 0)' }], timing);
+    anims.push(curtain, ink.animate([{ clipPath: 'inset(100% 0 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], timing));
+    const inner = current?.querySelector('.inner');
+    if (inner) anims.push(inner.animate([{ transform: 'translateY(48px)' }, { transform: 'none' }], { duration: lift + 160, delay: start, easing: EASE, fill: 'backwards' }));
+
+    curtain.finished.then(finish, finish);
+    const skip = () => anims.forEach((a) => a.finish());
+    intro.addEventListener('pointerdown', skip, { once: true });
+    document.addEventListener('keydown', skip, { once: true });
+  }
+
+  // ── Starting up ─────────────────────────────────────────
+  // Pick up a saved application in this tab if there is one; otherwise start fresh, on one role if
+  // the flyer's link names it (/help?role=video).
+  const saved = restore();
+  if (saved) {
+    const r = data.roles.find((x) => x.id === saved.role);
+    if (r) setRole(r);
+    Object.assign(answers, saved.answers ?? {});
+    (saved.counted ?? []).forEach((c) => counted.add(c));
+  } else {
+    const preset = data.roles.find((r) => r.id === new URLSearchParams(location.search).get('role'));
+    if (preset) setRole(preset);
+  }
+  const here = history.state as Step | null;
+  depth = here?.n ?? 0;
+  let start = 'know';
+  if (saved && here?.help && here.help !== 'done' && order().includes(here.help)) start = here.help;
+  else if (saved && saved.at !== 'done' && order().includes(saved.at)) start = saved.at;
 
   applyPalette(data.palettes[0]);
-  go('know');
+  go(start, undefined, 'replace');
+  opening(start !== 'know'); // someone picking up mid-form doesn't need the opening again
+
+  // The counter script loads in the background, so wait for it before counting the visit. A reload
+  // of a saved application doesn't count twice.
+  if (document.readyState === 'complete') count('opened');
+  else window.addEventListener('load', () => count('opened'), { once: true });
 </script>
 
 <style>
@@ -503,6 +641,25 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     transition: --accent 0.5s var(--ease);
     color: var(--ink);
   }
+
+  /* opening: a purple field with the lion, lifted away by the script (see opening()) */
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    animation: intro-safety 0s 3s forwards; /* if the script never runs, don't leave the page covered */
+  }
+  @keyframes intro-safety { to { visibility: hidden; } }
+  /* Two copies of the lion move together: a white one on the purple field, which the curtain cuts
+     away, and an ink one shown only where the page is already uncovered. So as the curtain's edge
+     passes through the lion, it turns from white to ink right at the edge. The fallbacks are Dusk's
+     colors, for the moment before the script sets the palette. */
+  .intro-field, .intro-ink { position: absolute; inset: 0; display: grid; place-items: center; }
+  .intro-field { background: var(--primary, #3b2a78); color: var(--primary-ink, #fff); }
+  .intro-ink { color: var(--ink, #241b3a); clip-path: inset(100% 0 0 0); }
+  .intro :global(.intro-mark) { width: clamp(6.5rem, 30vw, 9rem); height: auto; overflow: visible; }
+  .intro-field :global(.intro-mark path) { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  @media (prefers-reduced-motion: reduce) { .intro { display: none; } }
 
   /* progress */
   .bar { position: fixed; inset: 0 0 auto; height: 4px; z-index: 30; }
@@ -524,7 +681,26 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     align-items: center;
     padding: 1rem clamp(1.25rem, 4vw, 2.5rem);
     pointer-events: none;
+    --top-bg: var(--paper);
   }
+  /* A frosted band behind the header, so text scrolling up under it doesn't run into ← Back and the
+     name. It takes the color of the screen underneath and is solid, with a soft blurred edge at the
+     bottom where text fades out as it slides under. Solid, because some browsers (and phones in
+     power-saving modes) skip the blur, and a see-through band then leaves ghost text behind. */
+  .top::before {
+    content: '';
+    position: absolute;
+    inset: -4px 0 -0.9rem;
+    z-index: -1;
+    background: var(--top-bg);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 0.9rem), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 0.9rem), transparent);
+    transition: background-color 0.45s var(--ease);
+  }
+  :global(.app:has(#stage > .screen.color:last-child) .top) { --top-bg: var(--tint); }
+  :global(.app:has(#stage > .screen.primary:last-child) .top) { --top-bg: var(--primary-tint); }
   .top .mono { font-size: 0.66rem; letter-spacing: 0.14em; font-weight: 400; }
   .back { grid-column: 1; justify-self: start; pointer-events: auto; padding: 0.4rem 0; }
   .brand { grid-column: 2; display: flex; align-items: center; gap: 0.5rem; }
@@ -731,6 +907,27 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
   .does .mono { font-size: 0.64rem; font-weight: 500; letter-spacing: 0.1em; color: var(--primary); }
   .pics { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1.4rem; }
   .pics img { aspect-ratio: 16 / 10; border-radius: 4px; }
+  .sheet figure { position: relative; margin: 0; }
+  /* Name tags on the photos, so the officers teaching get the credit. */
+  .tag {
+    position: absolute;
+    left: 0.4rem;
+    bottom: 0.4rem;
+    max-width: calc(100% - 0.8rem);
+    padding: 0.2rem 0.42rem;
+    border-radius: 3px;
+    background: rgb(20 14 32 / 0.68);
+    color: #fff;
+    font-size: 0.5rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+  }
+  .hero-fig .tag { left: clamp(1.4rem, 5vw, 2.8rem); bottom: 0.75rem; font-size: 0.56rem; }
   .caption { margin-top: 0.55rem; font-size: 1.14rem; line-height: 1.22; font-style: italic; color: var(--dim); }
   .need {
     margin-top: 1.1rem;

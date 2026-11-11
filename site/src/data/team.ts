@@ -129,9 +129,10 @@ export const leadership: Member[] = [
 ];
 
 // Officer application. While formUrl is empty, the Team page shows the `soon` note
-// in place of a button. When the /help questionnaire goes live, set formUrl to '/help/'.
+// in place of a button. ?from=team-page counts people who apply from here separately
+// from the flyers in GoatCounter (see the /help page).
 export const officerApp = {
-  formUrl: '',
+  formUrl: '/help/?from=team-page',
   soon: 'Applications open very soon',
   perks: ['Help run a club that makes the MCAT free for everyone', 'Leadership experience for your applications', 'Earn service hours', 'Stay sharp on MCAT content yourself'],
   process: ['Fill out the application.', 'Meet with a few members of leadership.', 'Join the officer team and pick up a role.'],

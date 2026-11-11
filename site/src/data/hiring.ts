@@ -1,5 +1,4 @@
 // The questionnaire at /help. Every word a person reads is in this file.
-// MOCKUP: the expectations and hours are still placeholders.
 //
 // Writing tip: this text sits inside 'single quotes', so use a curly apostrophe (’) in words like you’ll.
 
@@ -86,6 +85,15 @@ export const intro = {
     { title: 'Scholarships', body: 'Five scholarships that cover the cost of registering for the exam.' },
   ],
   caption: 'Everything you see here is made by students, from the teaching to the slides.',
+  // Who's teaching in each photo on this screen. who and topic show as a small tag on the photo
+  // (leave who empty for no tag); alt describes the photo for people using screen readers.
+  photos: {
+    hero: { who: 'Nikhil Kumar', topic: 'Endocrine', alt: 'Nikhil Kumar teaching the endocrine chapter at a whiteboard in front of a room of students' },
+    nihal: { who: 'Nihal Jacobs', topic: 'Endocrine', alt: 'Nihal Jacobs explaining how hormones act, with drawings across the whiteboard' },
+    anmol: { who: 'Anmol Nayak', topic: 'DNA', alt: 'Anmol Nayak pointing to nucleotide structures on a whiteboard, next to a slide on DNA conformations' },
+    lee: { who: 'Lee Dix', topic: 'Carbonyls', alt: 'Lee Dix pointing to a slide on how aldehydes and ketones form' },
+    whiteboard: { who: 'Nikhil Kumar', topic: 'Metabolism', alt: 'Nikhil Kumar explaining a metabolic pathway drawn across the whiteboard' },
+  },
   mcatNote: 'Never heard of the MCAT? No worries! It’s the exam people take to apply to medical school, and it’s expensive to prepare for, so we make the prep as free as possible. Most of our roles don’t need you to know all too much about it.',
   button: 'Got it',
 };
@@ -128,6 +136,12 @@ const portfolio: Question = {
   placeholder: 'Paste a link',
 };
 
+// Asked for both MCAT roles. Someone who picks both only answers these once.
+const mcat: Question[] = [
+  { id: 'taken', type: 'choice', q: 'Have you taken the MCAT?', options: ['Yes', 'Not yet'] },
+  { id: 'score', type: 'long', q: 'What was your score, and what were your strongest subjects?', help: 'Only if you’re comfortable sharing.', optional: true, showIf: { id: 'taken', is: 'Yes' } },
+];
+
 export const roles: Role[] = [
   {
     id: 'outreach',
@@ -153,7 +167,7 @@ export const roles: Role[] = [
     about: 'We record hours of teaching every week, and we’re purchasing equipment to start creating professionally shot, creatively written 5-15 minute MCAT style videos. You’d be part of the team that writes them, films them and edits them, and you’d be setting the style for everything we put out. Nobody has this job yet, so you get to figure out what it should be.',
     gets: ['Videos people use, with your name on them', 'A growing reel and proper experience to show off on your resume', 'Freedom to experiment with how we shoot', 'Practice working with a team', 'An officer title and service hours'],
     yours: 'Once you’ve got the lectures down, help us with making shorts, explainers, whatever you can dream up. If you think we should be making it, pitch it and shoot it.',
-    expect: ['Help plan video ideas', 'Do the parts you sign up for well and on time', 'Turn each recording around within about 1-2 weeks', 'Keep up with the seminar schedule', 'About 3 to 4 hours a week'],
+    expect: ['Help plan video ideas', 'Do the parts you sign up for well and on time', 'Turn each recording around within about 1-2 weeks', 'Keep up with the seminar schedule', 'About 3 to 5 hours a week'],
     parts: { id: 'video-parts', type: 'multi', q: 'Which parts do you want to do?', help: 'All three would be amazing, but one is fine too.', options: ['Writing', 'Shooting', 'Editing'] },
     questions: [portfolio],
   },
@@ -174,17 +188,14 @@ export const roles: Role[] = [
     id: 'tutor',
     name: 'Peer Mentor (MCAT coach)',
     team: 'Tutoring',
-    line: 'Help students one-on-one and lock in your own content.',
+    line: 'Coach students one-on-one on how to prep for the MCAT.',
     group: 'mcat',
-    hook: 'Be the reason it finally clicks.',
-    about: 'A lot of students study for this alone and can’t pay for a private tutor. You’d sit down with them one-on-one and help them get unstuck.',
+    hook: 'Be the coach you wish you’d had.',
+    about: 'A lot of students prep for this alone and can’t pay for a coach. You’d meet with them one-on-one to help them build a study plan, pick the right resources, make sense of their practice tests and stay on track. You’re there to guide how they prep, not to teach them every subject.',
     gets: ['Service hours doing something that helps people directly','Make meaningful connections with undergrads preparing for the MCAT', 'Experience you can talk about in applications and interviews'],
-    yours: 'You decide how you approach tutoring. If you find something that works, we’ll help you share it with the other tutors.',
+    yours: 'You decide how you coach. If you find something that works, we’ll help you share it with the other mentors.',
     expect: ['Become trained in MCAT coaching', 'Keep time to mentor 1-2 people with true care and compassion', 'Be Communicative', 'WE DO NOT EXPECT YOU TO TUTOR ALL SUBJECT MATTER, just how to prepare for the MCAT in general'],
-    questions: [
-      { id: 'taken', type: 'choice', q: 'Have you taken the MCAT?', options: ['Yes', 'Not yet'] },
-      { id: 'score', type: 'long', q: 'What was your score, and what were your strongest subjects?', help: 'Only if you’re comfortable sharing.', optional: true, showIf: { id: 'taken', is: 'Yes' } },
-    ],
+    questions: mcat,
   },
   {
     id: 'lecturer',
@@ -198,7 +209,7 @@ export const roles: Role[] = [
     gets: ['Service hours and one of the most impressive leadership roles you can point to', 'You’ll know your chapters better than you ever could from reading them', 'Speaking and teaching experience most students never get'],
     yours: 'You decide how to teach your section, and we want you to try new things.',
     expect: ['Have your slides ready ahead of time', 'Practice before you present', 'A lot of commitment, hard work, and communication'],
-    questions: [],
+    questions: mcat,
   },
 ];
 
