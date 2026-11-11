@@ -5,3 +5,8 @@ time: "5:00 PM"
 end: "9:00 PM"
 location: White Hall 231
 covers: [bio-8, bio-9]
+
+materials:
+
+- { kind: slides, chapters: [bio-8], href: "/powerpoints/The Immune System.pdf" }
+- { kind: slides, chapters: [bio-9], href: "/powerpoints/MCATs Bio9.pdf" }
