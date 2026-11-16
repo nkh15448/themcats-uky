@@ -3,7 +3,10 @@ type: chemistry
 date: 2026-11-16
 time: "6:00 PM"
 end: "9:00 PM"
-location: White Hall 231
+location: No in-person meeting, problem set instead
+summary: "There is no in-person seminar tonight. Chapter 11 is a problem set you work on your own: 30 questions with worked answers and six reference charts."
 covers: [orgo-11]
 topics:
   - "Lab techniques in general"
+materials:
+  - { title: "Spectroscopy problem set, with answers and reference charts", kind: questions, chapters: [orgo-11], href: "/handouts/Orgo11_Spectroscopy_ProblemSet_TheMCATS.pdf" }
