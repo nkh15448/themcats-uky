@@ -1,0 +1,624 @@
+---
+// The "we're hiring" note: a small card on someone's first visit that tucks itself into a chip
+// in the bottom corner once they're done with it. All the words, the on switch and the hiring
+// round are in data/hiringNote.ts. Base.astro leaves it off /help, /present* and /mcatalyst.
+import { url } from '../lib/url';
+import { hiringNote as note } from '../data/hiringNote';
+import raw from '../assets/logo.svg?raw';
+
+// The logo's lion, with every stroke given a length of 1 so it can draw itself on.
+const lion = (cls: string) =>
+  raw
+    .replace(/<\?xml[^>]*\?>/, '')
+    .replace(/\s(id|data-name)="[^"]*"/g, '')
+    .replace(/stroke:\s*#fff;/g, 'stroke: currentColor;')
+    .replace(/<path /g, '<path pathLength="1" ')
+    .replace('<svg ', `<svg class="${cls}" aria-hidden="true" focusable="false" `);
+---
+{note.on && (
+  <div class="hn" id="hn" data-round={note.round} hidden>
+    <div class="hn-scrim" aria-hidden="true" hidden></div>
+    <div class="hn-stage" hidden>
+      <section class="hn-card" role="dialog" aria-modal="false" aria-labelledby="hn-title" aria-describedby="hn-body">
+        <div class="hn-in">
+          <div class="hn-head">
+            <span class="hn-badge" set:html={lion('hn-lion')} />
+            <p class="hn-kicker mono"><span class="hn-dot" aria-hidden="true"></span>{note.kicker}</p>
+          </div>
+          <h2 class="hn-title" id="hn-title">{note.title}</h2>
+          <p class="hn-body" id="hn-body">{note.body}</p>
+          <div class="hn-actions">
+            <a class="btn btn-solid hn-go" href={url(note.cardLink)}>{note.go}<span aria-hidden="true">→</span></a>
+            <button type="button" class="btn hn-later" data-hn-later>{note.later}</button>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="hn-chip" hidden>
+      <a class="hn-chip-go" href={url(note.chipLink)}>
+        <span class="hn-chip-lion" set:html={lion('hn-lion-sm')} />
+        <span class="hn-chip-text mono">{note.chip}</span>
+        <span class="hn-dot" aria-hidden="true"></span>
+        <span class="hn-chip-arrow" aria-hidden="true">→</span>
+      </a>
+      <button type="button" class="hn-chip-x" data-hn-close aria-label={note.chipClose} title={note.chipClose}>
+        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5" /></svg>
+      </button>
+    </div>
+  </div>
+)}
+
+<script>
+  import { track } from '../lib/track';
+
+  // What someone has done with the note, per hiring round, in localStorage:
+  //   (nothing)  first visit: show the card
+  //   tucked     they put it away, clicked through or opened /help: show only the chip
+  //   closed     they hid the chip for good: show nothing
+  // If storage can't be read (some private windows), act as if it's tucked, so nobody
+  // gets the card on every page.
+  const root = document.documentElement;
+  const hn = document.getElementById('hn');
+  if (hn) start(hn);
+
+  function start(hn: HTMLElement) {
+    const KEY = `mcats-hiring-${hn.dataset.round}`;
+    const scrim = hn.querySelector<HTMLElement>('.hn-scrim')!;
+    const stage = hn.querySelector<HTMLElement>('.hn-stage')!;
+    const card = hn.querySelector<HTMLElement>('.hn-card')!;
+    const chip = hn.querySelector<HTMLElement>('.hn-chip')!;
+    const ease = 'cubic-bezier(0.2, 0.7, 0.1, 1)';
+
+    let state: string | null;
+    try {
+      state = localStorage.getItem(KEY);
+    } catch {
+      state = 'tucked';
+    }
+    const save = (v: 'tucked' | 'closed') => {
+      try {
+        localStorage.setItem(KEY, v);
+      } catch {}
+    };
+    // The nav's motion switch, or the device asking for less motion.
+    const still = () =>
+      root.dataset.motion === 'reduced' ||
+      (matchMedia('(prefers-reduced-motion: reduce)').matches && !root.classList.contains('full-motion'));
+
+    if (state === 'closed') return;
+    hn.hidden = false;
+    if (state) {
+      showChip(500);
+    } else {
+      // Give the page a moment to land first, and wait if the tab is in the background.
+      const later = () => setTimeout(showCard, 1600);
+      if (document.visibilityState === 'visible') later();
+      else document.addEventListener('visibilitychange', function seen() {
+        if (document.visibilityState !== 'visible') return;
+        document.removeEventListener('visibilitychange', seen);
+        later();
+      });
+    }
+
+    // ── the card ──
+    let open = false;
+    let scrolledFrom = 0;
+    function showCard() {
+      open = true;
+      scrolledFrom = scrollY;
+      scrim.hidden = false;
+      stage.hidden = false;
+      card.classList.add('draw');
+      if (!still()) {
+        scrim.animate({ opacity: [0, 1] }, { duration: 700, easing: 'ease-out' });
+        card.animate(
+          [
+            { opacity: 0, transform: 'translateY(22px) scale(0.96)', filter: 'blur(8px)' },
+            { opacity: 1, transform: 'none', filter: 'blur(0)' },
+          ],
+          { duration: 800, easing: ease },
+        );
+      }
+      track('hiring note: shown');
+      document.addEventListener('keydown', onKey);
+      document.addEventListener('click', onClick);
+      addEventListener('scroll', onScroll, { passive: true });
+    }
+
+    // Esc puts it away, unless Esc is closing something else (the menu, the theme panel, search).
+    const somethingElseOpen = () =>
+      root.classList.contains('menu-open') ||
+      !!document.querySelector('dialog[open]') ||
+      document.getElementById('look-panel')?.hidden === false;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !somethingElseOpen()) tuck('esc');
+    };
+    const onClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest('[data-hn-later]')) tuck('button');
+      else if (t.closest('.hn-go')) {
+        save('tucked');
+        stop();
+      } else if (!card.contains(t)) tuck('outside');
+    };
+    // Reading on past it counts as a no thanks.
+    const onScroll = () => {
+      if (Math.abs(scrollY - scrolledFrom) > innerHeight * 0.5) tuck('scroll');
+    };
+    function stop() {
+      open = false;
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('click', onClick);
+      removeEventListener('scroll', onScroll);
+    }
+
+    // The card flies down into the corner and becomes the chip, in one motion: a copy of the
+    // card's box swoops along a curve (sideways first, then down) while it shrinks into a pill,
+    // the lion hops along with it into the chip's little circle, and the chip takes over
+    // exactly where they land.
+    function tuck(how: string) {
+      if (!open) return;
+      stop();
+      save('tucked');
+      track(`hiring note: tucked (${how})`);
+      const hadFocus = card.contains(document.activeElement);
+      chip.hidden = false;
+      chip.style.opacity = '0';
+      const r0 = card.getBoundingClientRect();
+      const r1 = chip.getBoundingClientRect();
+      const badge = card.querySelector<HTMLElement>('.hn-badge')!;
+      const chipLion = chip.querySelector<HTMLElement>('.hn-chip-lion')!;
+      const b0 = badge.getBoundingClientRect();
+      const b1 = chipLion.getBoundingClientRect();
+      const landed = () => {
+        chip.style.opacity = '';
+        if (hadFocus) chip.querySelector<HTMLElement>('.hn-chip-go')?.focus({ preventScroll: true });
+      };
+
+      if (still()) {
+        card.animate({ opacity: [1, 0] }, { duration: 180, easing: 'ease-out' }).onfinish = () => {
+          stage.hidden = true;
+          scrim.hidden = true;
+        };
+        chip.animate({ opacity: [0, 1] }, { duration: 220, delay: 120, easing: 'ease-out', fill: 'backwards' });
+        landed();
+        return;
+      }
+
+      const ghost = card.cloneNode(true) as HTMLElement;
+      ghost.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+      ghost.removeAttribute('role');
+      ghost.setAttribute('aria-hidden', 'true');
+      ghost.inert = true;
+      ghost.classList.add('hn-ghost');
+      Object.assign(ghost.style, { left: `${r0.left}px`, top: `${r0.top}px`, width: `${r0.width}px`, height: `${r0.height}px` });
+      // Keep the words from rewrapping while the box shrinks; they fade out first anyway.
+      ghost.querySelector<HTMLElement>('.hn-in')!.style.width = `${r0.width}px`;
+      ghost.querySelector<HTMLElement>('.hn-badge')!.style.visibility = 'hidden';
+      // The lion that hops into the corner.
+      const flyer = badge.cloneNode(true) as HTMLElement;
+      flyer.classList.add('hn-flyer');
+      Object.assign(flyer.style, { left: `${b0.left}px`, top: `${b0.top}px`, width: `${b0.width}px`, height: `${b0.height}px` });
+      const from = getComputedStyle(badge);
+      const to = getComputedStyle(chipLion);
+      hn.append(ghost, flyer);
+      stage.hidden = true;
+      chipLion.style.opacity = '0';
+      scrim.animate({ opacity: [1, 0] }, { duration: 450, easing: 'ease-out' }).onfinish = () => (scrim.hidden = true);
+
+      ghost.querySelector('.hn-in')!.animate(
+        [
+          { opacity: 1, filter: 'blur(0)' },
+          { opacity: 0, filter: 'blur(4px)' },
+        ],
+        { duration: 200, easing: 'ease-out', fill: 'forwards' },
+      );
+      const chipShadow = getComputedStyle(chip).boxShadow;
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+      // A keyframe for a box travelling from rect a to rect b. px and py: how far along it is
+      // sideways and down (sideways leads, which makes the curve); ps: how far it has shrunk.
+      const along = (a: DOMRect, b: DOMRect) => (px: number, py: number, ps: number, offset: number, more: Keyframe = {}): Keyframe => {
+        const w = lerp(a.width, b.width, ps);
+        const h = lerp(a.height, b.height, ps);
+        return {
+          left: `${lerp(a.left + a.width / 2, b.left + b.width / 2, px) - w / 2}px`,
+          top: `${lerp(a.top + a.height / 2, b.top + b.height / 2, py) - h / 2}px`,
+          width: `${w}px`,
+          height: `${h}px`,
+          offset,
+          ...more,
+        };
+      };
+      const box = along(r0, r1);
+      const pill = r1.height / 2;
+      const D = 820;
+      const flight = ghost.animate(
+        [
+          box(0, 0, 0, 0, { borderRadius: '14px', easing: 'cubic-bezier(0.3, 0, 0.4, 1)' }),
+          // a small breath in, like it's about to hop
+          box(-0.015, -0.025, -0.025, 0.13, { borderRadius: '14px', easing: 'cubic-bezier(0.45, 0, 0.25, 1)' }),
+          box(0.7, 0.3, 0.8, 0.58, { borderRadius: `${pill}px`, easing: 'cubic-bezier(0.3, 0.4, 0.2, 1)' }),
+          box(1, 1, 1, 1, { borderRadius: `${pill}px`, boxShadow: chipShadow }),
+        ],
+        { duration: D, fill: 'forwards' },
+      );
+      // The lion rides a little higher and tips back as it hops, and comes out of its outline
+      // circle into the chip's filled one.
+      const hop = along(b0, b1);
+      const wear0 = { color: from.color, backgroundColor: from.backgroundColor, borderColor: from.borderTopColor };
+      const wear1 = { color: to.color, backgroundColor: to.backgroundColor, borderColor: to.backgroundColor };
+      flyer.animate(
+        [
+          hop(0, 0, 0, 0, { ...wear0, transform: 'rotate(0)', easing: 'cubic-bezier(0.3, 0, 0.4, 1)' }),
+          hop(-0.02, -0.07, -0.05, 0.15, { ...wear0, transform: 'rotate(-10deg)', easing: 'cubic-bezier(0.45, 0, 0.25, 1)' }),
+          hop(0.66, 0.2, 0.7, 0.58, { transform: 'rotate(6deg)', easing: 'cubic-bezier(0.3, 0.4, 0.2, 1)' }),
+          hop(1, 1, 1, 1, { ...wear1, transform: 'rotate(0)' }),
+        ],
+        { duration: D, fill: 'forwards' },
+      );
+      flight.onfinish = () => {
+        landed();
+        ghost.remove();
+        // the chip's own lion takes over from the one that hopped in
+        chipLion.style.opacity = '';
+        flyer.animate({ opacity: [1, 0] }, { duration: 160, easing: 'ease-out', fill: 'forwards' }).onfinish = () => flyer.remove();
+        // a little bounce as it lands, and the chip's words settle in
+        chip.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.07)' }, { transform: 'scale(1)' }], { duration: 420, easing: ease });
+        chip.querySelectorAll<HTMLElement>('.hn-chip-go > :not(.hn-chip-lion), .hn-chip-x').forEach((el) =>
+          el.animate([{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 320, easing: 'ease-out' }),
+        );
+      };
+    }
+
+    // ── the chip ──
+    function showChip(delay: number) {
+      chip.hidden = false;
+      if (!still()) {
+        chip.animate(
+          [
+            { opacity: 0, transform: 'translateY(12px) scale(0.94)' },
+            { opacity: 1, transform: 'none' },
+          ],
+          { duration: 600, delay, easing: ease, fill: 'backwards' },
+        );
+      }
+    }
+    chip.querySelector('[data-hn-close]')!.addEventListener('click', () => {
+      save('closed');
+      track('hiring note: closed');
+      const gone = () => (hn.hidden = true);
+      if (still()) return gone();
+      chip.animate(
+        [
+          { opacity: 1, transform: 'none' },
+          { opacity: 0, transform: 'translateY(10px) scale(0.85)' },
+        ],
+        { duration: 300, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' },
+      ).onfinish = gone;
+    });
+  }
+</script>
+
+<style>
+  .hn {
+    --hn-gap: 1.5rem;
+  }
+  /* Out of the way while the phone menu is open. */
+  :global(html.menu-open) .hn {
+    visibility: hidden;
+  }
+
+  /* A soft pool of shade behind the card. It doesn't block anything. */
+  .hn-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 91;
+    pointer-events: none;
+    background: radial-gradient(ellipse 60% 55% at 50% 50%, rgb(var(--shade) / calc(0.45 * var(--shade-k))), transparent 70%);
+  }
+  .hn-stage {
+    position: fixed;
+    inset: 64px 0 0;
+    z-index: 92;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    pointer-events: none;
+  }
+  .hn-stage[hidden],
+  .hn-scrim[hidden] {
+    display: none;
+  }
+
+  /* Paper a shade brighter than the page: near-white on the light themes, lifted on dark. */
+  .hn-card,
+  .hn-ghost,
+  .hn-chip {
+    background: var(--print-bg);
+    border: 1px solid var(--rule-strong);
+    color: var(--fg);
+  }
+  .hn-card,
+  .hn-ghost {
+    position: relative;
+    width: min(26rem, 100%);
+    max-height: calc(100dvh - 64px - 2rem);
+    overflow: hidden auto;
+    border-radius: 14px;
+    box-shadow: 0 30px 60px -28px rgb(var(--shade) / calc(0.95 * var(--shade-k))), 0 0 0 1px rgb(var(--shade) / 0.04);
+    pointer-events: auto;
+  }
+  /* The galaxy line across the top, in whatever colors the theme gives it. */
+  .hn-card::before,
+  .hn-ghost::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: var(--nebula);
+  }
+  .hn-ghost {
+    position: fixed;
+    z-index: 93;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  /* The lion that hops to the corner. It's a copy, so keep it drawn instead of drawing it again. */
+  .hn-flyer.hn-badge {
+    position: fixed;
+    z-index: 94;
+    pointer-events: none;
+  }
+  .hn-flyer.hn-badge :global(.hn-lion) {
+    height: 65%;
+  }
+  .hn-flyer.hn-badge :global(.hn-lion path) {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .hn-in {
+    padding: 1.6rem 1.6rem 1.5rem;
+  }
+  .hn-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+  .hn-badge {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    flex: none;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+  }
+  .hn-badge :global(.hn-lion) {
+    width: auto;
+    height: 1.95rem;
+    overflow: visible;
+  }
+  .hn-badge :global(.hn-lion path) {
+    stroke-width: 1.1px;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .draw .hn-badge :global(.hn-lion path) {
+    animation: hn-draw 1.9s var(--ease) 0.25s forwards;
+  }
+  @keyframes hn-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  .hn-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    font-weight: 400;
+    font-size: 0.74rem;
+    color: var(--fg-dim);
+  }
+  .hn-dot {
+    position: relative;
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--neb-violet);
+  }
+  /* A slow, soft ripple off the dot. */
+  .hn-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--neb-violet);
+    animation: hn-ripple 2.6s ease-out infinite;
+  }
+  @keyframes hn-ripple {
+    from {
+      transform: scale(1);
+      opacity: 0.55;
+    }
+    70%,
+    to {
+      transform: scale(2.8);
+      opacity: 0;
+    }
+  }
+  .hn-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-variation-settings: 'opsz' 72;
+    font-size: 1.85rem;
+    line-height: 1.04;
+    letter-spacing: -0.012em;
+    text-wrap: balance;
+  }
+  .hn-body {
+    margin-top: 0.7rem;
+    font-size: 1.18rem;
+    line-height: 1.38;
+    color: var(--fg-dim);
+    text-wrap: pretty;
+  }
+  .hn-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.35rem;
+  }
+  .hn-go span {
+    transition: transform 0.35s var(--ease);
+  }
+  .hn-go:hover span {
+    transform: translateX(3px);
+  }
+  .hn-later {
+    color: var(--fg-dim);
+  }
+  .hn-later:hover {
+    color: var(--fg);
+  }
+
+  /* ── the chip ── */
+  .hn-chip {
+    position: fixed;
+    right: max(var(--hn-gap), env(safe-area-inset-right));
+    bottom: calc(var(--hn-gap) + env(safe-area-inset-bottom));
+    z-index: 92;
+    display: flex;
+    align-items: center;
+    border-radius: 999px;
+    box-shadow: 0 14px 30px -16px rgb(var(--shade) / calc(0.9 * var(--shade-k)));
+    transform-origin: 70% 60%;
+  }
+  .hn-chip[hidden] {
+    display: none;
+  }
+  .hn-chip-go {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.42rem 0.25rem 0.42rem 0.45rem;
+    border-radius: 999px;
+    color: var(--fg);
+  }
+  .hn-chip-lion {
+    display: grid;
+    place-items: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 50%;
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .hn-chip-lion :global(.hn-lion-sm) {
+    width: auto;
+    height: 1.25rem;
+    overflow: visible;
+  }
+  .hn-chip-lion :global(.hn-lion-sm path) {
+    stroke-width: 1.5px;
+  }
+  .hn-chip-text {
+    font-weight: 400;
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    white-space: nowrap;
+  }
+  .hn-chip-go .hn-dot {
+    width: 0.42rem;
+    height: 0.42rem;
+  }
+  /* The arrow slides out on hover. */
+  .hn-chip-arrow {
+    display: inline-block;
+    width: 0;
+    margin-left: -0.55rem;
+    overflow: hidden;
+    opacity: 0;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    transition: width 0.35s var(--ease), margin 0.35s var(--ease), opacity 0.25s;
+  }
+  .hn-chip-go:hover .hn-chip-arrow,
+  .hn-chip-go:focus-visible .hn-chip-arrow {
+    width: 0.9em;
+    margin-left: 0;
+    opacity: 1;
+  }
+  .hn-chip-go:hover .hn-chip-lion {
+    animation: hn-nod 0.7s var(--ease);
+  }
+  @keyframes hn-nod {
+    30% {
+      transform: rotate(-12deg);
+    }
+    65% {
+      transform: rotate(6deg);
+    }
+  }
+  .hn-chip-x {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin: 0 0.2rem 0 0.05rem;
+    border-radius: 50%;
+    color: var(--muted);
+    transition: color 0.2s, background 0.2s;
+  }
+  .hn-chip-x:hover {
+    color: var(--fg);
+    background: color-mix(in srgb, var(--fg) 8%, transparent);
+  }
+  .hn-chip-x svg {
+    width: 0.7rem;
+    height: 0.7rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.3;
+    stroke-linecap: round;
+  }
+  .hn-chip-go:focus-visible,
+  .hn-chip-x:focus-visible {
+    outline-offset: 2px;
+  }
+
+  /* Phones: the card sits low, where a thumb can reach it, and the chip hugs the corner. */
+  @media (max-width: 600px) {
+    .hn {
+      --hn-gap: 1rem;
+    }
+    .hn-stage {
+      place-items: end center;
+      padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    }
+    .hn-scrim {
+      background: linear-gradient(to top, rgb(var(--shade) / calc(0.5 * var(--shade-k))), transparent 60%);
+    }
+    .hn-in {
+      padding: 1.35rem 1.25rem 1.25rem;
+    }
+    .hn-title {
+      font-size: 1.6rem;
+    }
+    .hn-body {
+      font-size: 1.1rem;
+    }
+    .hn-actions {
+      flex-wrap: nowrap;
+    }
+    .hn-actions .btn {
+      flex: 1 1 auto;
+      justify-content: center;
+      padding-inline: 0.85em;
+      font-size: 0.7rem;
+      letter-spacing: 0.13em;
+    }
+  }
+</style>

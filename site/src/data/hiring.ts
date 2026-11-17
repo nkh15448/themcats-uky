@@ -19,10 +19,10 @@ export type Question = {
 export type Role = {
   id: string;
   name: string;
-  team: 'Outreach' | 'Media' | 'Tutoring' | 'Seminars';
+  team: 'Outreach' | 'Media' | 'Tutoring' | 'Seminars' | 'Content';
   /** One line for the list of roles. */
   line: string;
-  group: 'open' | 'mcat';
+  group: 'open' | 'science' | 'mcat';
   /** The big headline on the role's screen. */
   hook: string;
   about: string;
@@ -35,6 +35,8 @@ export type Role = {
   expect: string[];
   /** Asked first, for roles made up of parts people can pick from. */
   parts?: Question;
+  /** Reword the "Any experience that relates to this role?" question for this role. */
+  experience?: Pick<Question, 'q' | 'help' | 'placeholder'>;
   questions: Question[];
 };
 
@@ -69,6 +71,7 @@ export const palettes: Palette[] = [
       design: { bg: '#1F7A6D', ink: white, tint: '#D8ECE5' },
       tutor: { bg: '#7B2F6F', ink: white, tint: '#EFDDEB' },
       lecturer: { bg: '#2F3F8F', ink: white, tint: '#DFE2F3' },
+      reviewer: { bg: '#5B7A2E', ink: white, tint: '#E4ECD6' },
     },
   },
 ];
@@ -77,7 +80,7 @@ export const intro = {
   question: 'Do you know what The M-CATS at the University of Kentucky is?',
   title: 'We’re building something new at UK, and anyone can be part of it.',
   lead: 'The M-CATS is a new student-run organization that’s growing fast, and we’re looking for people to help us create something amazing.',
-  need: 'You don’t have to be pre-med. Any major, any year. We need designers, filmmakers, editors, social media people and people who are good at presenting. And if you know the MCAT or the pre-med process, we need you too.',
+  need: 'You don’t have to be pre-med. Any major, any year. We need designers, filmmakers, editors, social media people, people who are good at presenting and people who are great at gen chem, orgo, biochem, bio, physics or psych/soc. And if you know the MCAT or the pre-med process, we need you too.',
   doesTitle: 'What we’ve built so far',
   does: [
     { title: 'Seminars', body: 'Seven hours of free MCAT lectures every week, all run by students.' },
@@ -125,6 +128,7 @@ export const also = {
 export const groups = {
   question: 'Where do you want to jump in?',
   open: 'Any major, any year',
+  science: 'If you know gen chem, orgo, biochem, bio, physics or psych/soc',
   mcat: 'If you’ve studied for the MCAT',
 };
 
@@ -183,6 +187,21 @@ export const roles: Role[] = [
     yours: 'Build us a brand, invent new formats, pitch ideas nobody asked for.',
     expect: ['Turn requests around in a reasonable amount of time', 'Creativity!','Keep everything looking like it came from the same club','Training in Illustrator and/or Photoshop (or is willing to learn!!)', 'About 2 to 3 hours a week'],
     questions: [portfolio],
+  },
+  {
+    id: 'reviewer',
+    name: 'Content reviewer',
+    team: 'Content',
+    line: 'Check the practice questions our students study from.',
+    group: 'science',
+    hook: 'Make sure every question is right.',
+    about: 'We write practice questions, explanations and figures for every MCAT subject, from gen chem and orgo to physics and psych/soc, and a person checks every one before students see it. You’d work through sets on your own schedule, answering them the way a student would, then going back to catch anything that’s wrong, unclear or misleading. You don’t need to have taken the MCAT. If you know the material well, we need you.',
+    gets: ['Work you can do from anywhere, on your own schedule', 'Real MCAT prep, since you’ll know every question inside and out', 'A look at how good exam questions get written', 'An officer title and service hours'],
+    yours: 'See a topic we’re missing or a better way to explain something? Tell us. What you catch shapes what we write next.',
+    expect: ['Know at least one of gen chem, orgo, biochem, bio, physics or psych/soc really well', 'Be careful and honest, and flag anything that looks off', 'Finish each set by its deadline', 'About 2 to 3 hours a week'],
+    parts: { id: 'reviewer-subjects', type: 'multi', q: 'Which subjects do you know well?', help: 'Pick as many as you want.', options: ['Gen chem', 'Orgo', 'Biochem', 'Bio', 'Physics', 'Psych/soc'] },
+    experience: { q: 'What grades or experience do you have in those subjects?', help: 'Classes, grades, tutoring, TA work, anything. Grades only if you’re comfortable sharing.', placeholder: 'Classes, grades and experience' },
+    questions: [],
   },
   {
     id: 'tutor',

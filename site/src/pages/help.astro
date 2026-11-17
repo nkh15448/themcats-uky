@@ -95,7 +95,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
 
   type Data = {
     intro: { question: string };
-    groups: { question: string; open: string; mcat: string };
+    groups: { question: string; open: string; science: string; mcat: string };
     roles: Role[];
     everyone: Question[];
     palettes: Palette[];
@@ -147,7 +147,8 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     if (!role) return data.everyone;
     const extras = data.roles.filter((r) => picked('also').includes(r.name)).flatMap((r) => r.questions);
     const seen = new Set<string>();
-    return [...(role.parts ? [role.parts] : []), ...data.everyone, ...role.questions, alsoQuestion(role), ...extras].filter((q) => !seen.has(q.id) && seen.add(q.id));
+    const everyone = data.everyone.map((q) => (q.id === 'experience' && role!.experience ? { ...q, ...role!.experience } : q));
+    return [...(role.parts ? [role.parts] : []), ...everyone, ...role.questions, alsoQuestion(role), ...extras].filter((q) => !seen.has(q.id) && seen.add(q.id));
   }
   const questions = () => allQuestions().filter((q) => !q.showIf || picked(q.showIf.id).includes(q.showIf.is));
   const order = () => ['know', 'pledge', 'roles', ...(role ? ['brief', ...questions().map((q) => q.id), 'done'] : [])];
@@ -218,6 +219,7 @@ const data = { intro, groups, roles, everyone, palettes, pledge, makeItYours, br
     const el = make('tall', `
       <h1 tabindex="-1">${esc(data.groups.question)}</h1>
       ${group(data.groups.open, data.roles.filter((r) => r.group === 'open'))}
+      ${group(data.groups.science, data.roles.filter((r) => r.group === 'science'))}
       ${group(data.groups.mcat, data.roles.filter((r) => r.group === 'mcat'))}`);
     el.querySelectorAll<HTMLButtonElement>('[data-role]').forEach((b) =>
       b.addEventListener('click', (e) => {

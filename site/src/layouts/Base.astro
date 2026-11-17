@@ -1,5 +1,5 @@
 ---
-import { url } from '../lib/url';
+import { url, stripBase } from '../lib/url';
 import '@fontsource/ibm-plex-mono/300.css';
 import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
@@ -10,8 +10,10 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import Palette from '../components/Palette.astro';
 import Tuner from '../components/Tuner.astro';
+import HiringNote from '../components/HiringNote.astro';
 import playfair from '../assets/fonts/playfair-mcats.woff2?url';
 import { season } from '../data/season';
+import { hiringNote } from '../data/hiringNote';
 
 interface Props {
   title?: string;
@@ -29,6 +31,9 @@ const {
 } = Astro.props;
 const fullTitle = title ? `${title} · The M-CATS` : 'The M-CATS · Free MCAT Prep at the University of Kentucky';
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+// Someone who has opened /help has seen the hiring pitch, so the note elsewhere starts as the small chip.
+const onHelp = stripBase(Astro.url.pathname).startsWith('/help');
+const hiringKey = `mcats-hiring-${hiringNote.round}`;
 const ogImage = new URL(url('/og-image.png'), Astro.site).href;
 ---
 <!doctype html>
@@ -89,6 +94,13 @@ const ogImage = new URL(url('/og-image.png'), Astro.site).href;
     </main>
     {!bare && <Footer />}
     {!bare && <Palette />}
+    {/* The "we're hiring" note: not on /help, the presentation pages or /mcatalyst. */}
+    {!(bare || darkOnly) && <HiringNote />}
+    {onHelp && hiringNote.on && (
+      <script is:inline define:vars={{ hiringKey }}>
+        try { if (!localStorage.getItem(hiringKey)) localStorage.setItem(hiringKey, 'tucked'); } catch {}
+      </script>
+    )}
     {import.meta.env.DEV && !bare && <Tuner />}
     {import.meta.env.PUBLIC_PREVIEW === '1' && <p class="preview-tag mono">Preview build · not the live site</p>}
     <script>
