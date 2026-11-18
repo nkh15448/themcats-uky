@@ -5,3 +5,9 @@ time: "5:00 PM"
 end: "9:00 PM"
 location: White Hall 231
 covers: [biochem-8, bio-10, bio-11]
+
+
+materials:
+
+- { kind: slides, chapters: [biochem-8], href: "/powerpoints/Biomembranes.pdf" }
+
