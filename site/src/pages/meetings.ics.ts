@@ -1,6 +1,6 @@
 // Calendar feed: subscribe once in Google/Apple Calendar and new seminars appear automatically.
 import type { APIRoute } from 'astro';
-import { meetings, meetingTimes, meetingUrl, materialTitle } from '../lib/data';
+import { meetings, meetingTimes, meetingUrl, materialTitle, MEETING_TYPE } from '../lib/data';
 import { chapter } from '../lib/kaplan';
 
 import { url } from '../lib/url';
@@ -24,7 +24,7 @@ export const GET: APIRoute = async () => {
       abs(`/meetings/${m.id}/`),
     ].join('\n');
     const summary = m.data.covers.length
-      ? `M-CATS ${m.data.type === 'chemistry' ? 'Chem' : 'Bio'}: ${m.data.covers.map((c) => chapter(c).abbr).join(', ')}`
+      ? `M-CATS ${MEETING_TYPE[m.data.type].short}: ${m.data.covers.map((c) => chapter(c).abbr).join(', ')}`
       : `M-CATS: ${m.data.title}`;
     return [
       'BEGIN:VEVENT',

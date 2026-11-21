@@ -29,6 +29,7 @@ export const KIND_LABEL: Record<string, string> = {
 
 export const MEETING_TYPE = {
   chemistry: { label: 'Chemistry', short: 'Chem', section: 'cp' },
+  physics: { label: 'Physics', short: 'Phys', section: 'cp' },
   biology: { label: 'Biology / Biochem', short: 'Bio', section: 'bb' },
   general: { label: 'General', short: 'General', section: undefined },
 } as const;

@@ -27,7 +27,7 @@ const meetings = defineCollection({
   loader: glob({ pattern: '*.yaml', base: './src/content/meetings' }),
   schema: z.object({
     title: z.string(),
-    type: z.enum(['chemistry', 'biology', 'general']),
+    type: z.enum(['chemistry', 'physics', 'biology', 'general']),
     date: z.coerce.date(),
     time: z.string(),
     end: z.string().optional(),

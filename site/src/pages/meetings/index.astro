@@ -46,11 +46,11 @@ for (const m of all) {
 }
 
 // By-chapter view: for each Kaplan chapter, when we cover it and what exists for it.
-const bookIds = ['gc', 'orgo', 'bio', 'biochem'] as const;
+const bookIds = ['gc', 'orgo', 'phys', 'bio', 'biochem'] as const;
 const books = bookIds.map((b) => ({
   id: b,
   ...BOOKS[b],
-  type: BOOKS[b].section === 'cp' ? 'chemistry' : 'biology',
+  type: b === 'phys' ? 'physics' : BOOKS[b].section === 'cp' ? 'chemistry' : 'biology',
   chapters: chaptersOf(b).map((c) => {
     const ms = all.filter((m) => m.data.covers.includes(c.code));
     const mats = all.flatMap((m) => m.data.materials.filter((x) => x.chapters.includes(c.code)));
@@ -104,6 +104,7 @@ const clientData = semester.map((m) => ({
     <div class="chips" role="group" aria-label="Filter">
       <button class="chip" data-filter="" aria-pressed="true">All</button>
       <button class="chip" data-filter="chemistry" aria-pressed="false"><span class="dot" data-s="cp"></span>Chemistry</button>
+      <button class="chip" data-filter="physics" aria-pressed="false"><span class="dot" data-s="cp"></span>Physics</button>
       <button class="chip" data-filter="biology" aria-pressed="false"><span class="dot" data-s="bb"></span>Biology</button>
     </div>
   </div>
